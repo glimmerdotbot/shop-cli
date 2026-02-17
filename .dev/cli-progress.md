@@ -33,6 +33,11 @@ Tier 1 workflows (partial):
 - `shop products set-status --id <gid|num> --status ACTIVE|DRAFT|ARCHIVED`
 - `shop products add-tags --id <gid|num> --tags tag,tag`
 - `shop products remove-tags --id <gid|num> --tags tag,tag`
+- `shop products media add --id <gid|num> --url <https://...>` (repeatable `--url`)
+- `shop products media upload --id <gid|num> --file <path>` (repeatable `--file`)
+- `shop inventory set --inventory-item-id <gid|num> --location-id <gid|num> --available <int>`
+- `shop inventory adjust --inventory-item-id <gid|num> --location-id <gid|num> --delta <int>`
+- `shop files upload --file <path>` (repeatable `--file`)
 
 Common flags (implemented subset):
 
@@ -53,7 +58,7 @@ Common flags (implemented subset):
 
 Known gaps vs notes (next to implement):
 
-- More workflows: publish/unpublish, inventory set/adjust, metafields upsert, media add/upload, etc.
+- More workflows: publish/unpublish, publications resolve, metafields upsert, etc.
 - Remaining operations/resources from `.dev/operations.md`
 
 ## Next tranche proposal

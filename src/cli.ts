@@ -88,10 +88,12 @@ const printHelp = () => {
       '  shop <resource> <verb> [flags]',
       '',
       'Implemented resources (initial slice):',
-      '  products: create|get|list|update|delete|duplicate|set-status|add-tags|remove-tags',
+      '  products: create|get|list|update|delete|duplicate|set-status|add-tags|remove-tags|media add|media upload',
       '  collections: create|get|list|update|delete|duplicate',
       '  customers: create|get|list|update|delete',
       '  orders: create|get|list|update|delete',
+      '  inventory: set|adjust',
+      '  files: upload',
       '',
       'Auth (flags override env):',
       '  --shop-domain <your-shop.myshopify.com> (or env SHOP_DOMAIN / SHOPIFY_SHOP)',
@@ -125,8 +127,21 @@ const main = async () => {
     return
   }
 
-  const [resource, verb, ...rest] = argv
-  if (!resource || !verb) {
+  const resource = argv[0]
+  if (!resource) {
+    printHelp()
+    throw new CliError('Missing <resource>', 2)
+  }
+
+  const afterResource = argv.slice(1)
+  const firstFlagIndex = afterResource.findIndex((t) => t.startsWith('-'))
+  const verbParts =
+    firstFlagIndex === -1 ? afterResource : afterResource.slice(0, firstFlagIndex)
+  const rest =
+    firstFlagIndex === -1 ? [] : afterResource.slice(firstFlagIndex)
+
+  const verb = verbParts.join(' ')
+  if (!verb) {
     printHelp()
     throw new CliError('Missing <resource> or <verb>', 2)
   }

@@ -8,6 +8,8 @@ import { CliError } from './errors'
 import { printJsonError } from './output'
 import { runCollections } from './verbs/collections'
 import { runCustomers } from './verbs/customers'
+import { runFiles } from './verbs/files'
+import { runInventory } from './verbs/inventory'
 import { runOrders } from './verbs/orders'
 import { runProducts } from './verbs/products'
 
@@ -45,6 +47,8 @@ export const runCommand = async ({
   if (resource === 'collections') return runCollections({ ctx, verb, argv })
   if (resource === 'customers') return runCustomers({ ctx, verb, argv })
   if (resource === 'orders') return runOrders({ ctx, verb, argv })
+  if (resource === 'inventory') return runInventory({ ctx, verb, argv })
+  if (resource === 'files') return runFiles({ ctx, verb, argv })
 
   throw new CliError(`Unknown resource: ${resource}`, 2)
 }

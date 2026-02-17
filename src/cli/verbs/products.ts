@@ -5,6 +5,13 @@ import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
+import {
+  buildLocalFilesForStagedUpload,
+  stagedUploadLocalFiles,
+  type StagedUploadResource,
+} from '../workflows/files/stagedUploads'
+
+type MediaContentType = 'IMAGE' | 'VIDEO' | 'MODEL_3D' | 'EXTERNAL_VIDEO'
 
 const productSummarySelection = {
   id: true,
@@ -47,6 +54,27 @@ const parseTags = (tags: string | undefined) => {
     .filter(Boolean)
   if (parts.length === 0) throw new CliError('--tags must include at least one tag', 2)
   return parts
+}
+
+const normalizeMediaContentType = (value: string | undefined): MediaContentType => {
+  if (!value) return 'IMAGE'
+  const v = value.toUpperCase()
+  if (v === 'IMAGE' || v === 'VIDEO' || v === 'MODEL_3D' || v === 'EXTERNAL_VIDEO') return v
+  throw new CliError('--media-type must be IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO', 2)
+}
+
+const mediaTypeToStagedResource = (mediaType: MediaContentType): StagedUploadResource => {
+  if (mediaType === 'IMAGE') return 'IMAGE'
+  if (mediaType === 'VIDEO') return 'VIDEO'
+  if (mediaType === 'MODEL_3D') return 'MODEL_3D'
+  throw new CliError('--media-type EXTERNAL_VIDEO cannot be used with --file uploads', 2)
+}
+
+const stagedResourceToMediaType = (resource: StagedUploadResource): MediaContentType => {
+  if (resource === 'IMAGE') return 'IMAGE'
+  if (resource === 'VIDEO') return 'VIDEO'
+  if (resource === 'MODEL_3D') return 'MODEL_3D'
+  throw new CliError('Only IMAGE|VIDEO|MODEL_3D can be uploaded as product media', 2)
 }
 
 export const runProducts = async ({
@@ -278,6 +306,96 @@ export const runProducts = async ({
     if (ctx.quiet) return console.log(payload?.node?.id ?? '')
     if (ctx.format === 'raw') printJson(payload, false)
     else printJson(payload)
+    return
+  }
+
+  if (verb === 'media add') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        url: { type: 'string', multiple: true },
+        alt: { type: 'string' },
+        'media-type': { type: 'string' },
+      },
+    })
+    const id = requireId(args.id as any)
+
+    const urls = (args.url as string[] | undefined) ?? []
+    if (urls.length === 0) throw new CliError('Missing --url (repeatable)', 2)
+
+    const mediaContentType = normalizeMediaContentType(args['media-type'] as any)
+    const alt = args.alt as string | undefined
+
+    const media = urls.map((url) => ({
+      originalSource: url,
+      mediaContentType,
+      ...(alt ? { alt } : {}),
+    }))
+
+    const result = await runMutation(ctx, {
+      productUpdate: {
+        __args: { product: { id }, media },
+        product: productSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
+    printJson(result.productUpdate)
+    return
+  }
+
+  if (verb === 'media upload') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        file: { type: 'string', multiple: true },
+        alt: { type: 'string' },
+        'content-type': { type: 'string' },
+        'media-type': { type: 'string' },
+      },
+    })
+    const id = requireId(args.id as any)
+
+    const filePaths = (args.file as string[] | undefined) ?? []
+    if (filePaths.length === 0) throw new CliError('Missing --file (repeatable)', 2)
+
+    const forcedMediaType = args['media-type'] as string | undefined
+    const forced = forcedMediaType ? normalizeMediaContentType(forcedMediaType) : undefined
+    const resourceOverride = forced ? mediaTypeToStagedResource(forced) : undefined
+
+    const localFiles = buildLocalFilesForStagedUpload({
+      filePaths,
+      contentType: args['content-type'] as any,
+      resource: resourceOverride,
+    })
+
+    const targets = await stagedUploadLocalFiles(ctx, localFiles)
+    if (targets === undefined) return
+
+    const alt = args.alt as string | undefined
+    const media = targets.map((t, i) => {
+      const local = localFiles[i]!
+      if (!t.resourceUrl) throw new CliError(`Missing staged target resourceUrl for ${local.filename}`, 2)
+      return {
+        originalSource: t.resourceUrl,
+        mediaContentType: forced ?? stagedResourceToMediaType(local.resource),
+        ...(alt ? { alt } : {}),
+      }
+    })
+
+    const result = await runMutation(ctx, {
+      productUpdate: {
+        __args: { product: { id }, media },
+        product: productSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
+    printJson(result.productUpdate)
     return
   }
 

@@ -32,19 +32,61 @@ export interface GraphqlOperation {
     operationName?: string
 }
 
+const formatGraphqlLiteral = (value: any): string => {
+    if (value === null) return 'null'
+    if (typeof value === 'string') return JSON.stringify(value)
+    if (typeof value === 'number') {
+        if (!Number.isFinite(value)) throw new Error(`invalid number literal in directive: ${value}`)
+        return String(value)
+    }
+    if (typeof value === 'boolean') return value ? 'true' : 'false'
+    throw new Error(
+        `unsupported directive argument literal: ${Object.prototype.toString.call(value)}`,
+    )
+}
+
+const formatDirectives = (directives: any): string => {
+    if (!directives) return ''
+    if (typeof directives !== 'object' || Array.isArray(directives)) {
+        throw new Error(`__directives must be an object`)
+    }
+
+    const parts = Object.entries(directives).map(([name, raw]) => {
+        if (raw === true) return `@${name}`
+        if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+            const args = Object.entries(raw)
+                .map(([argName, argValue]) => `${argName}:${formatGraphqlLiteral(argValue)}`)
+                .join(',')
+            return `@${name}(${args})`
+        }
+        throw new Error(`invalid directive value for @${name}`)
+    })
+
+    return parts.length > 0 ? ` ${parts.join(' ')}` : ''
+}
+
 const parseRequest = (
     request: Request | undefined,
     ctx: Context,
     path: string[],
 ): string => {
-    if (typeof request === 'object' && '__args' in request) {
-        const args: any = request.__args
+    if (
+        typeof request === 'object' &&
+        request &&
+        ('__args' in request || '__directives' in request)
+    ) {
+        const args: any = '__args' in request ? (request as any).__args : undefined
+        const directives: any =
+            '__directives' in request ? (request as any).__directives : undefined
         let fields: Request | undefined = { ...request }
-        delete fields.__args
-        const argNames = Object.keys(args)
+        delete (fields as any).__args
+        delete (fields as any).__directives
+
+        const argNames = args ? Object.keys(args) : []
+        const directivesString = formatDirectives(directives)
 
         if (argNames.length === 0) {
-            return parseRequest(fields, ctx, path)
+            return `${directivesString}${parseRequest(fields, ctx, path)}`
         }
 
         const field = getFieldFromPath(ctx.root, path)
@@ -70,7 +112,7 @@ const parseRequest = (
 
             return `${argName}:$${varName}`
         })
-        return `(${argStrings})${parseRequest(fields, ctx, path)}`
+        return `(${argStrings})${directivesString}${parseRequest(fields, ctx, path)}`
     } else if (typeof request === 'object' && Object.keys(request).length > 0) {
         const fields = request
         const fieldNames = Object.keys(fields).filter((k) => Boolean(fields[k]))
@@ -106,7 +148,7 @@ const parseRequest = (
         }
 
         const fieldsSelection = fieldNames
-            .filter((f) => !['__scalar', '__name'].includes(f))
+            .filter((f) => !['__scalar', '__name', '__directives'].includes(f))
             .map((f) => {
                 const parsed = parseRequest(fields[f], ctx, [...path, f])
 

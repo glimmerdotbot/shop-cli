@@ -1,6 +1,14 @@
 import { CliError } from './errors'
 
-export type ShopifyGidType = 'Product' | 'Collection' | 'Customer' | 'Order'
+export type ShopifyGidType =
+  | 'Product'
+  | 'Collection'
+  | 'Customer'
+  | 'Order'
+  | 'ProductVariant'
+  | 'InventoryItem'
+  | 'Location'
+  | 'File'
 
 export const isGid = (value: string) => value.startsWith('gid://')
 
@@ -14,4 +22,3 @@ export const coerceGid = (value: string, type: ShopifyGidType) => {
   }
   return `gid://shopify/${type}/${value}`
 }
-
