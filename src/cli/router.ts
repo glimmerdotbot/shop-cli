@@ -2,9 +2,10 @@ import { parseArgs } from 'node:util'
 
 import type { Client } from '../generated/admin-2026-04'
 import { generateMutationOp, generateQueryOp } from '../generated/admin-2026-04'
+import { GenqlError } from '../generated/admin-2026-04'
 
 import { CliError } from './errors'
-import { printJson } from './output'
+import { printJsonError } from './output'
 import { runCollections } from './verbs/collections'
 import { runCustomers } from './verbs/customers'
 import { runOrders } from './verbs/orders'
@@ -64,8 +65,11 @@ export const parseStandardArgs = ({
       set: { type: 'string', multiple: true },
       'set-json': { type: 'string', multiple: true },
       select: { type: 'string', multiple: true },
+      selection: { type: 'string' },
       id: { type: 'string' },
       yes: { type: 'boolean' },
+      help: { type: 'boolean' },
+      h: { type: 'boolean' },
       query: { type: 'string' },
       first: { type: 'string' },
       after: { type: 'string' },
@@ -81,16 +85,36 @@ export const parseStandardArgs = ({
 
 export const runQuery = async (ctx: CommandContext, request: any): Promise<any> => {
   if (ctx.dryRun) {
-    printJson(generateQueryOp(request))
+    // dry-run output is always a stable JSON payload
+    // (format/quiet are handled by the command wrapper, not by the request generator)
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(generateQueryOp(request), null, 2))
     return undefined
   }
-  return await ctx.client.query(request)
+  try {
+    return await ctx.client.query(request)
+  } catch (err) {
+    if (err instanceof GenqlError) {
+      printJsonError({ errors: err.errors, data: err.data })
+      throw new CliError('GraphQL query failed', 1)
+    }
+    throw err
+  }
 }
 
 export const runMutation = async (ctx: CommandContext, request: any): Promise<any> => {
   if (ctx.dryRun) {
-    printJson(generateMutationOp(request))
+    // eslint-disable-next-line no-console
+    console.log(JSON.stringify(generateMutationOp(request), null, 2))
     return undefined
   }
-  return await ctx.client.mutation(request)
+  try {
+    return await ctx.client.mutation(request)
+  } catch (err) {
+    if (err instanceof GenqlError) {
+      printJsonError({ errors: err.errors, data: err.data })
+      throw new CliError('GraphQL mutation failed', 1)
+    }
+    throw err
+  }
 }

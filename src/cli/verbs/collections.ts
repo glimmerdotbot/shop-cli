@@ -1,8 +1,9 @@
 import { CliError } from '../errors'
 import { coerceGid } from '../gid'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { runMutation, runQuery, parseStandardArgs, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
 const collectionSummarySelection = {
@@ -22,6 +23,7 @@ const collectionFullSelection = {
 const getCollectionSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
   if (view === 'full') return collectionFullSelection
+  if (view === 'raw') return {} as const
   return collectionSummarySelection
 }
 
@@ -39,16 +41,6 @@ const parseFirst = (value: unknown) => {
   return Math.floor(n)
 }
 
-const applySelect = (selection: any, select: unknown) => {
-  if (!Array.isArray(select) || select.length === 0) return selection
-  if (select.some((s) => typeof s !== 'string' || s.includes('.'))) {
-    throw new CliError('--select currently only supports top-level fields (no dots)', 2)
-  }
-  const next = { ...selection }
-  for (const field of select as string[]) next[field] = true
-  return next
-}
-
 export const runCollections = async ({
   ctx,
   verb,
@@ -58,17 +50,40 @@ export const runCollections = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop collections <verb> [flags]',
+        '',
+        'Verbs:',
+        '  create|get|list|update|delete|duplicate',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|full|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id as any)
-    const selection = applySelect(getCollectionSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getCollectionSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, {
       collection: { __args: { id }, ...selection },
     })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.collection?.id ?? '')
-    printJson(result.collection)
+    printNode({ node: result.collection, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -80,7 +95,13 @@ export const runCollections = async ({
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
-    const nodeSelection = applySelect(getListNodeSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getListNodeSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
     const result = await runQuery(ctx, {
       collections: {
         __args: { first, after, query, reverse, sortKey },
@@ -117,7 +138,8 @@ export const runCollections = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.collectionCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.collectionCreate?.collection?.id ?? '')
-    printJson(result.collectionCreate)
+    if (ctx.format === 'raw') printJson(result.collectionCreate, false)
+    else printJson(result.collectionCreate)
     return
   }
 
@@ -143,7 +165,8 @@ export const runCollections = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.collectionUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.collectionUpdate?.collection?.id ?? '')
-    printJson(result.collectionUpdate)
+    if (ctx.format === 'raw') printJson(result.collectionUpdate, false)
+    else printJson(result.collectionUpdate)
     return
   }
 
@@ -162,7 +185,8 @@ export const runCollections = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.collectionDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.collectionDelete?.deletedCollectionId ?? '')
-    printJson(result.collectionDelete)
+    if (ctx.format === 'raw') printJson(result.collectionDelete, false)
+    else printJson(result.collectionDelete)
     return
   }
 
@@ -209,10 +233,10 @@ export const runCollections = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.collectionDuplicate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.collectionDuplicate?.collection?.id ?? '')
-    printJson(result.collectionDuplicate)
+    if (ctx.format === 'raw') printJson(result.collectionDuplicate, false)
+    else printJson(result.collectionDuplicate)
     return
   }
 
   throw new CliError(`Unknown verb for collections: ${verb}`, 2)
 }
-

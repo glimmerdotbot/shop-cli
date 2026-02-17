@@ -100,6 +100,9 @@ const printHelp = () => {
       '',
       'Output:',
       '  --format json|table|raw   (default: json)',
+      '  --view summary|ids|full|raw (default: summary)',
+      '  --select <path>           (repeatable; dot paths; adds to base view selection)',
+      '  --selection <graphql>     (selection override; can be @file.gql)',
       '  --quiet                  (IDs only when possible)',
       '',
       'Debug:',
@@ -131,11 +134,12 @@ const main = async () => {
   const parsed = parseGlobalFlags(rest)
 
   const dryRun = parsed.dryRun ?? false
+  const wantsHelp = parsed.passthrough.includes('--help') || parsed.passthrough.includes('-h')
   const shopDomain = parsed.shopDomain
   const accessToken = parsed.accessToken
   const apiVersion = parsed.apiVersion as any
 
-  const client = dryRun
+  const client = dryRun || wantsHelp
     ? createShopifyAdminClient({
         shopDomain:
           shopDomain ?? process.env.SHOP_DOMAIN ?? process.env.SHOPIFY_SHOP ?? 'example.myshopify.com',

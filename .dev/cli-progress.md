@@ -42,14 +42,17 @@ Common flags (implemented subset):
 - `--id <gid|num>` (numeric IDs are coerced to `gid://shopify/<Type>/<id>` when type is implied)
 - `--query`, `--first`, `--after`, `--sort`, `--reverse` (list)
 - `--format json|table|raw`, `--quiet`
+- `--view summary|ids|full|raw` (default: `summary`)
+- `--select <path>` (repeatable; **dot paths**; e.g. `variants.nodes.id`)
+  - when selecting `*.nodes.*` / `*.edges.*`, a default cap is applied (`first: 10`) and `pageInfo { hasNextPage endCursor }` is added
+- `--selection <graphql>` (selection override; can be `@file.gql`)
 - `--dry-run` (prints GraphQL operation + variables)
 - `--dry-run` does not require valid auth (no request is sent)
 - `--no-fail-on-user-errors`
+- `--help` / `-h` at resource/verb level (does not require auth)
 
 Known gaps vs notes (next to implement):
 
-- `--selection <graphql>` support
-- `--select <path>` dot-path support (currently top-level fields only)
 - More workflows: publish/unpublish, inventory set/adjust, metafields upsert, media add/upload, etc.
 - Remaining operations/resources from `.dev/operations.md`
 
