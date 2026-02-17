@@ -5,11 +5,22 @@
   "main": "index.js",
   "scripts": {
     "schema:admin": "node scripts/download-admin-schema.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "codegen:admin": "genql --schema schema/2026-04.graphql --output src/generated/admin-2026-04 --sort -S ARN:string -S BigInt:string -S Color:string -S Date:string -S DateTime:string -S Decimal:string -S FormattedString:string -S HTML:string -S JSON:unknown -S Money:string -S StorefrontID:string -S URL:string -S UnsignedInt64:string -S UtcOffset:string",
+    "dev:shop-name": "tsx dev/shop-name.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run typecheck"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@apollo/rover": "^0.37.0"
+    "@apollo/rover": "^0.37.0",
+    "@genql/runtime": "^2.10.0"
+  },
+  "devDependencies": {
+    "@genql/cli": "^6.3.3",
+    "@types/node": "^25.2.3",
+    "dotenv": "^17.3.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }
