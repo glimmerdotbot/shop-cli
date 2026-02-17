@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "bin": {
+    "shop": "bin/shop.js"
+  },
   "scripts": {
     "schema:admin": "node scripts/download-admin-schema.js",
     "codegen:admin": "genql --schema schema/2026-04.graphql --output src/generated/admin-2026-04 --sort -S ARN:string -S BigInt:string -S Color:string -S Date:string -S DateTime:string -S Decimal:string -S FormattedString:string -S HTML:string -S JSON:unknown -S Money:string -S StorefrontID:string -S URL:string -S UnsignedInt64:string -S UtcOffset:string",
     "dev:shop-name": "tsx dev/shop-name.ts",
+    "dev:shop": "tsx src/cli.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run typecheck"
   },
