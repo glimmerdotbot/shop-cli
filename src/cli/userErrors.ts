@@ -1,5 +1,5 @@
 import { CliError } from './errors'
-import { printJson } from './output'
+import { printJsonError } from './output'
 
 export const maybeFailOnUserErrors = ({
   payload,
@@ -11,10 +11,9 @@ export const maybeFailOnUserErrors = ({
   const userErrors = payload?.userErrors
   if (!Array.isArray(userErrors) || userErrors.length === 0) return
 
-  printJson({ userErrors })
+  printJsonError({ userErrors })
 
   if (failOnUserErrors) {
     throw new CliError('Shopify returned userErrors', 2)
   }
 }
-

@@ -1,8 +1,9 @@
 import { CliError } from '../errors'
 import { coerceGid } from '../gid'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
 const productSummarySelection = {
@@ -22,6 +23,7 @@ const productFullSelection = {
 const getProductSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
   if (view === 'full') return productFullSelection
+  if (view === 'raw') return {} as const
   return productSummarySelection
 }
 
@@ -35,16 +37,6 @@ const parseFirst = (value: unknown) => {
   const n = Number(value)
   if (!Number.isFinite(n) || n <= 0) throw new CliError('--first must be a positive integer', 2)
   return Math.floor(n)
-}
-
-const applySelect = (selection: any, select: unknown) => {
-  if (!Array.isArray(select) || select.length === 0) return selection
-  if (select.some((s) => typeof s !== 'string' || s.includes('.'))) {
-    throw new CliError('--select currently only supports top-level fields (no dots)', 2)
-  }
-  const next = { ...selection }
-  for (const field of select as string[]) next[field] = true
-  return next
 }
 
 const parseTags = (tags: string | undefined) => {
@@ -66,15 +58,38 @@ export const runProducts = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop products <verb> [flags]',
+        '',
+        'Verbs:',
+        '  create|get|list|update|delete|duplicate|set-status|add-tags|remove-tags',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|full|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id as any)
-    const selection = applySelect(getProductSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, { product: { __args: { id }, ...selection } })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.product?.id ?? '')
-    printJson(result.product)
+    printNode({ node: result.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -86,7 +101,13 @@ export const runProducts = async ({
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
-    const nodeSelection = applySelect(getProductSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, {
       products: {
@@ -120,7 +141,8 @@ export const runProducts = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productCreate?.product?.id ?? '')
-    printJson(result.productCreate)
+    if (ctx.format === 'raw') printJson(result.productCreate, false)
+    else printJson(result.productCreate)
     return
   }
 
@@ -146,7 +168,8 @@ export const runProducts = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-    printJson(result.productUpdate)
+    if (ctx.format === 'raw') printJson(result.productUpdate, false)
+    else printJson(result.productUpdate)
     return
   }
 
@@ -165,7 +188,8 @@ export const runProducts = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productDelete?.deletedProductId ?? '')
-    printJson(result.productDelete)
+    if (ctx.format === 'raw') printJson(result.productDelete, false)
+    else printJson(result.productDelete)
     return
   }
 
@@ -207,7 +231,8 @@ export const runProducts = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productDuplicate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productDuplicate?.newProduct?.id ?? '')
-    printJson(result.productDuplicate)
+    if (ctx.format === 'raw') printJson(result.productDuplicate, false)
+    else printJson(result.productDuplicate)
     return
   }
 
@@ -227,7 +252,8 @@ export const runProducts = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-    printJson(result.productUpdate)
+    if (ctx.format === 'raw') printJson(result.productUpdate, false)
+    else printJson(result.productUpdate)
     return
   }
 
@@ -250,10 +276,10 @@ export const runProducts = async ({
     const payload = result[mutationField]
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(payload?.node?.id ?? '')
-    printJson(payload)
+    if (ctx.format === 'raw') printJson(payload, false)
+    else printJson(payload)
     return
   }
 
   throw new CliError(`Unknown verb for products: ${verb}`, 2)
 }
-
