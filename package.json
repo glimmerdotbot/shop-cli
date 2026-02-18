@@ -12,6 +12,7 @@
     "codegen:help": "tsx scripts/extract-schema-help.ts",
     "dev:shop-name": "tsx dev/shop-name.ts",
     "dev:shop": "tsx src/cli.ts",
+    "check:help": "tsx scripts/check-help-coverage.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run typecheck"
   },

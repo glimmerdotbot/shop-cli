@@ -2,6 +2,7 @@ import 'dotenv/config'
 
 import { createCliClientFromEnv } from './cli/client'
 import { CliError } from './cli/errors'
+import { renderResourceHelp, renderTopLevelHelp, renderVerbHelp } from './cli/help/render'
 import { runCommand } from './cli/router'
 import { createShopifyAdminClient } from './adminClient'
 
@@ -110,98 +111,23 @@ const parseHeaderValues = (values: string[]) => {
   return headers
 }
 
-const printHelp = () => {
-  console.log(
-    [
-      'Usage:',
-      '  shop <resource> <verb> [flags]',
-      '',
-      'Implemented resources:',
-      '  products: create|get|list|update|delete|duplicate|set-status|add-tags|remove-tags',
-      '  products: publish|unpublish|publish-all',
-      '  products: metafields upsert',
-      '  products: media add|media upload',
-      '  product-variants: upsert',
-      '  collections: create|get|list|update|delete|duplicate',
-      '  customers: create|get|list|update|delete',
-      '  orders: create|get|list|update|delete',
-      '  order-edit: begin|get|commit|add-variant|add-custom-item|set-quantity',
-      '  order-edit: add-discount|remove-discount|update-discount',
-      '  order-edit: add-shipping|remove-shipping|update-shipping',
-      '  returns: create|get|calculate|cancel|close|reopen|process|refund',
-      '  returns: request|approve-request|decline-request|remove-item|reason-definitions|returnable-fulfillments',
-      '  fulfillment-orders: get|list|accept-request|reject-request|submit-request',
-      '  fulfillment-orders: accept-cancellation|reject-cancellation|submit-cancellation|cancel|close|open',
-      '  fulfillment-orders: hold|release-hold|reschedule|move|split|merge|report-progress|mark-prepared',
-      '  fulfillment-orders: set-deadline|reroute',
-      '  fulfillments: create|get|cancel|update-tracking|create-event',
-      '  inventory: set|adjust',
-      '  files: upload',
-      '  publications: resolve|create|get|list|update|delete',
-      '  articles: create|get|list|update|delete',
-      '  blogs: create|get|list|update|delete',
-      '  pages: create|get|list|update|delete',
-      '  comments: get|list|delete',
-      '  menus: create|get|list|update|delete',
-      '  catalogs: create|get|list|update|delete',
-      '  markets: create|get|list|update|delete',
-      '  draft-orders: create|get|list|update|delete|duplicate|count|calculate|complete|create-from-order|preview-invoice|send-invoice|bulk-add-tags|bulk-remove-tags|bulk-delete|saved-searches|tags|delivery-options',
-      '  url-redirects: create|get|list|update|delete',
-      '  segments: create|get|list|update|delete',
-      '  webhooks: create|get|list|update|delete',
-      '  metafield-definitions: create|get|list|update|delete',
-      '  metaobjects: create|get|list|update|delete',
-      '  metaobject-definitions: create|get|list|update|delete',
-      '  selling-plan-groups: create|get|list|update|delete|add-variants|remove-variants',
-      '  subscription-contracts: get|list|create|atomic-create|update|activate|pause|cancel|expire|fail|set-next-billing|change-product',
-      '  subscription-billing: get-attempt|list-attempts|create-attempt|get-cycle|list-cycles|charge',
-      '  subscription-billing: bulk-charge|bulk-search|skip-cycle|unskip-cycle|edit-schedule|edit-cycle|delete-edits',
-      '  subscription-drafts: get|commit|update|add-line|update-line|remove-line',
-      '  subscription-drafts: add-discount|update-discount|remove-discount|apply-code|add-free-shipping|update-free-shipping',
-      '',
-      'Raw GraphQL:',
-      '  graphql: query|mutation  (execute raw GraphQL queries/mutations)',
-      '',
-      'Auth (flags override env):',
-      '  --shop-domain <your-shop.myshopify.com> (or env SHOP_DOMAIN / SHOPIFY_SHOP)',
-      '  --graphql-endpoint <url>          (or env GRAPHQL_ENDPOINT; overrides shop domain)',
-      '  --access-token <token>              (or env SHOPIFY_ACCESS_TOKEN)',
-      '  --header "Name: value"              (repeatable; adds request headers)',
-      '  --api-version <YYYY-MM>             (default: 2026-04)',
-      '',
-      'Output:',
-      '  --format json|table|raw   (default: json)',
-      '  --view summary|ids|full|raw (default: summary)',
-      '  --select <path>           (repeatable; dot paths; adds to base view selection)',
-      '  --selection <graphql>     (selection override; can be @file.gql)',
-      '  --quiet                  (IDs only when possible)',
-      '',
-      'Debug:',
-      '  --dry-run                (print GraphQL op + variables, do not execute)',
-      '  --no-fail-on-user-errors (do not exit non-zero on userErrors)',
-      '',
-      'Examples:',
-      '  shop products list --first 5 --format table',
-      '  shop products create --set title=\"Hat\" --set status=\"ACTIVE\"',
-      '  shop products add-tags --id 123 --tags \"summer,featured\"',
-      '  shop publications resolve --publication \"Online Store\"',
-      '  shop products publish --id 123 --publication \"Online Store\" --now',
-      '  shop products metafields upsert --id 123 --set namespace=custom --set key=foo --set type=single_line_text_field --set value=bar',
-    ].join('\n'),
-  )
-}
+const helpFlags = new Set(['--help', '-h', '--help-full', '--help-all'])
+
+const hasHelpFlag = (args: string[]) => args.some((arg) => helpFlags.has(arg))
+
+const wantsFullHelp = (args: string[]) => args.some((arg) => arg === '--help-full' || arg === '--help-all')
 
 const main = async () => {
   const argv = process.argv.slice(2)
 
-  if (argv.length === 0 || argv[0] === 'help' || argv[0] === '--help' || argv[0] === '-h') {
-    printHelp()
+  if (argv.length === 0 || argv[0] === 'help' || hasHelpFlag([argv[0]])) {
+    console.log(renderTopLevelHelp())
     return
   }
 
   const resource = argv[0]
   if (!resource) {
-    printHelp()
+    console.log(renderTopLevelHelp())
     throw new CliError('Missing <resource>', 2)
   }
 
@@ -212,20 +138,36 @@ const main = async () => {
   const rest =
     firstFlagIndex === -1 ? [] : afterResource.slice(firstFlagIndex)
 
-  const verb = verbParts.join(' ') || 'help'
-
-  // Handle resource-level help (e.g., `shop graphql --help`)
-  if (!verbParts.length && (rest.includes('--help') || rest.includes('-h'))) {
-    // Let the resource handler show its own help
-  } else if (!verbParts.length && verb === 'help') {
-    printHelp()
+  const verb = verbParts.join(' ')
+  if (!verb) {
+    const resourceHelp = renderResourceHelp(resource)
+    if (resourceHelp) {
+      console.log(resourceHelp)
+      if (hasHelpFlag(afterResource)) return
+    } else {
+      console.log(renderTopLevelHelp())
+    }
     throw new CliError('Missing <resource> or <verb>', 2)
+  }
+
+  if (hasHelpFlag(rest)) {
+    const verbHelp = renderVerbHelp(resource, verb, { showAllFields: wantsFullHelp(rest) })
+    if (verbHelp) {
+      console.log(verbHelp)
+      return
+    }
+    const resourceHelp = renderResourceHelp(resource)
+    if (resourceHelp) {
+      console.log(resourceHelp)
+      return
+    }
+    console.log(renderTopLevelHelp())
+    return
   }
 
   const parsed = parseGlobalFlags(rest)
 
   const dryRun = parsed.dryRun ?? false
-  const wantsHelp = parsed.passthrough.includes('--help') || parsed.passthrough.includes('-h')
   const shopDomain = parsed.shopDomain
   const graphqlEndpoint = parsed.graphqlEndpoint
   const accessToken = parsed.accessToken
@@ -239,7 +181,7 @@ const main = async () => {
 
   const warnMissingAccessToken = !resolvedAccessToken && !hasAuthHeader
 
-  const client = dryRun || wantsHelp
+  const client = dryRun
     ? createShopifyAdminClient({
         shopDomain:
           shopDomain ?? process.env.SHOP_DOMAIN ?? process.env.SHOPIFY_SHOP ?? 'example.myshopify.com',

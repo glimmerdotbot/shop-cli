@@ -20,6 +20,134 @@ const flagTags = flag('--tags <csv>', 'Comma-separated tags')
 const flagStatus = flag('--status <value>', 'Status value')
 const flagNewTitle = flag('--new-title <string>', 'Title for the duplicate')
 
+const flagOrderId = flag('--order-id <gid>', 'Order ID')
+const flagCustomerId = flag('--customer-id <gid>', 'Customer ID')
+const flagCompanyId = flag('--company-id <gid>', 'Company ID')
+const flagContactId = flag('--contact-id <gid>', 'Company contact ID')
+const flagLocationId = flag('--location-id <gid>', 'Location ID')
+const flagInventoryItemId = flag('--inventory-item-id <gid>', 'Inventory item ID')
+const flagVariantId = flag('--variant-id <gid>', 'Variant ID')
+const flagVariantIds = flag('--variant-ids <gid>', 'Variant IDs (repeatable or comma-separated)')
+const flagProductId = flag('--product-id <gid>', 'Product ID')
+const flagGroupIds = flag('--group-ids <gid>', 'Selling plan group IDs (repeatable)')
+const flagPublicationId = flag('--publication-id <gid>', 'Publication ID (repeatable)')
+const flagPublication = flag('--publication <name>', 'Publication name (repeatable; resolves by name)')
+const flagAt = flag('--at <iso>', 'Publish at a specific ISO timestamp')
+const flagNow = flag('--now', 'Publish immediately')
+const flagUrl = flag('--url <url>', 'URL (repeatable)')
+const flagFile = flag('--file <path>', 'Local file path (repeatable)')
+const flagAlt = flag('--alt <string>', 'Alt text')
+const flagContentType = flag('--content-type <mime>', 'Override detected content type')
+const flagMediaType = flag('--media-type <type>', 'IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO')
+const flagAllowPartialUpdates = flag('--allow-partial-updates', 'Allow partial updates')
+const flagStrategy = flag('--strategy <value>', 'DEFAULT|PRESERVE_STANDALONE_VARIANT|REMOVE_STANDALONE_VARIANT')
+const flagOwnerType = flag('--owner-type <type>', 'Owner type filter')
+const flagType = flag('--type <string>', 'Type value')
+const flagKey = flag('--key <string>', 'Key')
+const flagNamespace = flag('--namespace <string>', 'Namespace')
+const flagTopic = flag('--topic <topic>', 'Webhook topic')
+const flagResourceType = flag('--resource-type <type>', 'Resource type')
+const flagResourceId = flag('--resource-id <gid>', 'Resource ID')
+const flagResourceIds = flag('--resource-ids <gid>', 'Resource IDs (repeatable)')
+const flagLocale = flag('--locale <string>', 'Locale')
+const flagLocales = flag('--locales <csv>', 'Locales (repeatable or comma-separated)')
+const flagTranslationKeys = flag('--translation-keys <csv>', 'Translation keys (repeatable)')
+const flagMarketIds = flag('--market-ids <gid>', 'Market IDs (repeatable)')
+const flagFunctionId = flag('--function-id <gid>', 'Function ID')
+const flagFunctionHandle = flag('--function-handle <handle>', 'Function handle')
+const flagBlockOnFailure = flag('--block-on-failure', 'Block checkout on failure')
+const flagMetafields = flag('--metafields <json>', 'Metafields JSON')
+const flagProfileId = flag('--profile-id <gid>', 'Checkout profile ID')
+const flagEnabled = flag('--enabled <bool>', 'Enable/disable')
+const flagRoles = flag('--roles <role>', 'Theme roles (repeatable)')
+const flagName = flag('--name <string>', 'Name')
+const flagRole = flag('--role <role>', 'Role')
+const flagSource = flag('--source <url>', 'Source URL (or src)')
+const flagFiles = flag('--files <json>', 'Files JSON (paths or mappings)')
+const flagWait = flag('--wait', 'Wait for completion')
+const flagWaitInterval = flag('--wait-interval <seconds>', 'Polling interval in seconds')
+const flagMutation = flag('--mutation <graphql>', 'Bulk mutation document')
+const flagStagedUploadPath = flag('--staged-upload-path <path>', 'Staged upload path')
+const flagClientId = flag('--client-id <string>', 'Client identifier')
+const flagContractId = flag('--contract-id <gid>', 'Subscription contract ID')
+const flagCycleIndex = flag('--cycle-index <n>', 'Billing cycle index')
+const flagCycleIndexes = flag('--cycle-indexes <csv>', 'Billing cycle indexes')
+const flagDate = flag('--date <date>', 'Date (YYYY-MM-DD)')
+const flagLineId = flag('--line-id <gid>', 'Line item ID')
+const flagDiscountId = flag('--discount-id <gid>', 'Discount ID')
+const flagCode = flag('--code <string>', 'Discount code')
+const flagReason = flag('--reason <string>', 'Reason')
+const flagNotes = flag('--notes <string>', 'Notes')
+const flagMessage = flag('--message <string>', 'Message')
+const flagEstimatedShippedAt = flag('--estimated-shipped-at <iso>', 'Estimated shipped at')
+const flagNotifyCustomer = flag('--notify-customer', 'Notify customer')
+const flagHoldIds = flag('--hold-ids <gid>', 'Fulfillment hold IDs (repeatable)')
+const flagFulfillAt = flag('--fulfill-at <iso>', 'Fulfill at timestamp')
+const flagDeadline = flag('--deadline <iso>', 'Fulfillment deadline')
+const flagQuantity = flag('--quantity <n>', 'Quantity')
+const flagLineItemId = flag('--line-item-id <gid>', 'Line item ID')
+const flagLineItemIds = flag('--line-item-ids <gid>', 'Line item IDs (repeatable)')
+const flagDiscountApplicationId = flag('--discount-application-id <gid>', 'Discount application ID')
+const flagShippingLineId = flag('--shipping-line-id <gid>', 'Shipping line ID')
+const flagStaffNote = flag('--staff-note <string>', 'Staff note')
+const flagAllowDuplicates = flag('--allow-duplicates', 'Allow duplicate line items')
+const flagTitle = flag('--title <string>', 'Title')
+const flagPrice = flag('--price <json>', 'Price JSON')
+const flagTaxable = flag('--taxable', 'Taxable')
+const flagRequiresShipping = flag('--requires-shipping', 'Requires shipping')
+const flagAssignmentIds = flag('--assignment-ids <gid>', 'Assignment IDs (repeatable)')
+const flagRoleId = flag('--role-id <gid>', 'Role ID')
+const flagRoleAssignments = flag('--role-assignments <json>', 'Role assignments JSON')
+const flagRoleAssignmentId = flag('--role-assignment-id <gid>', 'Role assignment ID')
+const flagRoleAssignmentIds = flag('--role-assignment-ids <gid>', 'Role assignment IDs (repeatable)')
+const flagStaffMemberIds = flag('--staff-member-ids <gid>', 'Staff member IDs (repeatable)')
+const flagAddressType = flag('--address-type <type>', 'Address type (repeatable)')
+const flagAddress = flag('--address <json>', 'Address JSON')
+const flagExemptions = flag('--exemptions <csv>', 'Tax exemptions (repeatable)')
+const flagRemoveExemptions = flag('--remove-exemptions <csv>', 'Tax exemptions to remove (repeatable)')
+const flagTaxId = flag('--tax-id <string>', 'Tax ID')
+const flagTaxExempt = flag('--tax-exempt <bool>', 'Tax exempt flag')
+const flagOwnerId = flag('--owner-id <gid>', 'Owner ID')
+const flagAmount = flag('--amount <number>', 'Amount')
+const flagCurrency = flag('--currency <code>', 'Currency code')
+const flagExpiresAt = flag('--expires-at <iso>', 'Expiration timestamp')
+const flagNotify = flag('--notify', 'Notify')
+const flagToken = flag('--token <string>', 'Access token')
+const flagItems = flag('--items <json>', 'Items JSON')
+const flagPositions = flag('--positions <json>', 'Positions JSON')
+const flagMediaIds = flag('--media-ids <gid>', 'Media IDs (repeatable)')
+const flagVariantMedia = flag('--variant-media <json>', 'Variant media JSON')
+const flagHandles = flag('--handles <csv>', 'Handles (repeatable)')
+const flagDeclineReason = flag('--decline-reason <string>', 'Decline reason')
+const flagDeclineNote = flag('--decline-note <string>', 'Decline note')
+const flagReturnLineItemId = flag('--return-line-item-id <gid>', 'Return line item ID')
+const flagDateShipped = flag('--date-shipped <date>', 'Date shipped')
+const flagBulkReceiveAction = flag('--bulk-receive-action <value>', 'Bulk receive action')
+const flagDateReceived = flag('--date-received <date>', 'Date received')
+const flagTracking = flag('--tracking <json>', 'Tracking JSON')
+const flagTrackingCompany = flag('--tracking-company <string>', 'Tracking company')
+const flagTrackingNumber = flag('--tracking-number <string>', 'Tracking number')
+const flagTrackingUrl = flag('--tracking-url <url>', 'Tracking URL')
+const flagStatusValue = flag('--status <value>', 'Status value')
+const flagHappenedAt = flag('--happened-at <iso>', 'Happened at timestamp')
+const flagRemoteId = flag('--remote-id <string>', 'Remote ID')
+const flagUtm = flag('--utm <json>', 'UTM JSON')
+const flagActivityId = flag('--activity-id <gid>', 'Marketing activity ID')
+const flagChannelHandle = flag('--channel-handle <string>', 'Channel handle')
+const flagAll = flag('--all', 'Apply to all')
+const flagApiType = flag('--api-type <string>', 'API type')
+const flagUseCreationUi = flag('--use-creation-ui', 'Use creation UI')
+const flagPubSubProject = flag('--pubsub-project <string>', 'Pub/Sub project')
+const flagPubSubTopic = flag('--pubsub-topic <string>', 'Pub/Sub topic')
+const flagArn = flag('--arn <string>', 'EventBridge ARN')
+const flagLineItemIdsCsv = flag('--line-item-ids <gid>', 'Line item IDs (repeatable)')
+const flagRedeemCodes = flag('--codes <csv>', 'Codes (repeatable)')
+const flagSubscriptionLineItemId = flag('--subscription-line-item-id <gid>', 'Subscription line item ID')
+const flagDescription = flag('--description <string>', 'Description')
+const flagIdempotencyKey = flag('--idempotency-key <string>', 'Idempotency key')
+const flagProrate = flag('--prorate', 'Prorate the cancellation')
+const flagDays = flag('--days <n>', 'Number of days')
+
 const inputFlags = [flagInput, flagSet, flagSetJson]
 
 const createVerb = ({
@@ -57,6 +185,7 @@ const updateVerb = ({
   flags,
   examples,
   notes,
+  inputRequired = true,
 }: {
   operation: string
   inputArg?: string
@@ -65,11 +194,12 @@ const updateVerb = ({
   flags?: FlagSpec[]
   examples?: string[]
   notes?: string[]
+  inputRequired?: boolean
 }): VerbSpec => ({
   verb: 'update',
   description,
   operation: { type: 'mutation', name: operation, inputArg },
-  input: { mode: 'set', arg: inputArg, required: true },
+  input: { mode: 'set', arg: inputArg, required: inputRequired },
   requiredFlags: [flagId, ...requiredFlags],
   flags,
   examples,
@@ -148,6 +278,52 @@ const duplicateVerb = ({
   notes,
 })
 
+const countVerb = ({
+  operation,
+  description,
+  flags,
+}: {
+  operation: string
+  description?: string
+  flags?: FlagSpec[]
+}): VerbSpec => ({
+  verb: 'count',
+  description,
+  operation: { type: 'query', name: operation },
+  flags,
+})
+
+const inputVerb = ({
+  verb,
+  operation,
+  inputArg,
+  description,
+  requiredFlags = [],
+  flags,
+  notes,
+  inputRequired = true,
+  output,
+}: {
+  verb: string
+  operation: string
+  inputArg?: string
+  description?: string
+  requiredFlags?: FlagSpec[]
+  flags?: FlagSpec[]
+  notes?: string[]
+  inputRequired?: boolean
+  output?: VerbSpec['output']
+}): VerbSpec => ({
+  verb,
+  description,
+  operation: { type: 'mutation', name: operation, inputArg },
+  input: { mode: 'set', arg: inputArg, required: inputRequired },
+  requiredFlags,
+  flags,
+  notes,
+  output,
+})
+
 export const commandRegistry: ResourceSpec[] = [
   {
     resource: 'products',
@@ -191,12 +367,7 @@ export const commandRegistry: ResourceSpec[] = [
         description: 'Publish a product to specific publications.',
         operation: { type: 'mutation', name: 'publishablePublish' },
         requiredFlags: [flagId],
-        flags: [
-          flag('--publication-id <gid>', 'Publication ID (repeatable)'),
-          flag('--publication <name>', 'Publication name (repeatable; resolves by name)'),
-          flag('--at <iso>', 'Publish at a specific ISO timestamp'),
-          flag('--now', 'Publish immediately'),
-        ],
+        flags: [flagPublicationId, flagPublication, flagAt, flagNow],
         notes: ['Pass either --publication-id or --publication (name).'],
       },
       {
@@ -204,10 +375,7 @@ export const commandRegistry: ResourceSpec[] = [
         description: 'Unpublish a product from specific publications.',
         operation: { type: 'mutation', name: 'publishableUnpublish' },
         requiredFlags: [flagId],
-        flags: [
-          flag('--publication-id <gid>', 'Publication ID (repeatable)'),
-          flag('--publication <name>', 'Publication name (repeatable; resolves by name)'),
-        ],
+        flags: [flagPublicationId, flagPublication],
         notes: ['Pass either --publication-id or --publication (name).'],
       },
       {
@@ -215,10 +383,7 @@ export const commandRegistry: ResourceSpec[] = [
         description: 'Publish a product to all publications.',
         operation: { type: 'mutation', name: 'publishablePublish' },
         requiredFlags: [flagId],
-        flags: [
-          flag('--at <iso>', 'Publish at a specific ISO timestamp'),
-          flag('--now', 'Publish immediately'),
-        ],
+        flags: [flagAt, flagNow],
       },
       {
         verb: 'metafields upsert',
@@ -232,41 +397,110 @@ export const commandRegistry: ResourceSpec[] = [
         verb: 'media add',
         description: 'Attach remote media URLs to a product.',
         operation: { type: 'mutation', name: 'productUpdate' },
-        requiredFlags: [flagId, flag('--url <url>', 'Media URL (repeatable)')],
-        flags: [
-          flag('--alt <string>', 'Alt text for media'),
-          flag('--media-type <type>', 'IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO (default: IMAGE)'),
-        ],
+        requiredFlags: [flagId, flagUrl],
+        flags: [flagAlt, flagMediaType],
       },
       {
         verb: 'media upload',
         description: 'Upload local files as product media.',
         operation: { type: 'mutation', name: 'productUpdate' },
-        requiredFlags: [flagId, flag('--file <path>', 'Local file path (repeatable)')],
-        flags: [
-          flag('--alt <string>', 'Alt text for media'),
-          flag('--content-type <mime>', 'Override detected content type'),
-          flag('--media-type <type>', 'IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO'),
-        ],
+        requiredFlags: [flagId, flagFile],
+        flags: [flagAlt, flagContentType, flagMediaType],
       },
+      inputVerb({
+        verb: 'bundle-create',
+        description: 'Create a product bundle.',
+        operation: 'productBundleCreate',
+      }),
+      inputVerb({
+        verb: 'bundle-update',
+        description: 'Update a product bundle.',
+        operation: 'productBundleUpdate',
+      }),
     ],
   },
   {
     resource: 'product-variants',
-    description: 'Bulk upsert product variants.',
+    description: 'Manage product variants.',
     verbs: [
       {
         verb: 'upsert',
         description: 'Create or update product variants in bulk.',
-        operation: { type: 'mutation', name: 'productVariantsBulkCreate', inputArg: 'variants' },
-        input: { mode: 'set', arg: 'variants', required: true },
-        requiredFlags: [flag('--product-id <gid>', 'Parent product ID')],
-        flags: [
-          flag('--allow-partial-updates', 'Allow partial updates during bulk update'),
-          flag('--strategy <value>', 'DEFAULT|PRESERVE_STANDALONE_VARIANT|REMOVE_STANDALONE_VARIANT'),
-        ],
+        input: { mode: 'set', required: true },
+        requiredFlags: [flagProductId],
+        flags: [flagAllowPartialUpdates, flagStrategy],
         notes: ['Input can be an array or { variants: [...] }.'],
       },
+      getVerb({ operation: 'productVariant', description: 'Fetch a variant by ID.' }),
+      {
+        verb: 'get-by-identifier',
+        description: 'Fetch a variant by identifier (product + sku/barcode).',
+        operation: { type: 'query', name: 'productVariantByIdentifier' },
+        flags: [flagProductId, flag('--sku <string>', 'SKU'), flag('--barcode <string>', 'Barcode')],
+        output: { view: true, selection: true },
+        notes: ['Provide --product-id plus --sku or --barcode, or pass --input.'],
+      },
+      listVerb({ operation: 'productVariants', description: 'List product variants.' }),
+      countVerb({ operation: 'productVariantsCount', description: 'Count product variants.', flags: [flagQuery] }),
+      inputVerb({
+        verb: 'bulk-create',
+        description: 'Bulk create variants for a product.',
+        operation: 'productVariantsBulkCreate',
+        requiredFlags: [flagProductId],
+        flags: [flagAllowPartialUpdates],
+      }),
+      inputVerb({
+        verb: 'bulk-update',
+        description: 'Bulk update variants for a product.',
+        operation: 'productVariantsBulkUpdate',
+        requiredFlags: [flagProductId],
+        flags: [flagAllowPartialUpdates],
+      }),
+      {
+        verb: 'bulk-delete',
+        description: 'Bulk delete variants for a product.',
+        operation: { type: 'mutation', name: 'productVariantsBulkDelete' },
+        requiredFlags: [flagProductId, flagVariantIds],
+        flags: [flagIds],
+        notes: ['Use --variant-ids or --ids.'],
+      },
+      {
+        verb: 'bulk-reorder',
+        description: 'Reorder variants for a product.',
+        operation: { type: 'mutation', name: 'productVariantsBulkReorder' },
+        requiredFlags: [flagProductId, flagPositions],
+      },
+      {
+        verb: 'append-media',
+        description: 'Append media to a variant.',
+        operation: { type: 'mutation', name: 'productVariantAppendMedia' },
+        requiredFlags: [flagId],
+        flags: [flagProductId, flagMediaIds, flagVariantMedia],
+      },
+      {
+        verb: 'detach-media',
+        description: 'Detach media from a variant.',
+        operation: { type: 'mutation', name: 'productVariantDetachMedia' },
+        requiredFlags: [flagId],
+        flags: [flagProductId, flagMediaIds, flagVariantMedia],
+      },
+      {
+        verb: 'join-selling-plans',
+        description: 'Join selling plan groups.',
+        operation: { type: 'mutation', name: 'productVariantJoinSellingPlanGroups' },
+        requiredFlags: [flagId, flagGroupIds],
+      },
+      {
+        verb: 'leave-selling-plans',
+        description: 'Leave selling plan groups.',
+        operation: { type: 'mutation', name: 'productVariantLeaveSellingPlanGroups' },
+        requiredFlags: [flagId, flagGroupIds],
+      },
+      inputVerb({
+        verb: 'update-relationships',
+        description: 'Bulk update variant relationships.',
+        operation: 'productVariantRelationshipBulkUpdate',
+      }),
     ],
   },
   {
@@ -300,11 +534,108 @@ export const commandRegistry: ResourceSpec[] = [
     resource: 'orders',
     description: 'Manage orders.',
     verbs: [
-      createVerb({ operation: 'orderCreate', description: 'Create an order.' }),
+      createVerb({ operation: 'orderCreate', description: 'Create an order.', inputArg: 'order' }),
       getVerb({ operation: 'order', description: 'Fetch an order by ID.' }),
       listVerb({ operation: 'orders', description: 'List orders.' }),
       updateVerb({ operation: 'orderUpdate', description: 'Update an order.' }),
       deleteVerb({ operation: 'orderDelete', description: 'Delete an order.' }),
+    ],
+  },
+  {
+    resource: 'order-edit',
+    description: 'Edit orders via the order-edit workflow.',
+    verbs: [
+      {
+        verb: 'begin',
+        description: 'Begin an order edit session.',
+        operation: { type: 'mutation', name: 'orderEditBegin' },
+        requiredFlags: [flagOrderId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'get',
+        description: 'Get an order edit session by ID.',
+        operation: { type: 'query', name: 'node' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'commit',
+        description: 'Commit an order edit session.',
+        operation: { type: 'mutation', name: 'orderEditCommit' },
+        requiredFlags: [flagId],
+        flags: [flagStaffNote, flagNotifyCustomer],
+      },
+      {
+        verb: 'add-variant',
+        description: 'Add a variant to the order edit.',
+        operation: { type: 'mutation', name: 'orderEditAddVariant' },
+        requiredFlags: [flagId, flagVariantId, flagQuantity],
+        flags: [flagLocationId, flagAllowDuplicates],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'add-custom-item',
+        description: 'Add a custom item to the order edit.',
+        operation: { type: 'mutation', name: 'orderEditAddCustomItem' },
+        requiredFlags: [flagId, flagTitle, flagPrice, flagQuantity],
+        flags: [flagTaxable, flagRequiresShipping, flagLocationId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'set-quantity',
+        description: 'Set quantity for an order edit line item.',
+        operation: { type: 'mutation', name: 'orderEditSetQuantity' },
+        requiredFlags: [flagId, flagLineItemId, flagQuantity],
+        flags: [flag('--restock', 'Restock inventory')],
+        output: { view: true, selection: true },
+      },
+      inputVerb({
+        verb: 'add-discount',
+        description: 'Add a discount to a line item.',
+        operation: 'orderEditAddLineItemDiscount',
+        requiredFlags: [flagId, flagLineItemId],
+        inputArg: 'discount',
+        output: { view: true, selection: true },
+      }),
+      {
+        verb: 'remove-discount',
+        description: 'Remove a discount from the order edit.',
+        operation: { type: 'mutation', name: 'orderEditRemoveDiscount' },
+        requiredFlags: [flagId, flagDiscountApplicationId],
+        output: { view: true, selection: true },
+      },
+      inputVerb({
+        verb: 'update-discount',
+        description: 'Update a discount for the order edit.',
+        operation: 'orderEditUpdateDiscount',
+        requiredFlags: [flagId, flagDiscountApplicationId],
+        inputArg: 'discount',
+        output: { view: true, selection: true },
+      }),
+      inputVerb({
+        verb: 'add-shipping',
+        description: 'Add a shipping line.',
+        operation: 'orderEditAddShippingLine',
+        requiredFlags: [flagId],
+        inputArg: 'shippingLine',
+        output: { view: true, selection: true },
+      }),
+      {
+        verb: 'remove-shipping',
+        description: 'Remove a shipping line.',
+        operation: { type: 'mutation', name: 'orderEditRemoveShippingLine' },
+        requiredFlags: [flagId, flagShippingLineId],
+        output: { view: true, selection: true },
+      },
+      inputVerb({
+        verb: 'update-shipping',
+        description: 'Update a shipping line.',
+        operation: 'orderEditUpdateShippingLine',
+        requiredFlags: [flagId, flagShippingLineId],
+        inputArg: 'shippingLine',
+        output: { view: true, selection: true },
+      }),
     ],
   },
   {
@@ -315,33 +646,360 @@ export const commandRegistry: ResourceSpec[] = [
         verb: 'set',
         description: 'Set available inventory to an absolute quantity.',
         operation: { type: 'mutation', name: 'inventorySetQuantities' },
-        requiredFlags: [
-          flag('--location-id <gid>', 'Location ID'),
-          flag('--available <int>', 'Absolute available quantity'),
-        ],
-        flags: [
-          flag('--inventory-item-id <gid>', 'Inventory item ID (or use --variant-id)'),
-          flag('--variant-id <gid>', 'Product variant ID (alternative to --inventory-item-id)'),
-          flag('--reason <value>', 'Adjustment reason (default: correction)'),
-          flag('--reference-document-uri <url>', 'Reference document URL'),
-        ],
+        requiredFlags: [flagLocationId, flag('--available <int>', 'Absolute available quantity')],
+        flags: [flagInventoryItemId, flagVariantId, flagReason, flag('--reference-document-uri <url>', 'Reference document URL')],
         notes: ['Pass either --inventory-item-id or --variant-id.'],
       },
       {
         verb: 'adjust',
         description: 'Adjust available inventory by a delta.',
         operation: { type: 'mutation', name: 'inventoryAdjustQuantities' },
-        requiredFlags: [
-          flag('--location-id <gid>', 'Location ID'),
-          flag('--delta <int>', 'Quantity delta (positive or negative)'),
-        ],
-        flags: [
-          flag('--inventory-item-id <gid>', 'Inventory item ID (or use --variant-id)'),
-          flag('--variant-id <gid>', 'Product variant ID (alternative to --inventory-item-id)'),
-          flag('--reason <value>', 'Adjustment reason (default: correction)'),
-          flag('--reference-document-uri <url>', 'Reference document URL'),
-        ],
+        requiredFlags: [flagLocationId, flag('--delta <int>', 'Quantity delta (positive or negative)')],
+        flags: [flagInventoryItemId, flagVariantId, flagReason, flag('--reference-document-uri <url>', 'Reference document URL')],
         notes: ['Pass either --inventory-item-id or --variant-id.'],
+      },
+    ],
+  },
+  {
+    resource: 'returns',
+    description: 'Manage returns.',
+    verbs: [
+      getVerb({ operation: 'return', description: 'Fetch a return by ID.' }),
+      {
+        verb: 'reason-definitions',
+        description: 'List return reason definitions.',
+        operation: { type: 'query', name: 'returnReasonDefinitions' },
+        flags: [flagIds, flagHandles],
+        output: { pagination: true },
+      },
+      {
+        verb: 'returnable-fulfillments',
+        description: 'List returnable fulfillments for an order.',
+        operation: { type: 'query', name: 'returnableFulfillments' },
+        requiredFlags: [flagOrderId],
+        output: { pagination: true },
+      },
+      {
+        verb: 'calculate',
+        description: 'Calculate a return.',
+        operation: { type: 'query', name: 'returnCalculate', inputArg: 'input' },
+        input: { mode: 'set', required: true },
+        flags: [flagOrderId],
+        notes: ['Requires orderId either via --order-id or input.orderId.'],
+      },
+      inputVerb({
+        verb: 'create',
+        description: 'Create a return.',
+        operation: 'returnCreate',
+        requiredFlags: [flagOrderId],
+        flags: [flagNotifyCustomer],
+        notes: ['orderId can be provided via --order-id or input.orderId.'],
+      }),
+      inputVerb({
+        verb: 'request',
+        description: 'Request a return.',
+        operation: 'returnRequest',
+        requiredFlags: [flagOrderId],
+        notes: ['orderId can be provided via --order-id or input.orderId.'],
+      }),
+      {
+        verb: 'approve-request',
+        description: 'Approve a return request.',
+        operation: { type: 'mutation', name: 'returnApproveRequest' },
+        requiredFlags: [flagId],
+        flags: [flagNotifyCustomer],
+      },
+      {
+        verb: 'decline-request',
+        description: 'Decline a return request.',
+        operation: { type: 'mutation', name: 'returnDeclineRequest' },
+        requiredFlags: [flagId, flagDeclineReason],
+        flags: [flagDeclineNote, flagNotifyCustomer],
+      },
+      {
+        verb: 'cancel',
+        description: 'Cancel a return.',
+        operation: { type: 'mutation', name: 'returnCancel' },
+        requiredFlags: [flagId],
+        flags: [flagNotifyCustomer],
+      },
+      {
+        verb: 'close',
+        description: 'Close a return.',
+        operation: { type: 'mutation', name: 'returnClose' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'reopen',
+        description: 'Reopen a return.',
+        operation: { type: 'mutation', name: 'returnReopen' },
+        requiredFlags: [flagId],
+      },
+      inputVerb({
+        verb: 'process',
+        description: 'Process a return.',
+        operation: 'returnProcess',
+        requiredFlags: [flagId],
+        flags: [flagNotifyCustomer],
+      }),
+      inputVerb({
+        verb: 'refund',
+        description: 'Refund a return.',
+        operation: 'returnRefund',
+        inputArg: 'returnRefundInput',
+        requiredFlags: [flagId],
+        flags: [flagNotifyCustomer],
+      }),
+      {
+        verb: 'remove-item',
+        description: 'Remove an item from a return.',
+        operation: { type: 'mutation', name: 'removeFromReturn' },
+        requiredFlags: [flagId, flagReturnLineItemId, flagQuantity],
+      },
+    ],
+  },
+  {
+    resource: 'fulfillment-orders',
+    description: 'Manage fulfillment orders.',
+    verbs: [
+      getVerb({ operation: 'fulfillmentOrder', description: 'Fetch a fulfillment order by ID.' }),
+      {
+        ...listVerb({ operation: 'fulfillmentOrders', description: 'List fulfillment orders.' }),
+        flags: [flagStatusValue, flag('--location-ids <gid>', 'Location IDs (repeatable)'), flag('--include-closed', 'Include closed fulfillment orders')],
+      },
+      {
+        verb: 'accept-request',
+        description: 'Accept a fulfillment request.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderAcceptFulfillmentRequest' },
+        requiredFlags: [flagId],
+        flags: [flagMessage, flagEstimatedShippedAt],
+      },
+      {
+        verb: 'reject-request',
+        description: 'Reject a fulfillment request.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderRejectFulfillmentRequest' },
+        requiredFlags: [flagId],
+        flags: [flagMessage, flagReason],
+      },
+      {
+        verb: 'submit-request',
+        description: 'Submit a fulfillment request.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderSubmitFulfillmentRequest' },
+        requiredFlags: [flagId],
+        flags: [flagMessage, flagNotifyCustomer],
+        input: { mode: 'set', required: false },
+        notes: ['Input can include fulfillmentOrderLineItems.'],
+      },
+      {
+        verb: 'accept-cancellation',
+        description: 'Accept a cancellation request.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderAcceptCancellationRequest' },
+        requiredFlags: [flagId],
+        flags: [flagMessage],
+      },
+      {
+        verb: 'reject-cancellation',
+        description: 'Reject a cancellation request.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderRejectCancellationRequest' },
+        requiredFlags: [flagId],
+        flags: [flagMessage],
+      },
+      {
+        verb: 'submit-cancellation',
+        description: 'Submit a cancellation request.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderSubmitCancellationRequest' },
+        requiredFlags: [flagId],
+        flags: [flagMessage],
+      },
+      {
+        verb: 'cancel',
+        description: 'Cancel a fulfillment order.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderCancel' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'close',
+        description: 'Close a fulfillment order.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderClose' },
+        requiredFlags: [flagId],
+        flags: [flagMessage],
+      },
+      {
+        verb: 'open',
+        description: 'Open a fulfillment order.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderOpen' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'hold',
+        description: 'Place a fulfillment order on hold.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderHold' },
+        requiredFlags: [flagId, flagReason],
+        flags: [flagNotes],
+      },
+      {
+        verb: 'release-hold',
+        description: 'Release a fulfillment hold.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderReleaseHold' },
+        requiredFlags: [flagId],
+        flags: [flagHoldIds],
+      },
+      {
+        verb: 'reschedule',
+        description: 'Reschedule a fulfillment order.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderReschedule' },
+        requiredFlags: [flagId, flagFulfillAt],
+      },
+      {
+        verb: 'move',
+        description: 'Move a fulfillment order to a new location.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderMove' },
+        requiredFlags: [flagId, flagLocationId],
+        input: { mode: 'set', required: false },
+      },
+      inputVerb({
+        verb: 'split',
+        description: 'Split a fulfillment order.',
+        operation: 'fulfillmentOrderSplit',
+      }),
+      {
+        verb: 'merge',
+        description: 'Merge fulfillment orders.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderMerge' },
+        flags: [flagIds],
+        input: { mode: 'set', required: false },
+        notes: ['Pass --ids or --input with fulfillmentOrderMergeInputs.'],
+      },
+      {
+        verb: 'report-progress',
+        description: 'Report progress on a fulfillment order.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderReportProgress' },
+        requiredFlags: [flagId],
+        flags: [flagMessage],
+      },
+      {
+        verb: 'mark-prepared',
+        description: 'Mark fulfillment order line items as prepared.',
+        operation: { type: 'mutation', name: 'fulfillmentOrderLineItemsPreparedForPickup' },
+        requiredFlags: [flagId],
+        input: { mode: 'set', required: false },
+      },
+      {
+        verb: 'set-deadline',
+        description: 'Set fulfillment deadlines.',
+        operation: { type: 'mutation', name: 'fulfillmentOrdersSetFulfillmentDeadline' },
+        requiredFlags: [flagIds, flagDeadline],
+      },
+      {
+        verb: 'reroute',
+        description: 'Reroute fulfillment orders to a location.',
+        operation: { type: 'mutation', name: 'fulfillmentOrdersReroute' },
+        requiredFlags: [flagIds, flagLocationId],
+      },
+    ],
+  },
+  {
+    resource: 'fulfillments',
+    description: 'Manage fulfillments.',
+    verbs: [
+      getVerb({ operation: 'fulfillment', description: 'Fetch a fulfillment by ID.' }),
+      inputVerb({
+        verb: 'create',
+        description: 'Create a fulfillment.',
+        operation: 'fulfillmentCreateV2',
+        requiredFlags: [],
+        flags: [flagMessage],
+        inputArg: 'fulfillment',
+      }),
+      {
+        verb: 'cancel',
+        description: 'Cancel a fulfillment.',
+        operation: { type: 'mutation', name: 'fulfillmentCancel' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'update-tracking',
+        description: 'Update fulfillment tracking.',
+        operation: { type: 'mutation', name: 'fulfillmentTrackingInfoUpdateV2' },
+        requiredFlags: [flagId],
+        flags: [flagTrackingCompany, flagTrackingNumber, flagTrackingUrl, flagNotifyCustomer],
+      },
+      {
+        verb: 'create-event',
+        description: 'Create a fulfillment event.',
+        operation: { type: 'mutation', name: 'fulfillmentEventCreate' },
+        requiredFlags: [flagId, flagStatusValue],
+        flags: [flagMessage, flagHappenedAt],
+      },
+    ],
+  },
+  {
+    resource: 'inventory-items',
+    description: 'Manage inventory items.',
+    verbs: [
+      getVerb({ operation: 'inventoryItem', description: 'Fetch an inventory item by ID.' }),
+      listVerb({ operation: 'inventoryItems', description: 'List inventory items.' }),
+      updateVerb({ operation: 'inventoryItemUpdate', description: 'Update an inventory item.' }),
+    ],
+  },
+  {
+    resource: 'inventory-shipments',
+    description: 'Manage inventory shipments.',
+    verbs: [
+      getVerb({ operation: 'inventoryShipment', description: 'Fetch an inventory shipment by ID.' }),
+      inputVerb({
+        verb: 'create',
+        description: 'Create an inventory shipment.',
+        operation: 'inventoryShipmentCreate',
+      }),
+      inputVerb({
+        verb: 'create-in-transit',
+        description: 'Create an inventory shipment in transit.',
+        operation: 'inventoryShipmentCreateInTransit',
+      }),
+      {
+        verb: 'delete',
+        description: 'Delete an inventory shipment.',
+        operation: { type: 'mutation', name: 'inventoryShipmentDelete' },
+        requiredFlags: [flagId, flagYes],
+      },
+      {
+        verb: 'add-items',
+        description: 'Add items to an inventory shipment.',
+        operation: { type: 'mutation', name: 'inventoryShipmentAddItems' },
+        requiredFlags: [flagId, flagItems],
+      },
+      {
+        verb: 'remove-items',
+        description: 'Remove items from an inventory shipment.',
+        operation: { type: 'mutation', name: 'inventoryShipmentRemoveItems' },
+        requiredFlags: [flagId, flagLineItemIds],
+      },
+      {
+        verb: 'update-quantities',
+        description: 'Update item quantities for an inventory shipment.',
+        operation: { type: 'mutation', name: 'inventoryShipmentUpdateItemQuantities' },
+        requiredFlags: [flagId, flagItems],
+      },
+      {
+        verb: 'mark-in-transit',
+        description: 'Mark an inventory shipment as in transit.',
+        operation: { type: 'mutation', name: 'inventoryShipmentMarkInTransit' },
+        requiredFlags: [flagId],
+        flags: [flagDateShipped],
+      },
+      {
+        verb: 'receive',
+        description: 'Receive an inventory shipment.',
+        operation: { type: 'mutation', name: 'inventoryShipmentReceive' },
+        requiredFlags: [flagId],
+        flags: [flagBulkReceiveAction, flagDateReceived, flagItems],
+      },
+      {
+        verb: 'set-tracking',
+        description: 'Set tracking for an inventory shipment.',
+        operation: { type: 'mutation', name: 'inventoryShipmentSetTracking' },
+        requiredFlags: [flagId, flagTracking],
       },
     ],
   },
@@ -353,11 +1011,8 @@ export const commandRegistry: ResourceSpec[] = [
         verb: 'upload',
         description: 'Upload local files to Shopify.',
         operation: { type: 'mutation', name: 'fileCreate' },
-        requiredFlags: [flag('--file <path>', 'Local file path (repeatable)')],
-        flags: [
-          flag('--alt <string>', 'Alt text for the file'),
-          flag('--content-type <mime>', 'Override detected content type'),
-        ],
+        requiredFlags: [flagFile],
+        flags: [flagAlt, flagContentType],
       },
     ],
   },
@@ -467,24 +1122,12 @@ export const commandRegistry: ResourceSpec[] = [
     verbs: [
       getVerb({ operation: 'draftOrder', description: 'Fetch a draft order by ID.' }),
       listVerb({ operation: 'draftOrders', description: 'List draft orders.' }),
-      {
-        verb: 'count',
-        description: 'Count draft orders.',
-        operation: { type: 'query', name: 'draftOrdersCount' },
-        flags: [flagQuery],
-      },
+      countVerb({ operation: 'draftOrdersCount', description: 'Count draft orders.', flags: [flagQuery] }),
       createVerb({ operation: 'draftOrderCreate', description: 'Create a draft order.' }),
-      {
-        ...updateVerb({ operation: 'draftOrderUpdate', description: 'Update a draft order.' }),
-      },
+      updateVerb({ operation: 'draftOrderUpdate', description: 'Update a draft order.' }),
       deleteVerb({ operation: 'draftOrderDelete', description: 'Delete a draft order.' }),
       duplicateVerb({ operation: 'draftOrderDuplicate', description: 'Duplicate a draft order.' }),
-      {
-        verb: 'calculate',
-        description: 'Calculate a draft order without saving.',
-        operation: { type: 'mutation', name: 'draftOrderCalculate', inputArg: 'input' },
-        input: { mode: 'set', arg: 'input', required: true },
-      },
+      inputVerb({ verb: 'calculate', description: 'Calculate a draft order without saving.', operation: 'draftOrderCalculate', inputArg: 'input' }),
       {
         verb: 'complete',
         description: 'Complete a draft order.',
@@ -495,20 +1138,24 @@ export const commandRegistry: ResourceSpec[] = [
         verb: 'create-from-order',
         description: 'Create a draft order from an order.',
         operation: { type: 'mutation', name: 'draftOrderCreateFromOrder' },
-        requiredFlags: [flag('--order-id <gid>', 'Order ID')],
+        requiredFlags: [flagOrderId],
       },
-      {
+      inputVerb({
         verb: 'preview-invoice',
         description: 'Preview a draft order invoice.',
-        operation: { type: 'mutation', name: 'draftOrderInvoicePreview' },
+        operation: 'draftOrderInvoicePreview',
         requiredFlags: [flagId],
-      },
-      {
+        inputArg: 'email',
+        inputRequired: false,
+      }),
+      inputVerb({
         verb: 'send-invoice',
         description: 'Send a draft order invoice.',
-        operation: { type: 'mutation', name: 'draftOrderInvoiceSend' },
+        operation: 'draftOrderInvoiceSend',
         requiredFlags: [flagId],
-      },
+        inputArg: 'email',
+        inputRequired: false,
+      }),
       {
         verb: 'bulk-add-tags',
         description: 'Bulk add tags to draft orders.',
@@ -539,12 +1186,12 @@ export const commandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'draftOrderTag' },
         requiredFlags: [flagId],
       },
-      {
+      inputVerb({
         verb: 'delivery-options',
         description: 'List available delivery options for a draft order.',
-        operation: { type: 'query', name: 'draftOrderAvailableDeliveryOptions', inputArg: 'input' },
-        input: { mode: 'set', arg: 'input', required: true },
-      },
+        operation: 'draftOrderAvailableDeliveryOptions',
+        inputArg: 'input',
+      }),
     ],
   },
   {
@@ -570,23 +1217,339 @@ export const commandRegistry: ResourceSpec[] = [
     ],
   },
   {
+    resource: 'saved-searches',
+    description: 'Manage saved searches.',
+    verbs: [
+      inputVerb({
+        verb: 'create',
+        description: 'Create a saved search.',
+        operation: 'savedSearchCreate',
+        flags: [flagResourceType],
+      }),
+      inputVerb({
+        verb: 'update',
+        description: 'Update a saved search.',
+        operation: 'savedSearchUpdate',
+        requiredFlags: [flagId],
+        inputArg: 'input',
+        notes: ['ID can be provided via --id or input.id.'],
+      }),
+      {
+        verb: 'delete',
+        description: 'Delete a saved search.',
+        operation: { type: 'mutation', name: 'savedSearchDelete' },
+        requiredFlags: [flagId, flagYes],
+      },
+      {
+        verb: 'list-products',
+        description: 'List saved searches for products.',
+        operation: { type: 'query', name: 'productSavedSearches' },
+        output: { pagination: true },
+      },
+      {
+        verb: 'list-orders',
+        description: 'List saved searches for orders.',
+        operation: { type: 'query', name: 'orderSavedSearches' },
+        output: { pagination: true },
+      },
+      {
+        verb: 'list-customers',
+        description: 'List saved searches for customers.',
+        operation: { type: 'query', name: 'customerSavedSearches' },
+        output: { pagination: true },
+      },
+      {
+        verb: 'list-draft-orders',
+        description: 'List saved searches for draft orders.',
+        operation: { type: 'query', name: 'draftOrderSavedSearches' },
+        output: { pagination: true },
+      },
+      {
+        verb: 'list-collections',
+        description: 'List saved searches for collections.',
+        operation: { type: 'query', name: 'collectionSavedSearches' },
+        output: { pagination: true },
+      },
+    ],
+  },
+  {
+    resource: 'script-tags',
+    description: 'Manage script tags.',
+    verbs: [
+      createVerb({ operation: 'scriptTagCreate', description: 'Create a script tag.' }),
+      getVerb({ operation: 'scriptTag', description: 'Fetch a script tag by ID.' }),
+      listVerb({ operation: 'scriptTags', description: 'List script tags.' }),
+      updateVerb({ operation: 'scriptTagUpdate', description: 'Update a script tag.' }),
+      deleteVerb({ operation: 'scriptTagDelete', description: 'Delete a script tag.' }),
+    ],
+  },
+  {
+    resource: 'carrier-services',
+    description: 'Manage carrier services.',
+    verbs: [
+      createVerb({ operation: 'carrierServiceCreate', description: 'Create a carrier service.' }),
+      getVerb({ operation: 'carrierService', description: 'Fetch a carrier service by ID.' }),
+      listVerb({ operation: 'carrierServices', description: 'List carrier services.' }),
+      {
+        verb: 'list-available',
+        description: 'List available carrier services.',
+        operation: { type: 'query', name: 'availableCarrierServices' },
+      },
+      updateVerb({ operation: 'carrierServiceUpdate', description: 'Update a carrier service.' }),
+      deleteVerb({ operation: 'carrierServiceDelete', description: 'Delete a carrier service.' }),
+    ],
+  },
+  {
     resource: 'webhooks',
     description: 'Manage webhook subscriptions.',
     verbs: [
-      createVerb({
+      inputVerb({
+        verb: 'create',
+        description: 'Create a webhook subscription.',
         operation: 'webhookSubscriptionCreate',
         inputArg: 'webhookSubscription',
-        description: 'Create a webhook subscription.',
-        requiredFlags: [flag('--topic <topic>', 'Webhook topic')],
+        requiredFlags: [flagTopic],
       }),
       getVerb({ operation: 'webhookSubscription', description: 'Fetch a webhook subscription by ID.' }),
       listVerb({ operation: 'webhookSubscriptions', description: 'List webhook subscriptions.' }),
-      updateVerb({
+      inputVerb({
+        verb: 'update',
+        description: 'Update a webhook subscription.',
         operation: 'webhookSubscriptionUpdate',
         inputArg: 'webhookSubscription',
-        description: 'Update a webhook subscription.',
+        requiredFlags: [flagId],
       }),
       deleteVerb({ operation: 'webhookSubscriptionDelete', description: 'Delete a webhook subscription.' }),
+    ],
+  },
+  {
+    resource: 'subscription-contracts',
+    description: 'Manage subscription contracts.',
+    verbs: [
+      getVerb({ operation: 'subscriptionContract', description: 'Fetch a subscription contract by ID.' }),
+      listVerb({ operation: 'subscriptionContracts', description: 'List subscription contracts.' }),
+      inputVerb({
+        verb: 'create',
+        description: 'Create a subscription contract draft.',
+        operation: 'subscriptionContractCreate',
+        flags: [flagCustomerId],
+      }),
+      inputVerb({
+        verb: 'atomic-create',
+        description: 'Atomically create a subscription contract.',
+        operation: 'subscriptionContractAtomicCreate',
+      }),
+      inputVerb({
+        verb: 'update',
+        description: 'Update a subscription contract (via draft).',
+        operation: 'subscriptionContractUpdate',
+        requiredFlags: [flagId],
+        inputRequired: false,
+        notes: ['If no input is provided, returns a draft ID.'],
+      }),
+      {
+        verb: 'activate',
+        description: 'Activate a subscription contract.',
+        operation: { type: 'mutation', name: 'subscriptionContractActivate' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'pause',
+        description: 'Pause a subscription contract.',
+        operation: { type: 'mutation', name: 'subscriptionContractPause' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'cancel',
+        description: 'Cancel a subscription contract.',
+        operation: { type: 'mutation', name: 'subscriptionContractCancel' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'expire',
+        description: 'Expire a subscription contract.',
+        operation: { type: 'mutation', name: 'subscriptionContractExpire' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'fail',
+        description: 'Fail a subscription contract.',
+        operation: { type: 'mutation', name: 'subscriptionContractFail' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'set-next-billing',
+        description: 'Set the next billing date.',
+        operation: { type: 'mutation', name: 'subscriptionContractSetNextBillingDate' },
+        requiredFlags: [flagId, flagDate],
+      },
+      inputVerb({
+        verb: 'change-product',
+        description: 'Change the product for a subscription line.',
+        operation: 'subscriptionContractProductChange',
+        requiredFlags: [flagId, flagLineId],
+      }),
+    ],
+  },
+  {
+    resource: 'subscription-billing',
+    description: 'Manage subscription billing cycles and attempts.',
+    verbs: [
+      {
+        verb: 'get-attempt',
+        description: 'Fetch a billing attempt by ID.',
+        operation: { type: 'query', name: 'subscriptionBillingAttempt' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'list-attempts',
+        description: 'List billing attempts for a contract.',
+        operation: { type: 'query', name: 'subscriptionContract' },
+        requiredFlags: [flagContractId],
+        output: { pagination: true },
+      },
+      inputVerb({
+        verb: 'create-attempt',
+        description: 'Create a billing attempt.',
+        operation: 'subscriptionBillingAttemptCreate',
+        requiredFlags: [flagContractId],
+        inputArg: 'subscriptionBillingAttemptInput',
+      }),
+      {
+        verb: 'get-cycle',
+        description: 'Fetch a billing cycle.',
+        operation: { type: 'query', name: 'subscriptionBillingCycle' },
+        requiredFlags: [flagContractId, flagCycleIndex],
+      },
+      {
+        verb: 'list-cycles',
+        description: 'List billing cycles.',
+        operation: { type: 'query', name: 'subscriptionBillingCycles' },
+        requiredFlags: [flagContractId],
+        output: { pagination: true },
+      },
+      {
+        verb: 'charge',
+        description: 'Charge a billing cycle.',
+        operation: { type: 'mutation', name: 'subscriptionBillingCycleCharge' },
+        requiredFlags: [flagContractId, flagCycleIndex],
+      },
+      inputVerb({
+        verb: 'bulk-charge',
+        description: 'Bulk charge billing cycles.',
+        operation: 'subscriptionBillingCycleBulkCharge',
+        inputRequired: true,
+      }),
+      inputVerb({
+        verb: 'bulk-search',
+        description: 'Bulk search billing cycles.',
+        operation: 'subscriptionBillingCycleBulkSearch',
+        inputRequired: true,
+      }),
+      {
+        verb: 'skip-cycle',
+        description: 'Skip a billing cycle.',
+        operation: { type: 'mutation', name: 'subscriptionBillingCycleSkip' },
+        requiredFlags: [flagContractId, flagCycleIndex],
+      },
+      {
+        verb: 'unskip-cycle',
+        description: 'Unskip a billing cycle.',
+        operation: { type: 'mutation', name: 'subscriptionBillingCycleUnskip' },
+        requiredFlags: [flagContractId, flagCycleIndex],
+      },
+      inputVerb({
+        verb: 'edit-schedule',
+        description: 'Edit billing cycle schedule.',
+        operation: 'subscriptionBillingCycleScheduleEdit',
+        requiredFlags: [flagContractId, flagCycleIndex],
+      }),
+      inputVerb({
+        verb: 'edit-cycle',
+        description: 'Edit a billing cycle (via draft).',
+        operation: 'subscriptionBillingCycleContractEdit',
+        requiredFlags: [flagContractId, flagCycleIndex],
+        inputRequired: false,
+      }),
+      {
+        verb: 'delete-edits',
+        description: 'Delete billing cycle edits.',
+        operation: { type: 'mutation', name: 'subscriptionBillingCycleEditDelete' },
+        requiredFlags: [flagContractId, flagCycleIndexes],
+      },
+    ],
+  },
+  {
+    resource: 'subscription-drafts',
+    description: 'Manage subscription drafts.',
+    verbs: [
+      getVerb({ operation: 'subscriptionDraft', description: 'Fetch a subscription draft by ID.' }),
+      {
+        verb: 'commit',
+        description: 'Commit a subscription draft.',
+        operation: { type: 'mutation', name: 'subscriptionDraftCommit' },
+        requiredFlags: [flagId],
+      },
+      inputVerb({
+        verb: 'update',
+        description: 'Update a subscription draft.',
+        operation: 'subscriptionDraftUpdate',
+        requiredFlags: [flagId],
+      }),
+      inputVerb({
+        verb: 'add-line',
+        description: 'Add a line item to a draft.',
+        operation: 'subscriptionDraftLineAdd',
+        requiredFlags: [flagId],
+      }),
+      inputVerb({
+        verb: 'update-line',
+        description: 'Update a draft line item.',
+        operation: 'subscriptionDraftLineUpdate',
+        requiredFlags: [flagId, flagLineId],
+      }),
+      {
+        verb: 'remove-line',
+        description: 'Remove a line item from a draft.',
+        operation: { type: 'mutation', name: 'subscriptionDraftLineRemove' },
+        requiredFlags: [flagId, flagLineId],
+      },
+      inputVerb({
+        verb: 'add-discount',
+        description: 'Add a discount to a draft.',
+        operation: 'subscriptionDraftDiscountAdd',
+        requiredFlags: [flagId],
+      }),
+      inputVerb({
+        verb: 'update-discount',
+        description: 'Update a draft discount.',
+        operation: 'subscriptionDraftDiscountUpdate',
+        requiredFlags: [flagId, flagDiscountId],
+      }),
+      {
+        verb: 'remove-discount',
+        description: 'Remove a discount from a draft.',
+        operation: { type: 'mutation', name: 'subscriptionDraftDiscountRemove' },
+        requiredFlags: [flagId, flagDiscountId],
+      },
+      {
+        verb: 'apply-code',
+        description: 'Apply a discount code to a draft.',
+        operation: { type: 'mutation', name: 'subscriptionDraftDiscountCodeApply' },
+        requiredFlags: [flagId, flagCode],
+      },
+      inputVerb({
+        verb: 'add-free-shipping',
+        description: 'Add free shipping to a draft.',
+        operation: 'subscriptionDraftFreeShippingDiscountAdd',
+        requiredFlags: [flagId],
+      }),
+      inputVerb({
+        verb: 'update-free-shipping',
+        description: 'Update free shipping on a draft.',
+        operation: 'subscriptionDraftFreeShippingDiscountUpdate',
+        requiredFlags: [flagId, flagDiscountId],
+      }),
     ],
   },
   {
@@ -605,25 +1568,17 @@ export const commandRegistry: ResourceSpec[] = [
           description: 'List metafield definitions.',
           notes: ['Use --owner-type to filter by owner type.'],
         }),
-        flags: [flag('--owner-type <type>', 'Owner type filter')],
+        flags: [flagOwnerType],
       },
       {
         verb: 'update',
         description: 'Update a metafield definition.',
         operation: { type: 'mutation', name: 'metafieldDefinitionUpdate', inputArg: 'definition' },
         input: { mode: 'set', arg: 'definition', required: true },
-        flags: [
-          flag('--id <gid>', 'Definition ID (optional; otherwise use key/namespace/owner-type)'),
-          flag('--key <string>', 'Definition key'),
-          flag('--namespace <string>', 'Definition namespace'),
-          flag('--owner-type <type>', 'Definition owner type'),
-        ],
+        flags: [flagId, flagKey, flagNamespace, flagOwnerType],
         notes: ['Pass either --id or all of --key, --namespace, and --owner-type.'],
       },
-      deleteVerb({
-        operation: 'metafieldDefinitionDelete',
-        description: 'Delete a metafield definition.',
-      }),
+      deleteVerb({ operation: 'metafieldDefinitionDelete', description: 'Delete a metafield definition.' }),
     ],
   },
   {
@@ -638,7 +1593,7 @@ export const commandRegistry: ResourceSpec[] = [
       getVerb({ operation: 'metaobject', description: 'Fetch a metaobject by ID.' }),
       {
         ...listVerb({ operation: 'metaobjects', description: 'List metaobjects.' }),
-        requiredFlags: [flag('--type <string>', 'Metaobject type')],
+        requiredFlags: [flagType],
       },
       updateVerb({
         operation: 'metaobjectUpdate',
@@ -680,13 +1635,716 @@ export const commandRegistry: ResourceSpec[] = [
         verb: 'add-variants',
         description: 'Add variants to a selling plan group.',
         operation: { type: 'mutation', name: 'sellingPlanGroupAddProductVariants' },
-        requiredFlags: [flagId, flag('--variant-ids <gid>', 'Variant IDs (repeatable)')],
+        requiredFlags: [flagId, flagVariantIds],
       },
       {
         verb: 'remove-variants',
         description: 'Remove variants from a selling plan group.',
         operation: { type: 'mutation', name: 'sellingPlanGroupRemoveProductVariants' },
-        requiredFlags: [flagId, flag('--variant-ids <gid>', 'Variant IDs (repeatable)')],
+        requiredFlags: [flagId, flagVariantIds],
+      },
+    ],
+  },
+  {
+    resource: 'companies',
+    description: 'Manage companies.',
+    verbs: [
+      createVerb({ operation: 'companyCreate', description: 'Create a company.' }),
+      getVerb({ operation: 'company', description: 'Fetch a company by ID.' }),
+      listVerb({ operation: 'companies', description: 'List companies.' }),
+      countVerb({ operation: 'companiesCount', description: 'Count companies.', flags: [flag('--limit <n>', 'Limit count precision')] }),
+      updateVerb({ operation: 'companyUpdate', description: 'Update a company.' }),
+      deleteVerb({ operation: 'companyDelete', description: 'Delete a company.' }),
+      {
+        verb: 'bulk-delete',
+        description: 'Bulk delete companies.',
+        operation: { type: 'mutation', name: 'companiesDelete' },
+        requiredFlags: [flagIds, flagYes],
+      },
+      {
+        verb: 'assign-main-contact',
+        description: 'Assign a main contact to a company.',
+        operation: { type: 'mutation', name: 'companyAssignMainContact' },
+        requiredFlags: [flagId, flagContactId],
+      },
+      {
+        verb: 'revoke-main-contact',
+        description: 'Revoke a company main contact.',
+        operation: { type: 'mutation', name: 'companyRevokeMainContact' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'assign-customer',
+        description: 'Assign a customer as a company contact.',
+        operation: { type: 'mutation', name: 'companyAssignCustomerAsContact' },
+        requiredFlags: [flagId, flagCustomerId],
+      },
+    ],
+  },
+  {
+    resource: 'company-contacts',
+    description: 'Manage company contacts.',
+    verbs: [
+      getVerb({ operation: 'companyContact', description: 'Fetch a company contact by ID.' }),
+      inputVerb({
+        verb: 'create',
+        description: 'Create a company contact.',
+        operation: 'companyContactCreate',
+        requiredFlags: [flagCompanyId],
+      }),
+      updateVerb({
+        operation: 'companyContactUpdate',
+        description: 'Update a company contact.',
+        inputArg: 'input',
+      }),
+      deleteVerb({ operation: 'companyContactDelete', description: 'Delete a company contact.' }),
+      {
+        verb: 'bulk-delete',
+        description: 'Bulk delete company contacts.',
+        operation: { type: 'mutation', name: 'companyContactsDelete' },
+        requiredFlags: [flagIds, flagYes],
+      },
+      {
+        verb: 'assign-role',
+        description: 'Assign a role to a company contact.',
+        operation: { type: 'mutation', name: 'companyContactAssignRole' },
+        requiredFlags: [flagId, flagRoleId, flagLocationId],
+      },
+      {
+        verb: 'assign-roles',
+        description: 'Assign roles to a company contact.',
+        operation: { type: 'mutation', name: 'companyContactAssignRoles' },
+        requiredFlags: [flagId, flagRoleAssignments],
+      },
+      {
+        verb: 'revoke-role',
+        description: 'Revoke a role assignment.',
+        operation: { type: 'mutation', name: 'companyContactRevokeRole' },
+        requiredFlags: [flagId, flagRoleAssignmentId],
+      },
+      {
+        verb: 'revoke-roles',
+        description: 'Revoke role assignments.',
+        operation: { type: 'mutation', name: 'companyContactRevokeRoles' },
+        requiredFlags: [flagId],
+        flags: [flagRoleAssignmentIds, flagAll],
+        notes: ['Use --all to revoke all roles.'],
+      },
+      {
+        verb: 'remove-from-company',
+        description: 'Remove a contact from the company.',
+        operation: { type: 'mutation', name: 'companyContactRemoveFromCompany' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'send-welcome-email',
+        description: 'Send a welcome email to a contact.',
+        operation: { type: 'mutation', name: 'companyContactSendWelcomeEmail' },
+        requiredFlags: [flagId],
+        flags: [flag('--email <json>', 'Email input JSON')],
+      },
+    ],
+  },
+  {
+    resource: 'company-locations',
+    description: 'Manage company locations.',
+    verbs: [
+      getVerb({ operation: 'companyLocation', description: 'Fetch a company location by ID.' }),
+      listVerb({ operation: 'companyLocations', description: 'List company locations.' }),
+      inputVerb({
+        verb: 'create',
+        description: 'Create a company location.',
+        operation: 'companyLocationCreate',
+        requiredFlags: [flagCompanyId],
+      }),
+      updateVerb({
+        operation: 'companyLocationUpdate',
+        description: 'Update a company location.',
+        inputArg: 'input',
+      }),
+      deleteVerb({ operation: 'companyLocationDelete', description: 'Delete a company location.' }),
+      {
+        verb: 'bulk-delete',
+        description: 'Bulk delete company locations.',
+        operation: { type: 'mutation', name: 'companyLocationsDelete' },
+        requiredFlags: [flagIds, flagYes],
+      },
+      {
+        verb: 'assign-address',
+        description: 'Assign addresses to a company location.',
+        operation: { type: 'mutation', name: 'companyLocationAssignAddress' },
+        requiredFlags: [flagId, flagAddressType, flagAddress],
+      },
+      {
+        verb: 'assign-roles',
+        description: 'Assign roles to a company location.',
+        operation: { type: 'mutation', name: 'companyLocationAssignRoles' },
+        requiredFlags: [flagId, flagRoleAssignments],
+      },
+      {
+        verb: 'revoke-roles',
+        description: 'Revoke roles from a company location.',
+        operation: { type: 'mutation', name: 'companyLocationRevokeRoles' },
+        requiredFlags: [flagId, flagRoleAssignmentIds],
+      },
+      {
+        verb: 'assign-staff',
+        description: 'Assign staff members to a company location.',
+        operation: { type: 'mutation', name: 'companyLocationAssignStaffMembers' },
+        requiredFlags: [flagId, flagStaffMemberIds],
+      },
+      {
+        verb: 'remove-staff',
+        description: 'Remove staff members from a company location.',
+        operation: { type: 'mutation', name: 'companyLocationRemoveStaffMembers' },
+        requiredFlags: [flagId],
+        flags: [flagAssignmentIds, flagStaffMemberIds],
+        notes: ['Pass either --assignment-ids or --staff-member-ids.'],
+      },
+      {
+        verb: 'assign-tax-exemptions',
+        description: 'Assign tax exemptions.',
+        operation: { type: 'mutation', name: 'companyLocationAssignTaxExemptions' },
+        requiredFlags: [flagId, flagExemptions],
+      },
+      {
+        verb: 'revoke-tax-exemptions',
+        description: 'Revoke tax exemptions.',
+        operation: { type: 'mutation', name: 'companyLocationRevokeTaxExemptions' },
+        requiredFlags: [flagId, flagExemptions],
+      },
+      {
+        verb: 'create-tax-registration',
+        description: 'Create a tax registration.',
+        operation: { type: 'mutation', name: 'companyLocationCreateTaxRegistration' },
+        requiredFlags: [flagId, flagTaxId],
+      },
+      {
+        verb: 'revoke-tax-registration',
+        description: 'Revoke a tax registration.',
+        operation: { type: 'mutation', name: 'companyLocationRevokeTaxRegistration' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'update-tax-settings',
+        description: 'Update tax settings for a location.',
+        operation: { type: 'mutation', name: 'companyLocationTaxSettingsUpdate' },
+        requiredFlags: [flagId],
+        flags: [flagExemptions, flagRemoveExemptions, flagTaxExempt, flagTaxId],
+      },
+    ],
+  },
+  {
+    resource: 'store-credit',
+    description: 'Manage store credit accounts.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Get store credit by account or owner.',
+        operation: { type: 'query', name: 'storeCreditAccount' },
+        flags: [flagId, flagOwnerId, flagFirst],
+        output: { view: true, selection: true, pagination: true },
+        notes: ['Provide --id or --owner-id.'],
+      },
+      inputVerb({
+        verb: 'credit',
+        description: 'Credit a store credit account.',
+        operation: 'storeCreditAccountCredit',
+        flags: [flagId, flagOwnerId, flagAmount, flagCurrency, flagExpiresAt, flagNotify],
+        inputRequired: false,
+        notes: ['Provide --id or --owner-id.', 'Provide --amount or --input/--set.'],
+      }),
+      inputVerb({
+        verb: 'debit',
+        description: 'Debit a store credit account.',
+        operation: 'storeCreditAccountDebit',
+        flags: [flagId, flagOwnerId, flagAmount, flagCurrency],
+        inputRequired: false,
+        notes: ['Provide --id or --owner-id.', 'Provide --amount or --input/--set.'],
+      }),
+    ],
+  },
+  {
+    resource: 'delegate-tokens',
+    description: 'Manage delegate access tokens.',
+    verbs: [
+      inputVerb({
+        verb: 'create',
+        description: 'Create a delegate access token.',
+        operation: 'delegateAccessTokenCreate',
+      }),
+      {
+        verb: 'destroy',
+        description: 'Destroy a delegate access token.',
+        operation: { type: 'mutation', name: 'delegateAccessTokenDestroy' },
+        requiredFlags: [flagToken],
+      },
+    ],
+  },
+  {
+    resource: 'themes',
+    description: 'Manage themes.',
+    verbs: [
+      getVerb({ operation: 'theme', description: 'Fetch a theme by ID.' }),
+      {
+        ...listVerb({ operation: 'themes', description: 'List themes.' }),
+        flags: [flagRoles],
+      },
+      {
+        verb: 'create',
+        description: 'Create a theme.',
+        operation: { type: 'mutation', name: 'themeCreate' },
+        flags: [flagName, flagRole, flagSource],
+        input: { mode: 'set', required: false },
+        notes: ['Requires --source or input.source/src.'],
+      },
+      updateVerb({ operation: 'themeUpdate', description: 'Update a theme.' }),
+      deleteVerb({ operation: 'themeDelete', description: 'Delete a theme.' }),
+      {
+        verb: 'duplicate',
+        description: 'Duplicate a theme.',
+        operation: { type: 'mutation', name: 'themeDuplicate' },
+        requiredFlags: [flagId],
+        flags: [flagName],
+      },
+      {
+        verb: 'publish',
+        description: 'Publish a theme.',
+        operation: { type: 'mutation', name: 'themePublish' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'files-upsert',
+        description: 'Upsert theme files.',
+        operation: { type: 'mutation', name: 'themeFilesUpsert' },
+        requiredFlags: [flagId, flagFiles],
+      },
+      {
+        verb: 'files-delete',
+        description: 'Delete theme files.',
+        operation: { type: 'mutation', name: 'themeFilesDelete' },
+        requiredFlags: [flagId, flagFiles],
+      },
+      {
+        verb: 'files-copy',
+        description: 'Copy theme files.',
+        operation: { type: 'mutation', name: 'themeFilesCopy' },
+        requiredFlags: [flagId, flagFiles],
+      },
+    ],
+  },
+  {
+    resource: 'cart-transforms',
+    description: 'Manage cart transforms.',
+    verbs: [
+      {
+        verb: 'create',
+        description: 'Create a cart transform.',
+        operation: { type: 'mutation', name: 'cartTransformCreate' },
+        flags: [flagFunctionId, flagFunctionHandle, flagBlockOnFailure, flagMetafields],
+        notes: ['Provide --function-id or --function-handle.'],
+      },
+      {
+        verb: 'list',
+        description: 'List cart transforms.',
+        operation: { type: 'query', name: 'cartTransforms' },
+        output: { pagination: true },
+      },
+      deleteVerb({ operation: 'cartTransformDelete', description: 'Delete a cart transform.' }),
+    ],
+  },
+  {
+    resource: 'validations',
+    description: 'Manage checkout validations.',
+    verbs: [
+      inputVerb({
+        verb: 'create',
+        description: 'Create a validation.',
+        operation: 'validationCreate',
+        inputArg: 'validation',
+        flags: [flagFunctionId],
+      }),
+      getVerb({ operation: 'validation', description: 'Fetch a validation by ID.' }),
+      listVerb({ operation: 'validations', description: 'List validations.' }),
+      updateVerb({ operation: 'validationUpdate', description: 'Update a validation.' }),
+      deleteVerb({ operation: 'validationDelete', description: 'Delete a validation.' }),
+    ],
+  },
+  {
+    resource: 'checkout-branding',
+    description: 'Manage checkout branding.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Get checkout branding.',
+        operation: { type: 'query', name: 'checkoutBranding' },
+        requiredFlags: [flagProfileId],
+      },
+      inputVerb({
+        verb: 'upsert',
+        description: 'Upsert checkout branding.',
+        operation: 'checkoutBrandingUpsert',
+        inputArg: 'checkoutBrandingInput',
+        requiredFlags: [flagProfileId],
+      }),
+    ],
+  },
+  {
+    resource: 'delivery-profiles',
+    description: 'Manage delivery profiles.',
+    verbs: [
+      inputVerb({
+        verb: 'create',
+        description: 'Create a delivery profile.',
+        operation: 'deliveryProfileCreate',
+        inputArg: 'profile',
+      }),
+      getVerb({ operation: 'deliveryProfile', description: 'Fetch a delivery profile by ID.' }),
+      listVerb({ operation: 'deliveryProfiles', description: 'List delivery profiles.' }),
+      updateVerb({ operation: 'deliveryProfileUpdate', description: 'Update a delivery profile.' }),
+      deleteVerb({ operation: 'deliveryProfileRemove', description: 'Delete a delivery profile.' }),
+    ],
+  },
+  {
+    resource: 'delivery-customizations',
+    description: 'Manage delivery customizations.',
+    verbs: [
+      inputVerb({
+        verb: 'create',
+        description: 'Create a delivery customization.',
+        operation: 'deliveryCustomizationCreate',
+        inputArg: 'input',
+        flags: [flagFunctionId],
+      }),
+      getVerb({ operation: 'deliveryCustomization', description: 'Fetch a delivery customization by ID.' }),
+      listVerb({ operation: 'deliveryCustomizations', description: 'List delivery customizations.' }),
+      updateVerb({ operation: 'deliveryCustomizationUpdate', description: 'Update a delivery customization.' }),
+      deleteVerb({ operation: 'deliveryCustomizationDelete', description: 'Delete a delivery customization.' }),
+      {
+        verb: 'activate',
+        description: 'Activate or deactivate a delivery customization.',
+        operation: { type: 'mutation', name: 'deliveryCustomizationActivation' },
+        requiredFlags: [flagId, flagEnabled],
+      },
+    ],
+  },
+  {
+    resource: 'web-pixels',
+    description: 'Manage web pixels.',
+    verbs: [
+      inputVerb({
+        verb: 'create',
+        description: 'Create a web pixel.',
+        operation: 'webPixelCreate',
+      }),
+      getVerb({ operation: 'webPixel', description: 'Fetch a web pixel by ID.' }),
+      updateVerb({ operation: 'webPixelUpdate', description: 'Update a web pixel.' }),
+      deleteVerb({ operation: 'webPixelDelete', description: 'Delete a web pixel.' }),
+    ],
+  },
+  {
+    resource: 'server-pixels',
+    description: 'Manage server pixels.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Get the current app server pixel.',
+        operation: { type: 'query', name: 'serverPixel' },
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'create',
+        description: 'Create a server pixel.',
+        operation: { type: 'mutation', name: 'serverPixelCreate' },
+      },
+      {
+        verb: 'delete',
+        description: 'Delete the server pixel.',
+        operation: { type: 'mutation', name: 'serverPixelDelete' },
+        requiredFlags: [flagYes],
+      },
+      {
+        verb: 'update-pubsub',
+        description: 'Update Pub/Sub endpoint.',
+        operation: { type: 'mutation', name: 'pubSubServerPixelUpdate' },
+        requiredFlags: [flagPubSubProject, flagPubSubTopic],
+      },
+      {
+        verb: 'update-eventbridge',
+        description: 'Update EventBridge endpoint.',
+        operation: { type: 'mutation', name: 'eventBridgeServerPixelUpdate' },
+        requiredFlags: [flagArn],
+      },
+    ],
+  },
+  {
+    resource: 'marketing-activities',
+    description: 'Manage marketing activities.',
+    verbs: [
+      getVerb({ operation: 'marketingActivity', description: 'Fetch a marketing activity by ID.' }),
+      listVerb({ operation: 'marketingActivities', description: 'List marketing activities.' }),
+      inputVerb({
+        verb: 'create',
+        description: 'Create a marketing activity.',
+        operation: 'marketingActivityCreate',
+      }),
+      inputVerb({
+        verb: 'create-external',
+        description: 'Create an external marketing activity.',
+        operation: 'marketingActivityCreateExternal',
+      }),
+      inputVerb({
+        verb: 'update',
+        description: 'Update a marketing activity.',
+        operation: 'marketingActivityUpdate',
+        requiredFlags: [flagId],
+        notes: ['ID can be provided via --id or input.id.'],
+      }),
+      inputVerb({
+        verb: 'update-external',
+        description: 'Update an external marketing activity.',
+        operation: 'marketingActivityUpdateExternal',
+        flags: [flagRemoteId, flagUtm],
+        notes: ['Provide --id or --remote-id.'],
+      }),
+      inputVerb({
+        verb: 'upsert-external',
+        description: 'Upsert an external marketing activity.',
+        operation: 'marketingActivityUpsertExternal',
+      }),
+      {
+        verb: 'delete-external',
+        description: 'Delete an external marketing activity.',
+        operation: { type: 'mutation', name: 'marketingActivityDeleteExternal' },
+        flags: [flagId, flagRemoteId],
+        notes: ['Provide --id or --remote-id.'],
+      },
+      {
+        verb: 'delete-all-external',
+        description: 'Delete all external marketing activities.',
+        operation: { type: 'mutation', name: 'marketingActivitiesDeleteAllExternal' },
+        requiredFlags: [flagYes],
+      },
+      inputVerb({
+        verb: 'create-engagement',
+        description: 'Create a marketing engagement.',
+        operation: 'marketingEngagementCreate',
+        flags: [flagActivityId, flagChannelHandle, flagRemoteId],
+      }),
+      {
+        verb: 'delete-engagements',
+        description: 'Delete marketing engagements.',
+        operation: { type: 'mutation', name: 'marketingEngagementsDelete' },
+        requiredFlags: [],
+        flags: [flagChannelHandle, flagAll],
+      },
+    ],
+  },
+  {
+    resource: 'bulk-operations',
+    description: 'Manage bulk operations.',
+    verbs: [
+      {
+        verb: 'run-query',
+        description: 'Run a bulk query.',
+        operation: { type: 'mutation', name: 'bulkOperationRunQuery' },
+        requiredFlags: [flag('--query <graphql>', 'Bulk query document')],
+        flags: [flagWait, flagWaitInterval],
+      },
+      {
+        verb: 'run-mutation',
+        description: 'Run a bulk mutation.',
+        operation: { type: 'mutation', name: 'bulkOperationRunMutation' },
+        requiredFlags: [flagMutation, flagStagedUploadPath],
+        flags: [flagClientId, flagWait, flagWaitInterval],
+      },
+      {
+        verb: 'get',
+        description: 'Get a bulk operation by ID.',
+        operation: { type: 'query', name: 'bulkOperation' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'list',
+        description: 'List bulk operations.',
+        operation: { type: 'query', name: 'bulkOperations' },
+        flags: [flag('--type <QUERY|MUTATION>', 'Operation type'), flagStatusValue],
+        output: { view: true, selection: true, pagination: true },
+      },
+      {
+        verb: 'current',
+        description: 'Get the current bulk operation.',
+        operation: { type: 'query', name: 'currentBulkOperation' },
+        flags: [flag('--type <QUERY|MUTATION>', 'Operation type')],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'cancel',
+        description: 'Cancel a bulk operation.',
+        operation: { type: 'mutation', name: 'bulkOperationCancel' },
+        requiredFlags: [flagId, flagYes],
+      },
+    ],
+  },
+  {
+    resource: 'app-billing',
+    description: 'Manage app billing.',
+    verbs: [
+      inputVerb({
+        verb: 'create-one-time',
+        description: 'Create a one-time purchase.',
+        operation: 'appPurchaseOneTimeCreate',
+      }),
+      inputVerb({
+        verb: 'create-subscription',
+        description: 'Create an app subscription.',
+        operation: 'appSubscriptionCreate',
+      }),
+      {
+        verb: 'cancel-subscription',
+        description: 'Cancel an app subscription.',
+        operation: { type: 'mutation', name: 'appSubscriptionCancel' },
+        requiredFlags: [flagId],
+        flags: [flagProrate],
+      },
+      {
+        verb: 'update-line-item',
+        description: 'Update a subscription line item.',
+        operation: { type: 'mutation', name: 'appSubscriptionLineItemUpdate' },
+        flags: [flag('--line-item-id <gid>', 'Line item ID (or use --id)'), flagId, flagAmount, flagCurrency, flagInput],
+        notes: ['Provide --line-item-id or --id.', 'Provide --amount/--currency or --input.'],
+      },
+      {
+        verb: 'extend-trial',
+        description: 'Extend a subscription trial.',
+        operation: { type: 'mutation', name: 'appSubscriptionTrialExtend' },
+        requiredFlags: [flagId, flagDays],
+      },
+      {
+        verb: 'create-usage-record',
+        description: 'Create a usage record.',
+        operation: { type: 'mutation', name: 'appUsageRecordCreate' },
+        requiredFlags: [flagSubscriptionLineItemId],
+        flags: [flagDescription, flagAmount, flagCurrency, flagIdempotencyKey],
+        notes: ['Requires description and price.'],
+      },
+      {
+        verb: 'get-installation',
+        description: 'Get the current app installation.',
+        operation: { type: 'query', name: 'appInstallation' },
+        flags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'list-subscriptions',
+        description: 'List active app subscriptions.',
+        operation: { type: 'query', name: 'appInstallation' },
+        flags: [flagId],
+        output: { view: true, selection: true },
+      },
+    ],
+  },
+  {
+    resource: 'config',
+    description: 'Manage shop configuration.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Get shop configuration.',
+        operation: { type: 'query', name: 'shop' },
+        output: { view: true, selection: true },
+      },
+      inputVerb({
+        verb: 'update-policy',
+        description: 'Update a shop policy.',
+        operation: 'shopPolicyUpdate',
+        inputArg: 'shopPolicy',
+      }),
+      {
+        verb: 'enable-locale',
+        description: 'Enable a locale.',
+        operation: { type: 'mutation', name: 'shopLocaleEnable' },
+        requiredFlags: [flagLocale],
+        flags: [flag('--market-web-presence-ids <gid>', 'Market web presence IDs (repeatable)')],
+      },
+      {
+        verb: 'disable-locale',
+        description: 'Disable a locale.',
+        operation: { type: 'mutation', name: 'shopLocaleDisable' },
+        requiredFlags: [flagLocale],
+      },
+      inputVerb({
+        verb: 'update-locale',
+        description: 'Update a locale.',
+        operation: 'shopLocaleUpdate',
+        requiredFlags: [flagLocale],
+        inputArg: 'input',
+      }),
+      {
+        verb: 'get-locales',
+        description: 'List shop locales.',
+        operation: { type: 'query', name: 'shopLocales' },
+      },
+    ],
+  },
+  {
+    resource: 'translations',
+    description: 'Manage translations.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Get translatable resource.',
+        operation: { type: 'query', name: 'translatableResource' },
+        requiredFlags: [flagResourceId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'list',
+        description: 'List translatable resources.',
+        operation: { type: 'query', name: 'translatableResources' },
+        requiredFlags: [flagResourceType],
+        output: { view: true, selection: true, pagination: true },
+      },
+      {
+        verb: 'list-by-ids',
+        description: 'List translatable resources by IDs.',
+        operation: { type: 'query', name: 'translatableResourcesByIds' },
+        requiredFlags: [flagResourceIds],
+        output: { view: true, selection: true, pagination: true },
+      },
+      {
+        verb: 'register',
+        description: 'Register translations.',
+        operation: { type: 'mutation', name: 'translationsRegister' },
+        requiredFlags: [flagResourceId, flag('--translations <json>', 'Translations JSON')],
+      },
+      {
+        verb: 'remove',
+        description: 'Remove translations.',
+        operation: { type: 'mutation', name: 'translationsRemove' },
+        requiredFlags: [flagResourceId, flagTranslationKeys, flagLocales],
+        flags: [flagMarketIds],
+      },
+    ],
+  },
+  {
+    resource: 'events',
+    description: 'Query events.',
+    verbs: [
+      getVerb({ operation: 'event', description: 'Fetch an event by ID.' }),
+      listVerb({ operation: 'events', description: 'List events.' }),
+      countVerb({ operation: 'eventsCount', description: 'Count events.', flags: [flagQuery] }),
+    ],
+  },
+  {
+    resource: 'functions',
+    description: 'List Shopify Functions.',
+    verbs: [
+      getVerb({ operation: 'shopifyFunction', description: 'Fetch a function by ID.' }),
+      {
+        ...listVerb({ operation: 'shopifyFunctions', description: 'List Shopify Functions.' }),
+        flags: [flagApiType, flagUseCreationUi],
       },
     ],
   },
