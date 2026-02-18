@@ -1,11 +1,11 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
-import { printConnection, printJson, printNode } from '../output'
+import { printConnection, printIds, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, requireId } from './_shared'
+import { parseCsv, parseFirst, parseJsonArg, requireId } from './_shared'
 
 const customerSummarySelection = {
   id: true,
@@ -45,7 +45,9 @@ export const runCustomers = async ({
         '  shop customers <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete',
+        '  create|get|list|count|update|delete',
+        '  add-tags|remove-tags|merge|send-invite',
+        '  metafields upsert',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -53,6 +55,109 @@ export const runCustomers = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'count') {
+    const args = parseStandardArgs({ argv, extraOptions: { limit: { type: 'string' } } })
+    const query = args.query as any
+    const limitRaw = args.limit as any
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const result = await runQuery(ctx, {
+      customersCount: {
+        __args: {
+          ...(query ? { query } : {}),
+          ...(limit !== undefined ? { limit: Math.floor(limit) } : {}),
+        },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.customersCount?.count ?? '')
+    printJson(result.customersCount, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'metafields') {
+    const [subverb, ...rest] = argv
+    if (subverb !== 'upsert') {
+      throw new CliError(`Unknown customers metafields verb: ${subverb ?? '(missing)'}`, 2)
+    }
+
+    const args = parseStandardArgs({ argv: rest, extraOptions: {} })
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
+
+    const ownerId = requireId(args.id as any, 'Customer')
+
+    const asArray = (value: any): any[] => {
+      if (Array.isArray(value)) return value
+      if (value && Array.isArray(value.metafields)) return value.metafields
+      if (value && typeof value === 'object') return [value]
+      return []
+    }
+
+    const items = asArray(built.input)
+    if (items.length === 0) throw new CliError('Missing metafield input: pass --input/--set/--set-json', 2)
+
+    const normalized = items.map((m) => {
+      if (!m || typeof m !== 'object') throw new CliError('Metafield inputs must be objects', 2)
+      const { key, namespace, type, value, compareDigest } = m as any
+      if (!key) throw new CliError('Metafield input missing key', 2)
+      if (value === undefined) throw new CliError('Metafield input missing value', 2)
+      return {
+        ownerId,
+        key,
+        namespace,
+        type,
+        value: String(value),
+        compareDigest,
+      }
+    })
+
+    const chunk = <T,>(arr: T[], size: number): T[][] => {
+      const out: T[][] = []
+      for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size))
+      return out
+    }
+
+    const payloads: any[] = []
+    const ids: Array<string | undefined> = []
+
+    for (const group of chunk(normalized, 25)) {
+      const result = await runMutation(ctx, {
+        metafieldsSet: {
+          __args: { metafields: group },
+          metafields: { id: true },
+          userErrors: { field: true, message: true, elementIndex: true, code: true },
+        },
+      })
+      if (result === undefined) return
+
+      maybeFailOnUserErrors({ payload: result.metafieldsSet, failOnUserErrors: ctx.failOnUserErrors })
+      payloads.push(result.metafieldsSet)
+      for (const mf of result.metafieldsSet?.metafields ?? []) ids.push(mf?.id)
+    }
+
+    if (ctx.quiet) {
+      printIds(ids)
+      return
+    }
+
+    printJson(payloads.length === 1 ? payloads[0] : payloads, ctx.format !== 'raw')
     return
   }
 
@@ -122,6 +227,95 @@ export const runCustomers = async ({
     maybeFailOnUserErrors({ payload: result.customerCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.customerCreate?.customer?.id ?? '')
     printJson(result.customerCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'add-tags' || verb === 'remove-tags') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id as any, 'Customer')
+    const tags = parseCsv(args.tags as any, '--tags')
+
+    const mutationField = verb === 'add-tags' ? 'tagsAdd' : 'tagsRemove'
+    const request: any = {
+      [mutationField]: {
+        __args: { id, tags },
+        node: { id: true },
+        userErrors: { field: true, message: true },
+      },
+    }
+
+    const result = await runMutation(ctx, request)
+    if (result === undefined) return
+    const payload = result[mutationField]
+    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(payload?.node?.id ?? '')
+    printJson(payload, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'merge') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'other-id': { type: 'string' },
+        'override-fields': { type: 'string' },
+      },
+    })
+    const customerOneId = requireId(args.id as any, 'Customer')
+    const other = (args as any)['other-id'] as string | undefined
+    if (!other) throw new CliError('Missing --other-id', 2)
+    const customerTwoId = requireId(other, 'Customer')
+    const overrideFieldsRaw = (args as any)['override-fields'] as any
+    const overrideFields =
+      overrideFieldsRaw !== undefined ? parseJsonArg(overrideFieldsRaw, '--override-fields', { allowEmpty: true }) : undefined
+
+    const result = await runMutation(ctx, {
+      customerMerge: {
+        __args: {
+          customerOneId,
+          customerTwoId,
+          ...(overrideFields ? { overrideFields } : {}),
+        },
+        job: { id: true, done: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.customerMerge, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.customerMerge?.job?.id ?? '')
+    printJson(result.customerMerge, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'send-invite') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        email: { type: 'string' },
+      },
+    })
+    const customerId = requireId(args.id as any, 'Customer')
+    const emailRaw = (args as any).email as any
+    const email =
+      emailRaw !== undefined ? parseJsonArg(emailRaw, '--email', { allowEmpty: true }) : undefined
+
+    const result = await runMutation(ctx, {
+      customerSendAccountInviteEmail: {
+        __args: {
+          customerId,
+          ...(email ? { email } : {}),
+        },
+        customer: { id: true },
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.customerSendAccountInviteEmail,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.customerSendAccountInviteEmail?.customer?.id ?? '')
+    printJson(result.customerSendAccountInviteEmail, ctx.format !== 'raw')
     return
   }
 

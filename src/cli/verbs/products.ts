@@ -1,4 +1,5 @@
 import { CliError } from '../errors'
+import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
@@ -21,6 +22,16 @@ import { listPublications } from '../workflows/publications/resolvePublicationId
 import { parseFirst, requireId } from './_shared'
 
 type MediaContentType = 'IMAGE' | 'VIDEO' | 'MODEL_3D' | 'EXTERNAL_VIDEO'
+
+const productMediaSelection = {
+  id: true,
+  mediaContentType: true,
+  status: true,
+  alt: true,
+  preview: { status: true, image: { url: true } },
+  mediaErrors: { code: true, message: true },
+  mediaWarnings: { code: true, message: true },
+} as const
 
 const productSummarySelection = {
   id: true,
@@ -60,6 +71,14 @@ const normalizeMediaContentType = (value: string | undefined): MediaContentType 
   throw new CliError('--media-type must be IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO', 2)
 }
 
+const normalizeMediaId = (value: string) => {
+  const raw = value.trim()
+  if (!raw) throw new CliError('Media ID cannot be empty', 2)
+  if (raw.startsWith('gid://')) return raw
+  // Media IDs map to file resources in most workflows; allow numeric IDs by coercing to File.
+  return coerceGid(raw, 'File')
+}
+
 const mediaTypeToStagedResource = (mediaType: MediaContentType): StagedUploadResource => {
   if (mediaType === 'IMAGE') return 'IMAGE'
   if (mediaType === 'VIDEO') return 'VIDEO'
@@ -90,10 +109,12 @@ export const runProducts = async ({
         '  shop products <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete|duplicate|set-status|add-tags|remove-tags',
+        '  create|get|list|count|update|delete|duplicate|set-status|archive|unarchive',
+        '  add-tags|remove-tags|set-price',
         '  publish|unpublish|publish-all',
         '  bundle-create|bundle-update',
         '  metafields upsert',
+        '  media add|media upload|media list|media remove|media reorder|media update',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -131,6 +152,48 @@ export const runProducts = async ({
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(payload?.productBundleOperation?.id ?? '')
     printJson(payload, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'count') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        limit: { type: 'string' },
+        'saved-search-id': { type: 'string' },
+      },
+    })
+    const query = args.query as any
+    const limitRaw = args.limit as any
+    const savedSearchIdRaw = (args as any)['saved-search-id'] as any
+
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const savedSearchId = savedSearchIdRaw
+      ? coerceGid(String(savedSearchIdRaw), 'SavedSearch')
+      : undefined
+
+    const result = await runQuery(ctx, {
+      productsCount: {
+        __args: {
+          ...(query ? { query } : {}),
+          ...(savedSearchId ? { savedSearchId } : {}),
+          ...(limit !== undefined ? { limit: Math.floor(limit) } : {}),
+        },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.productsCount?.count ?? '')
+    printJson(result.productsCount, ctx.format !== 'raw')
     return
   }
 
@@ -302,6 +365,26 @@ export const runProducts = async ({
     return
   }
 
+  if (verb === 'archive' || verb === 'unarchive') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id as any, 'Product')
+    const status =
+      verb === 'archive' ? 'ARCHIVED' : ((args.status as string | undefined) ?? 'DRAFT')
+
+    const result = await runMutation(ctx, {
+      productUpdate: {
+        __args: { input: { id, status } },
+        product: productSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
+    printJson(result.productUpdate, ctx.format !== 'raw')
+    return
+  }
+
   if (verb === 'update') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id as any, 'Product')
@@ -406,6 +489,68 @@ export const runProducts = async ({
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
     printJson(result.productUpdate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'set-price') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'variant-id': { type: 'string' },
+        price: { type: 'string' },
+        'compare-at-price': { type: 'string' },
+        'product-id': { type: 'string' },
+      },
+    })
+
+    const variantId = requireId((args as any)['variant-id'], 'ProductVariant')
+    const price = args.price as string | undefined
+    if (!price) throw new CliError('Missing --price', 2)
+
+    const compareAtPrice = (args as any)['compare-at-price'] as string | undefined
+    const explicitProductId = (args as any)['product-id'] as string | undefined
+
+    let productId: string
+    if (explicitProductId) {
+      productId = coerceGid(explicitProductId, 'Product')
+    } else {
+      if (ctx.dryRun) {
+        throw new CliError(
+          'In --dry-run mode, --product-id is required because resolving a productId from a variantId requires executing a query.',
+          2,
+        )
+      }
+      const resolved = await runQuery(ctx, {
+        productVariant: { __args: { id: variantId }, product: { id: true } },
+      })
+      if (resolved === undefined) return
+      const pid = resolved.productVariant?.product?.id
+      if (!pid) throw new CliError('Could not resolve productId from --variant-id', 2)
+      productId = pid
+    }
+
+    const result = await runMutation(ctx, {
+      productVariantsBulkUpdate: {
+        __args: {
+          productId,
+          variants: [
+            {
+              id: variantId,
+              price,
+              ...(compareAtPrice ? { compareAtPrice } : {}),
+            },
+          ],
+        },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.productVariantsBulkUpdate,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(variantId)
+    printJson(result.productVariantsBulkUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -519,6 +664,151 @@ export const runProducts = async ({
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
     printJson(result.productUpdate)
+    return
+  }
+
+  if (verb === 'media list') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id as any, 'Product')
+    const first = parseFirst(args.first)
+    const after = args.after as any
+
+    const result = await runQuery(ctx, {
+      product: {
+        __args: { id },
+        media: {
+          __args: { first, after },
+          pageInfo: { hasNextPage: true, endCursor: true },
+          nodes: productMediaSelection,
+        },
+      },
+    })
+    if (result === undefined) return
+    printConnection({ connection: result.product?.media ?? { nodes: [] }, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'media remove') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'media-id': { type: 'string', multiple: true },
+      },
+    })
+    const productId = requireId(args.id as any, 'Product')
+    const mediaIds = ((args as any)['media-id'] as string[] | undefined) ?? []
+    if (mediaIds.length === 0) throw new CliError('Missing --media-id (repeatable)', 2)
+
+    const files = mediaIds.map((id) => ({
+      id: normalizeMediaId(id),
+      referencesToRemove: [productId],
+    }))
+
+    const result = await runMutation(ctx, {
+      fileUpdate: {
+        __args: { files },
+        files: { id: true, alt: true, fileStatus: true, updatedAt: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.fileUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(productId)
+    printJson(result.fileUpdate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'media update') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'media-id': { type: 'string' },
+        alt: { type: 'string' },
+      },
+    })
+    const mediaIdRaw = (args as any)['media-id'] as string | undefined
+    if (!mediaIdRaw) throw new CliError('Missing --media-id', 2)
+    const alt = args.alt as string | undefined
+    if (alt === undefined) throw new CliError('Missing --alt', 2)
+
+    const files = [{ id: normalizeMediaId(mediaIdRaw), alt }]
+
+    const result = await runMutation(ctx, {
+      fileUpdate: {
+        __args: { files },
+        files: { id: true, alt: true, fileStatus: true, updatedAt: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.fileUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(files[0]!.id)
+    printJson(result.fileUpdate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'media reorder') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        moves: { type: 'string' },
+        move: { type: 'string', multiple: true },
+      },
+    })
+    const id = requireId(args.id as any, 'Product')
+
+    let moves: Array<{ id: string; newPosition: number }> = []
+    if ((args as any).moves) {
+      try {
+        const parsed = JSON.parse((args as any).moves as string)
+        if (!Array.isArray(parsed)) throw new CliError('--moves must be a JSON array', 2)
+        moves = parsed as any
+      } catch (err) {
+        throw new CliError(`--moves must be valid JSON: ${(err as Error).message}`, 2)
+      }
+    } else if ((args as any).move) {
+      const raw = (args as any).move as string[]
+      const parsedMoves: Array<{ id: string; newPosition: number }> = []
+      for (const item of raw) {
+        const parts = item.split(':')
+        if (parts.length !== 2) throw new CliError('--move must be <mediaId>:<newPosition>', 2)
+        const mediaId = parts[0]!.trim()
+        const pos = Number(parts[1]!.trim())
+        if (!mediaId) throw new CliError('--move mediaId cannot be empty', 2)
+        if (!Number.isFinite(pos) || pos < 0) throw new CliError('--move newPosition must be a non-negative number', 2)
+        parsedMoves.push({ id: normalizeMediaId(mediaId), newPosition: Math.floor(pos) } as any)
+      }
+      moves = parsedMoves as any
+    }
+
+    if (moves.length === 0) {
+      throw new CliError('Missing moves: pass either --moves <json> or --move <mediaId>:<newPosition> (repeatable)', 2)
+    }
+
+    const normalizedMoves = moves.map((move, i) => {
+      const id = (move as any)?.id
+      const newPosition = (move as any)?.newPosition
+      if (typeof id !== 'string' || !id.trim()) {
+        throw new CliError(`moves[${i}].id is required`, 2)
+      }
+      const pos = Number(newPosition)
+      if (!Number.isFinite(pos) || pos < 0) {
+        throw new CliError(`moves[${i}].newPosition must be a non-negative number`, 2)
+      }
+      return { id: normalizeMediaId(id), newPosition: Math.floor(pos) }
+    })
+
+    const result = await runMutation(ctx, {
+      productReorderMedia: {
+        __args: { id, moves: normalizedMoves },
+        job: { id: true, done: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productReorderMedia, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.productReorderMedia?.job?.id ?? '')
+    printJson(result.productReorderMedia, ctx.format !== 'raw')
     return
   }
 
