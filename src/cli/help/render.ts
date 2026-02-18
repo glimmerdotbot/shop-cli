@@ -156,7 +156,18 @@ const renderTypeShapesSection = (types: Map<string, InputFieldHelp[]>): string[]
       const type = formatFieldTypeWithMarkers(field).padEnd(typeWidth)
       const required = field.required ? 'Required. ' : ''
       const desc = field.description ?? ''
-      lines.push(`    ${name}  ${type}  ${required}${desc}`)
+
+      // Calculate indent for continuation lines (align with description start)
+      const prefix = `    ${name}  ${type}  `
+      const indent = ' '.repeat(prefix.length)
+
+      // Split description on newlines and indent continuation lines
+      const descLines = `${required}${desc}`.split('\n')
+      const formattedDesc = descLines
+        .map((line, i) => (i === 0 ? line : `${indent}${line}`))
+        .join('\n')
+
+      lines.push(`${prefix}${formattedDesc}`)
     }
   }
 
