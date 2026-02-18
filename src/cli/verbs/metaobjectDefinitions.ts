@@ -107,8 +107,7 @@ export const runMetaobjectDefinitions = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.metaobjectDefinitionCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.metaobjectDefinitionCreate?.metaobjectDefinition?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.metaobjectDefinitionCreate, false)
-    else printJson(result.metaobjectDefinitionCreate)
+    printJson(result.metaobjectDefinitionCreate, ctx.format !== 'raw')
     return
   }
 
@@ -132,8 +131,7 @@ export const runMetaobjectDefinitions = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.metaobjectDefinitionUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.metaobjectDefinitionUpdate?.metaobjectDefinition?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.metaobjectDefinitionUpdate, false)
-    else printJson(result.metaobjectDefinitionUpdate)
+    printJson(result.metaobjectDefinitionUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -152,8 +150,7 @@ export const runMetaobjectDefinitions = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.metaobjectDefinitionDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.metaobjectDefinitionDelete?.deletedId ?? '')
-    if (ctx.format === 'raw') printJson(result.metaobjectDefinitionDelete, false)
-    else printJson(result.metaobjectDefinitionDelete)
+    printJson(result.metaobjectDefinitionDelete, ctx.format !== 'raw')
     return
   }
 

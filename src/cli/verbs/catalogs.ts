@@ -110,8 +110,7 @@ export const runCatalogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.catalogCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.catalogCreate?.catalog?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.catalogCreate, false)
-    else printJson(result.catalogCreate)
+    printJson(result.catalogCreate, ctx.format !== 'raw')
     return
   }
 
@@ -135,8 +134,7 @@ export const runCatalogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.catalogUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.catalogUpdate?.catalog?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.catalogUpdate, false)
-    else printJson(result.catalogUpdate)
+    printJson(result.catalogUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -161,8 +159,7 @@ export const runCatalogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.catalogDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.catalogDelete?.deletedId ?? '')
-    if (ctx.format === 'raw') printJson(result.catalogDelete, false)
-    else printJson(result.catalogDelete)
+    printJson(result.catalogDelete, ctx.format !== 'raw')
     return
   }
 

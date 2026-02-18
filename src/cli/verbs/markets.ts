@@ -112,8 +112,7 @@ export const runMarkets = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.marketCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.marketCreate?.market?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.marketCreate, false)
-    else printJson(result.marketCreate)
+    printJson(result.marketCreate, ctx.format !== 'raw')
     return
   }
 
@@ -137,8 +136,7 @@ export const runMarkets = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.marketUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.marketUpdate?.market?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.marketUpdate, false)
-    else printJson(result.marketUpdate)
+    printJson(result.marketUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -157,8 +155,7 @@ export const runMarkets = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.marketDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.marketDelete?.deletedId ?? '')
-    if (ctx.format === 'raw') printJson(result.marketDelete, false)
-    else printJson(result.marketDelete)
+    printJson(result.marketDelete, ctx.format !== 'raw')
     return
   }
 

@@ -1,5 +1,4 @@
 import { CliError } from '../errors'
-import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
@@ -125,8 +124,7 @@ export const runMenus = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.menuCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.menuCreate?.menu?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.menuCreate, false)
-    else printJson(result.menuCreate)
+    printJson(result.menuCreate, ctx.format !== 'raw')
     return
   }
 
@@ -142,7 +140,7 @@ export const runMenus = async ({
     const input = requireMenuArgs(built.input, ['title', 'items'])
 
     const mutationArgs = {
-      id: coerceGid(id, 'Menu'),
+      id,
       title: input.title,
       items: input.items,
       ...(input.handle === undefined ? {} : { handle: input.handle }),
@@ -158,8 +156,7 @@ export const runMenus = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.menuUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.menuUpdate?.menu?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.menuUpdate, false)
-    else printJson(result.menuUpdate)
+    printJson(result.menuUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -178,8 +175,7 @@ export const runMenus = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.menuDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.menuDelete?.deletedMenuId ?? '')
-    if (ctx.format === 'raw') printJson(result.menuDelete, false)
-    else printJson(result.menuDelete)
+    printJson(result.menuDelete, ctx.format !== 'raw')
     return
   }
 

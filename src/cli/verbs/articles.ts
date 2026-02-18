@@ -119,8 +119,7 @@ export const runArticles = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.articleCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.articleCreate?.article?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.articleCreate, false)
-    else printJson(result.articleCreate)
+    printJson(result.articleCreate, ctx.format !== 'raw')
     return
   }
 
@@ -144,8 +143,7 @@ export const runArticles = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.articleUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.articleUpdate?.article?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.articleUpdate, false)
-    else printJson(result.articleUpdate)
+    printJson(result.articleUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -164,8 +162,7 @@ export const runArticles = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.articleDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.articleDelete?.deletedArticleId ?? '')
-    if (ctx.format === 'raw') printJson(result.articleDelete, false)
-    else printJson(result.articleDelete)
+    printJson(result.articleDelete, ctx.format !== 'raw')
     return
   }
 

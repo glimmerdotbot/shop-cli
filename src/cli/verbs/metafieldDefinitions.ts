@@ -16,8 +16,13 @@ const metafieldDefinitionSummarySelection = {
   type: true,
 } as const
 
+const metafieldDefinitionFullSelection = {
+  ...metafieldDefinitionSummarySelection,
+} as const
+
 const getMetafieldDefinitionSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
+  if (view === 'full') return metafieldDefinitionFullSelection
   if (view === 'raw') return {} as const
   return metafieldDefinitionSummarySelection
 }
@@ -41,7 +46,7 @@ export const runMetafieldDefinitions = async ({
         '  create|get|list|update|delete',
         '',
         'Common output flags:',
-        '  --view summary|ids|raw',
+        '  --view summary|ids|full|raw',
         '  --select <path>        (repeatable; dot paths; adds to base view selection)',
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
@@ -121,8 +126,7 @@ export const runMetafieldDefinitions = async ({
       failOnUserErrors: ctx.failOnUserErrors,
     })
     if (ctx.quiet) return console.log(result.metafieldDefinitionCreate?.createdDefinition?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.metafieldDefinitionCreate, false)
-    else printJson(result.metafieldDefinitionCreate)
+    printJson(result.metafieldDefinitionCreate, ctx.format !== 'raw')
     return
   }
 
@@ -190,8 +194,7 @@ export const runMetafieldDefinitions = async ({
       failOnUserErrors: ctx.failOnUserErrors,
     })
     if (ctx.quiet) return console.log(result.metafieldDefinitionUpdate?.updatedDefinition?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.metafieldDefinitionUpdate, false)
-    else printJson(result.metafieldDefinitionUpdate)
+    printJson(result.metafieldDefinitionUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -220,8 +223,7 @@ export const runMetafieldDefinitions = async ({
       failOnUserErrors: ctx.failOnUserErrors,
     })
     if (ctx.quiet) return console.log(result.metafieldDefinitionDelete?.deletedDefinitionId ?? '')
-    if (ctx.format === 'raw') printJson(result.metafieldDefinitionDelete, false)
-    else printJson(result.metafieldDefinitionDelete)
+    printJson(result.metafieldDefinitionDelete, ctx.format !== 'raw')
     return
   }
 

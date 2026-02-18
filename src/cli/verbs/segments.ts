@@ -127,8 +127,7 @@ export const runSegments = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.segmentCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.segmentCreate?.segment?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.segmentCreate, false)
-    else printJson(result.segmentCreate)
+    printJson(result.segmentCreate, ctx.format !== 'raw')
     return
   }
 
@@ -156,8 +155,7 @@ export const runSegments = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.segmentUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.segmentUpdate?.segment?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.segmentUpdate, false)
-    else printJson(result.segmentUpdate)
+    printJson(result.segmentUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -176,8 +174,7 @@ export const runSegments = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.segmentDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.segmentDelete?.deletedSegmentId ?? '')
-    if (ctx.format === 'raw') printJson(result.segmentDelete, false)
-    else printJson(result.segmentDelete)
+    printJson(result.segmentDelete, ctx.format !== 'raw')
     return
   }
 

@@ -1,10 +1,11 @@
 import { CliError } from '../errors'
-import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
+
+import { parseFirst, requireId } from './_shared'
 
 const customerSummarySelection = {
   id: true,
@@ -26,18 +27,6 @@ const getCustomerSelection = (view: CommandContext['view']) => {
   if (view === 'full') return customerFullSelection
   if (view === 'raw') return {} as const
   return customerSummarySelection
-}
-
-const requireId = (id: string | undefined) => {
-  if (!id) throw new CliError('Missing --id', 2)
-  return coerceGid(id, 'Customer')
-}
-
-const parseFirst = (value: unknown) => {
-  if (value === undefined) return 50
-  const n = Number(value)
-  if (!Number.isFinite(n) || n <= 0) throw new CliError('--first must be a positive integer', 2)
-  return Math.floor(n)
 }
 
 export const runCustomers = async ({
@@ -69,7 +58,7 @@ export const runCustomers = async ({
 
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Customer')
     const selection = resolveSelection({
       view: ctx.view,
       baseSelection: getCustomerSelection(ctx.view) as any,
@@ -132,14 +121,13 @@ export const runCustomers = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.customerCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.customerCreate?.customer?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.customerCreate, false)
-    else printJson(result.customerCreate)
+    printJson(result.customerCreate, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'update') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Customer')
     const built = buildInput({
       inputArg: args.input as any,
       setArgs: args.set as any,
@@ -158,14 +146,13 @@ export const runCustomers = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.customerUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.customerUpdate?.customer?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.customerUpdate, false)
-    else printJson(result.customerUpdate)
+    printJson(result.customerUpdate, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'delete') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Customer')
     if (!args.yes) throw new CliError('Refusing to delete without --yes', 2)
 
     const result = await runMutation(ctx, {
@@ -178,8 +165,7 @@ export const runCustomers = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.customerDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.customerDelete?.deletedCustomerId ?? '')
-    if (ctx.format === 'raw') printJson(result.customerDelete, false)
-    else printJson(result.customerDelete)
+    printJson(result.customerDelete, ctx.format !== 'raw')
     return
   }
 

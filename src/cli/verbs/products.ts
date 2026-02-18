@@ -1,5 +1,4 @@
 import { CliError } from '../errors'
-import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
@@ -18,6 +17,8 @@ import {
   unpublishProduct,
 } from '../workflows/products/publishablePublish'
 import { listPublications } from '../workflows/publications/resolvePublicationId'
+
+import { parseFirst, requireId } from './_shared'
 
 type MediaContentType = 'IMAGE' | 'VIDEO' | 'MODEL_3D' | 'EXTERNAL_VIDEO'
 
@@ -40,18 +41,6 @@ const getProductSelection = (view: CommandContext['view']) => {
   if (view === 'full') return productFullSelection
   if (view === 'raw') return {} as const
   return productSummarySelection
-}
-
-const requireId = (id: string | undefined) => {
-  if (!id) throw new CliError('Missing --id', 2)
-  return coerceGid(id, 'Product')
-}
-
-const parseFirst = (value: unknown) => {
-  if (value === undefined) return 50
-  const n = Number(value)
-  if (!Number.isFinite(n) || n <= 0) throw new CliError('--first must be a positive integer', 2)
-  return Math.floor(n)
 }
 
 const parseTags = (tags: string | undefined) => {
@@ -215,7 +204,7 @@ export const runProducts = async ({
 
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Product')
     const selection = resolveSelection({
       view: ctx.view,
       baseSelection: getProductSelection(ctx.view) as any,
@@ -278,14 +267,13 @@ export const runProducts = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productCreate?.product?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.productCreate, false)
-    else printJson(result.productCreate)
+    printJson(result.productCreate, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'update') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Product')
     const built = buildInput({
       inputArg: args.input as any,
       setArgs: args.set as any,
@@ -305,14 +293,13 @@ export const runProducts = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.productUpdate, false)
-    else printJson(result.productUpdate)
+    printJson(result.productUpdate, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'delete') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Product')
     if (!args.yes) throw new CliError('Refusing to delete without --yes', 2)
 
     const result = await runMutation(ctx, {
@@ -325,14 +312,13 @@ export const runProducts = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productDelete?.deletedProductId ?? '')
-    if (ctx.format === 'raw') printJson(result.productDelete, false)
-    else printJson(result.productDelete)
+    printJson(result.productDelete, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'duplicate') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Product')
 
     const built = buildInput({
       inputArg: undefined,
@@ -368,14 +354,13 @@ export const runProducts = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productDuplicate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productDuplicate?.newProduct?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.productDuplicate, false)
-    else printJson(result.productDuplicate)
+    printJson(result.productDuplicate, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'set-status') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Product')
     const status = args.status as string | undefined
     if (!status) throw new CliError('Missing --status (ACTIVE|DRAFT|ARCHIVED)', 2)
 
@@ -389,14 +374,13 @@ export const runProducts = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.productUpdate, false)
-    else printJson(result.productUpdate)
+    printJson(result.productUpdate, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'add-tags' || verb === 'remove-tags') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Product')
     const tags = parseTags(args.tags as any)
 
     const mutationField = verb === 'add-tags' ? 'tagsAdd' : 'tagsRemove'
@@ -413,8 +397,7 @@ export const runProducts = async ({
     const payload = result[mutationField]
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(payload?.node?.id ?? '')
-    if (ctx.format === 'raw') printJson(payload, false)
-    else printJson(payload)
+    printJson(payload, ctx.format !== 'raw')
     return
   }
 
@@ -427,7 +410,7 @@ export const runProducts = async ({
         'media-type': { type: 'string' },
       },
     })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Product')
 
     const urls = (args.url as string[] | undefined) ?? []
     if (urls.length === 0) throw new CliError('Missing --url (repeatable)', 2)
@@ -465,7 +448,7 @@ export const runProducts = async ({
         'media-type': { type: 'string' },
       },
     })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Product')
 
     const filePaths = (args.file as string[] | undefined) ?? []
     if (filePaths.length === 0) throw new CliError('Missing --file (repeatable)', 2)

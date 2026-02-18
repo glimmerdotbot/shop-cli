@@ -117,8 +117,7 @@ export const runBlogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.blogCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.blogCreate?.blog?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.blogCreate, false)
-    else printJson(result.blogCreate)
+    printJson(result.blogCreate, ctx.format !== 'raw')
     return
   }
 
@@ -142,8 +141,7 @@ export const runBlogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.blogUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.blogUpdate?.blog?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.blogUpdate, false)
-    else printJson(result.blogUpdate)
+    printJson(result.blogUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -162,8 +160,7 @@ export const runBlogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.blogDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.blogDelete?.deletedBlogId ?? '')
-    if (ctx.format === 'raw') printJson(result.blogDelete, false)
-    else printJson(result.blogDelete)
+    printJson(result.blogDelete, ctx.format !== 'raw')
     return
   }
 

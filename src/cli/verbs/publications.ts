@@ -160,8 +160,7 @@ export const runPublications = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.publicationCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.publicationCreate?.publication?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.publicationCreate, false)
-    else printJson(result.publicationCreate)
+    printJson(result.publicationCreate, ctx.format !== 'raw')
     return
   }
 
@@ -185,8 +184,7 @@ export const runPublications = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.publicationUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.publicationUpdate?.publication?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.publicationUpdate, false)
-    else printJson(result.publicationUpdate)
+    printJson(result.publicationUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -205,8 +203,7 @@ export const runPublications = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.publicationDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.publicationDelete?.deletedId ?? '')
-    if (ctx.format === 'raw') printJson(result.publicationDelete, false)
-    else printJson(result.publicationDelete)
+    printJson(result.publicationDelete, ctx.format !== 'raw')
     return
   }
 

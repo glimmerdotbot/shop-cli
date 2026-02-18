@@ -1,10 +1,11 @@
 import { CliError } from '../errors'
-import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
+
+import { parseFirst, requireId } from './_shared'
 
 const orderSummarySelection = {
   id: true,
@@ -26,18 +27,6 @@ const getOrderSelection = (view: CommandContext['view']) => {
   if (view === 'full') return orderFullSelection
   if (view === 'raw') return {} as const
   return orderSummarySelection
-}
-
-const requireId = (id: string | undefined) => {
-  if (!id) throw new CliError('Missing --id', 2)
-  return coerceGid(id, 'Order')
-}
-
-const parseFirst = (value: unknown) => {
-  if (value === undefined) return 50
-  const n = Number(value)
-  if (!Number.isFinite(n) || n <= 0) throw new CliError('--first must be a positive integer', 2)
-  return Math.floor(n)
 }
 
 export const runOrders = async ({
@@ -69,7 +58,7 @@ export const runOrders = async ({
 
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Order')
     const selection = resolveSelection({
       view: ctx.view,
       baseSelection: getOrderSelection(ctx.view) as any,
@@ -132,14 +121,13 @@ export const runOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.orderCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.orderCreate?.order?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.orderCreate, false)
-    else printJson(result.orderCreate)
+    printJson(result.orderCreate, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'update') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Order')
     const built = buildInput({
       inputArg: args.input as any,
       setArgs: args.set as any,
@@ -159,14 +147,13 @@ export const runOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.orderUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.orderUpdate?.order?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.orderUpdate, false)
-    else printJson(result.orderUpdate)
+    printJson(result.orderUpdate, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'delete') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Order')
     if (!args.yes) throw new CliError('Refusing to delete without --yes', 2)
 
     const result = await runMutation(ctx, {
@@ -179,8 +166,7 @@ export const runOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.orderDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.orderDelete?.deletedId ?? '')
-    if (ctx.format === 'raw') printJson(result.orderDelete, false)
-    else printJson(result.orderDelete)
+    printJson(result.orderDelete, ctx.format !== 'raw')
     return
   }
 

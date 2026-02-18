@@ -13,8 +13,13 @@ const urlRedirectSummarySelection = {
   target: true,
 } as const
 
+const urlRedirectFullSelection = {
+  ...urlRedirectSummarySelection,
+} as const
+
 const getUrlRedirectSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
+  if (view === 'full') return urlRedirectFullSelection
   if (view === 'raw') return {} as const
   return urlRedirectSummarySelection
 }
@@ -38,7 +43,7 @@ export const runUrlRedirects = async ({
         '  create|get|list|update|delete',
         '',
         'Common output flags:',
-        '  --view summary|ids|raw',
+        '  --view summary|ids|full|raw',
         '  --select <path>        (repeatable; dot paths; adds to base view selection)',
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
@@ -109,8 +114,7 @@ export const runUrlRedirects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.urlRedirectCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.urlRedirectCreate?.urlRedirect?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.urlRedirectCreate, false)
-    else printJson(result.urlRedirectCreate)
+    printJson(result.urlRedirectCreate, ctx.format !== 'raw')
     return
   }
 
@@ -134,8 +138,7 @@ export const runUrlRedirects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.urlRedirectUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.urlRedirectUpdate?.urlRedirect?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.urlRedirectUpdate, false)
-    else printJson(result.urlRedirectUpdate)
+    printJson(result.urlRedirectUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -154,8 +157,7 @@ export const runUrlRedirects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.urlRedirectDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.urlRedirectDelete?.deletedUrlRedirectId ?? '')
-    if (ctx.format === 'raw') printJson(result.urlRedirectDelete, false)
-    else printJson(result.urlRedirectDelete)
+    printJson(result.urlRedirectDelete, ctx.format !== 'raw')
     return
   }
 

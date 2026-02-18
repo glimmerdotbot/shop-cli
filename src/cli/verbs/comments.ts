@@ -113,8 +113,7 @@ export const runComments = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.commentDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.commentDelete?.deletedCommentId ?? '')
-    if (ctx.format === 'raw') printJson(result.commentDelete, false)
-    else printJson(result.commentDelete)
+    printJson(result.commentDelete, ctx.format !== 'raw')
     return
   }
 

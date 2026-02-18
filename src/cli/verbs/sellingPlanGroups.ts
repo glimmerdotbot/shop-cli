@@ -14,8 +14,13 @@ const sellingPlanGroupSummarySelection = {
   createdAt: true,
 } as const
 
+const sellingPlanGroupFullSelection = {
+  ...sellingPlanGroupSummarySelection,
+} as const
+
 const getSellingPlanGroupSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
+  if (view === 'full') return sellingPlanGroupFullSelection
   if (view === 'raw') return {} as const
   return sellingPlanGroupSummarySelection
 }
@@ -39,7 +44,7 @@ export const runSellingPlanGroups = async ({
         '  create|get|list|update|delete|add-variants|remove-variants',
         '',
         'Common output flags:',
-        '  --view summary|ids|raw',
+        '  --view summary|ids|full|raw',
         '  --select <path>        (repeatable; dot paths; adds to base view selection)',
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
@@ -110,8 +115,7 @@ export const runSellingPlanGroups = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.sellingPlanGroupCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.sellingPlanGroupCreate?.sellingPlanGroup?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.sellingPlanGroupCreate, false)
-    else printJson(result.sellingPlanGroupCreate)
+    printJson(result.sellingPlanGroupCreate, ctx.format !== 'raw')
     return
   }
 
@@ -135,8 +139,7 @@ export const runSellingPlanGroups = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.sellingPlanGroupUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.sellingPlanGroupUpdate?.sellingPlanGroup?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.sellingPlanGroupUpdate, false)
-    else printJson(result.sellingPlanGroupUpdate)
+    printJson(result.sellingPlanGroupUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -155,8 +158,7 @@ export const runSellingPlanGroups = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.sellingPlanGroupDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.sellingPlanGroupDelete?.deletedSellingPlanGroupId ?? '')
-    if (ctx.format === 'raw') printJson(result.sellingPlanGroupDelete, false)
-    else printJson(result.sellingPlanGroupDelete)
+    printJson(result.sellingPlanGroupDelete, ctx.format !== 'raw')
     return
   }
 
@@ -184,8 +186,7 @@ export const runSellingPlanGroups = async ({
     const payload = (result as any)[mutationField]
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(payload?.sellingPlanGroup?.id ?? '')
-    if (ctx.format === 'raw') printJson(payload, false)
-    else printJson(payload)
+    printJson(payload, ctx.format !== 'raw')
     return
   }
 

@@ -120,8 +120,7 @@ export const runPages = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.pageCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.pageCreate?.page?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.pageCreate, false)
-    else printJson(result.pageCreate)
+    printJson(result.pageCreate, ctx.format !== 'raw')
     return
   }
 
@@ -145,8 +144,7 @@ export const runPages = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.pageUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.pageUpdate?.page?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.pageUpdate, false)
-    else printJson(result.pageUpdate)
+    printJson(result.pageUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -165,8 +163,7 @@ export const runPages = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.pageDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.pageDelete?.deletedPageId ?? '')
-    if (ctx.format === 'raw') printJson(result.pageDelete, false)
-    else printJson(result.pageDelete)
+    printJson(result.pageDelete, ctx.format !== 'raw')
     return
   }
 

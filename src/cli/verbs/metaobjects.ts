@@ -15,8 +15,13 @@ const metaobjectSummarySelection = {
   createdAt: true,
 } as const
 
+const metaobjectFullSelection = {
+  ...metaobjectSummarySelection,
+} as const
+
 const getMetaobjectSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
+  if (view === 'full') return metaobjectFullSelection
   if (view === 'raw') return {} as const
   return metaobjectSummarySelection
 }
@@ -40,7 +45,7 @@ export const runMetaobjects = async ({
         '  create|get|list|update|delete',
         '',
         'Common output flags:',
-        '  --view summary|ids|raw',
+        '  --view summary|ids|full|raw',
         '  --select <path>        (repeatable; dot paths; adds to base view selection)',
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
@@ -114,8 +119,7 @@ export const runMetaobjects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.metaobjectCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.metaobjectCreate?.metaobject?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.metaobjectCreate, false)
-    else printJson(result.metaobjectCreate)
+    printJson(result.metaobjectCreate, ctx.format !== 'raw')
     return
   }
 
@@ -139,8 +143,7 @@ export const runMetaobjects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.metaobjectUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.metaobjectUpdate?.metaobject?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.metaobjectUpdate, false)
-    else printJson(result.metaobjectUpdate)
+    printJson(result.metaobjectUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -159,8 +162,7 @@ export const runMetaobjects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.metaobjectDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.metaobjectDelete?.deletedId ?? '')
-    if (ctx.format === 'raw') printJson(result.metaobjectDelete, false)
-    else printJson(result.metaobjectDelete)
+    printJson(result.metaobjectDelete, ctx.format !== 'raw')
     return
   }
 

@@ -1,10 +1,11 @@
 import { CliError } from '../errors'
-import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { runMutation, runQuery, parseStandardArgs, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
+
+import { parseFirst, requireId } from './_shared'
 
 const collectionSummarySelection = {
   id: true,
@@ -28,18 +29,6 @@ const getCollectionSelection = (view: CommandContext['view']) => {
 }
 
 const getListNodeSelection = (view: CommandContext['view']) => getCollectionSelection(view)
-
-const requireId = (id: string | undefined) => {
-  if (!id) throw new CliError('Missing --id', 2)
-  return coerceGid(id, 'Collection')
-}
-
-const parseFirst = (value: unknown) => {
-  if (value === undefined) return 50
-  const n = Number(value)
-  if (!Number.isFinite(n) || n <= 0) throw new CliError('--first must be a positive integer', 2)
-  return Math.floor(n)
-}
 
 export const runCollections = async ({
   ctx,
@@ -70,7 +59,7 @@ export const runCollections = async ({
 
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Collection')
     const selection = resolveSelection({
       view: ctx.view,
       baseSelection: getCollectionSelection(ctx.view) as any,
@@ -138,14 +127,13 @@ export const runCollections = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.collectionCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.collectionCreate?.collection?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.collectionCreate, false)
-    else printJson(result.collectionCreate)
+    printJson(result.collectionCreate, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'update') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Collection')
     const built = buildInput({
       inputArg: args.input as any,
       setArgs: args.set as any,
@@ -165,14 +153,13 @@ export const runCollections = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.collectionUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.collectionUpdate?.collection?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.collectionUpdate, false)
-    else printJson(result.collectionUpdate)
+    printJson(result.collectionUpdate, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'delete') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Collection')
     if (!args.yes) throw new CliError('Refusing to delete without --yes', 2)
 
     const result = await runMutation(ctx, {
@@ -185,14 +172,13 @@ export const runCollections = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.collectionDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.collectionDelete?.deletedCollectionId ?? '')
-    if (ctx.format === 'raw') printJson(result.collectionDelete, false)
-    else printJson(result.collectionDelete)
+    printJson(result.collectionDelete, ctx.format !== 'raw')
     return
   }
 
   if (verb === 'duplicate') {
     const args = parseStandardArgs({ argv, extraOptions: { 'copy-publications': { type: 'boolean' } } })
-    const id = requireId(args.id as any)
+    const id = requireId(args.id as any, 'Collection')
 
     const built = buildInput({
       inputArg: undefined,
@@ -233,8 +219,7 @@ export const runCollections = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.collectionDuplicate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.collectionDuplicate?.collection?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.collectionDuplicate, false)
-    else printJson(result.collectionDuplicate)
+    printJson(result.collectionDuplicate, ctx.format !== 'raw')
     return
   }
 

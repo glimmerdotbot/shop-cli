@@ -123,8 +123,7 @@ export const runWebhooks = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.webhookSubscriptionCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.webhookSubscriptionCreate?.webhookSubscription?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.webhookSubscriptionCreate, false)
-    else printJson(result.webhookSubscriptionCreate)
+    printJson(result.webhookSubscriptionCreate, ctx.format !== 'raw')
     return
   }
 
@@ -149,8 +148,7 @@ export const runWebhooks = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.webhookSubscriptionUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.webhookSubscriptionUpdate?.webhookSubscription?.id ?? '')
-    if (ctx.format === 'raw') printJson(result.webhookSubscriptionUpdate, false)
-    else printJson(result.webhookSubscriptionUpdate)
+    printJson(result.webhookSubscriptionUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -169,8 +167,7 @@ export const runWebhooks = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.webhookSubscriptionDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.webhookSubscriptionDelete?.deletedWebhookSubscriptionId ?? '')
-    if (ctx.format === 'raw') printJson(result.webhookSubscriptionDelete, false)
-    else printJson(result.webhookSubscriptionDelete)
+    printJson(result.webhookSubscriptionDelete, ctx.format !== 'raw')
     return
   }
 
