@@ -7,6 +7,12 @@ export interface ValidationResult {
   errors: string[]
 }
 
+export interface ValidationOptions {
+  variables?: Record<string, unknown>
+  operationName?: string
+  apiVersion?: string
+}
+
 const getOperationDefinition = (doc: DocumentNode, operationName?: string) => {
   const ops = doc.definitions.filter((d) => d.kind === 'OperationDefinition')
   if (ops.length === 0) return undefined
@@ -23,9 +29,10 @@ export function validateGraphQLOperation(
   query: string,
   variables?: Record<string, unknown>,
   operationName?: string,
+  apiVersion?: string,
 ): ValidationResult {
   const errors: string[] = []
-  const schema = getAdminSchema()
+  const schema = getAdminSchema(apiVersion)
 
   let document: DocumentNode
   try {
