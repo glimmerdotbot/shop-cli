@@ -19,7 +19,7 @@ import {
 } from '../workflows/products/publishablePublish'
 import { listPublications } from '../workflows/publications/resolvePublicationId'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 type MediaContentType = 'IMAGE' | 'VIDEO' | 'MODEL_3D' | 'EXTERNAL_VIDEO'
 
@@ -335,7 +335,12 @@ export const runProducts = async ({
     })
     if (result === undefined) return
 
-    printConnection({ connection: result.products, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.products,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('products', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 
@@ -681,7 +686,17 @@ export const runProducts = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.product?.media ?? { nodes: [] }, format: ctx.format, quiet: ctx.quiet })
+    const connection = result.product?.media ?? { nodes: [], pageInfo: undefined }
+    printConnection({
+      connection,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop products media list',
+        first,
+        extraFlags: [{ flag: '--id', value: id }],
+      },
+    })
     return
   }
 

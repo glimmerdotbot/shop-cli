@@ -7,7 +7,7 @@ import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 import { resolvePublicationIds } from '../workflows/products/publishablePublish'
 
-import { parseFirst, parseJsonArg, parseStringList, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseJsonArg, parseStringList, requireId } from './_shared'
 
 const collectionSummarySelection = {
   id: true,
@@ -112,6 +112,7 @@ export const runCollections = async ({
       connection: result.collections,
       format: ctx.format,
       quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('collections', { first, query, sort: sortKey, reverse }),
     })
     return
   }

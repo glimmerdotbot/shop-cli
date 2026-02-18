@@ -3,7 +3,7 @@ import { printConnection, printNode } from '../output'
 import { parseStandardArgs, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const staffMemberSummarySelection = {
   id: true,
@@ -102,7 +102,13 @@ export const runStaff = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.staffMembers ?? { nodes: [], pageInfo: undefined }, format: ctx.format, quiet: ctx.quiet })
+    const connection = result.staffMembers ?? { nodes: [], pageInfo: undefined }
+    printConnection({
+      connection,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('staff', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

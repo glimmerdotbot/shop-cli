@@ -3,7 +3,7 @@ import { printConnection, printNode } from '../output'
 import { parseStandardArgs, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 
-import { parseFirst } from './_shared'
+import { buildListNextPageArgs, parseFirst } from './_shared'
 
 const shopifyFunctionSelection = {
   id: true,
@@ -94,7 +94,19 @@ export const runShopifyFunctions = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.shopifyFunctions, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.shopifyFunctions,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs(
+        'functions',
+        { first, reverse },
+        [
+          ...(apiType ? [{ flag: '--api-type', value: apiType }] : []),
+          ...(useCreationUi === true ? [{ flag: '--use-creation-ui', value: true }] : []),
+        ],
+      ),
+    })
     return
   }
 

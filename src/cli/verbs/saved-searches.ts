@@ -137,7 +137,12 @@ export const runSavedSearches = async ({
     })
     if (result === undefined) return
     const connection = (result as any)[field]
-    printConnection({ connection, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: { base: `shop saved-searches ${verb}`, first, reverse },
+    })
     return
   }
 

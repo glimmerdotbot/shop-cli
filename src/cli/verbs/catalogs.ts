@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const catalogSummarySelection = {
   id: true,
@@ -91,7 +91,16 @@ export const runCatalogs = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.catalogs, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.catalogs,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs(
+        'catalogs',
+        { first, query, sort: sortKey, reverse },
+        type ? [{ flag: '--type', value: type }] : undefined,
+      ),
+    })
     return
   }
 

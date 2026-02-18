@@ -5,7 +5,14 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseDateTime, parseFirst, parseIds, requireId, requireLocationId } from './_shared'
+import {
+  buildListNextPageArgs,
+  parseDateTime,
+  parseFirst,
+  parseIds,
+  requireId,
+  requireLocationId,
+} from './_shared'
 
 const fulfillmentOrderSummarySelection = {
   id: true,
@@ -191,7 +198,16 @@ export const runFulfillmentOrders = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.fulfillmentOrders, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.fulfillmentOrders,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs(
+        'fulfillment-orders',
+        { first, query, sort: sortKey, reverse },
+        includeClosed ? [{ flag: '--include-closed', value: true }] : undefined,
+      ),
+    })
     return
   }
 

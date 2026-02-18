@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const inventoryItemSummarySelection = {
   id: true,
@@ -115,7 +115,12 @@ export const runInventoryItems = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.inventoryItems, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.inventoryItems,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('inventory-items', { first, query, reverse }),
+    })
     return
   }
 

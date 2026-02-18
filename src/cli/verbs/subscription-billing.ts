@@ -142,7 +142,17 @@ export const runSubscriptionBilling = async ({
     })
     if (result === undefined) return
     if (!result.subscriptionContract) throw new CliError('Subscription contract not found', 2)
-    printConnection({ connection: result.subscriptionContract.billingAttempts, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.subscriptionContract.billingAttempts,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop subscription-billing list-attempts',
+        first,
+        reverse,
+        extraFlags: [{ flag: '--contract-id', value: contractId }],
+      },
+    })
     return
   }
 
@@ -204,7 +214,18 @@ export const runSubscriptionBilling = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.subscriptionBillingCycles, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.subscriptionBillingCycles,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop subscription-billing list-cycles',
+        first,
+        sort: typeof sortKey === 'string' ? sortKey : undefined,
+        reverse,
+        extraFlags: [{ flag: '--contract-id', value: contractId }],
+      },
+    })
     return
   }
 

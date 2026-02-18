@@ -132,3 +132,28 @@ export const parseStringList = (
 
   return parts
 }
+
+export const buildListNextPageArgs = (
+  resource: string,
+  args: { first?: unknown; query?: unknown; sort?: unknown; reverse?: unknown },
+  extraFlags?: Array<{ flag: string; value?: unknown }>,
+) => {
+  const normalizedExtraFlags: Array<{ flag: string; value?: string | number | boolean }> = []
+
+  for (const f of extraFlags ?? []) {
+    if (!f?.flag) continue
+    const value = f.value
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      normalizedExtraFlags.push({ flag: f.flag, value })
+    }
+  }
+
+  return {
+    base: `shop ${resource} list`,
+    first: typeof args.first === 'number' ? args.first : undefined,
+    query: typeof args.query === 'string' ? args.query : undefined,
+    sort: typeof args.sort === 'string' ? args.sort : undefined,
+    reverse: args.reverse === true,
+    extraFlags: normalizedExtraFlags,
+  }
+}

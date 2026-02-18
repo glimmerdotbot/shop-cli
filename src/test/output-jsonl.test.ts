@@ -4,19 +4,27 @@ import { printConnection, printJson, printNode, setGlobalOutputFormat } from '..
 
 describe('output jsonl', () => {
   const originalWrite = process.stdout.write.bind(process.stdout)
+  const originalErrWrite = process.stderr.write.bind(process.stderr)
   let stdout = ''
+  let stderr = ''
 
   beforeEach(() => {
     stdout = ''
+    stderr = ''
     setGlobalOutputFormat('json')
     ;(process.stdout as any).write = (chunk: unknown) => {
       stdout += typeof chunk === 'string' ? chunk : Buffer.from(chunk as any).toString('utf8')
+      return true
+    }
+    ;(process.stderr as any).write = (chunk: unknown) => {
+      stderr += typeof chunk === 'string' ? chunk : Buffer.from(chunk as any).toString('utf8')
       return true
     }
   })
 
   afterEach(() => {
     ;(process.stdout as any).write = originalWrite
+    ;(process.stderr as any).write = originalErrWrite
     setGlobalOutputFormat('json')
   })
 
@@ -42,11 +50,22 @@ describe('output jsonl', () => {
       format: 'jsonl',
       quiet: false,
     })
-    expect(stdout).toBe(
-      '{"id":"1","title":"Hat"}\n' +
-        '{"id":"2"}\n' +
-        '{"pageInfo":{"hasNextPage":false,"endCursor":null}}\n',
-    )
+    expect(stdout).toBe('{"id":"1","title":"Hat"}\n' + '{"id":"2"}\n')
+    expect(stderr).toBe('')
+  })
+
+  it('prints next-page hint to stderr when hasNextPage is true', () => {
+    setGlobalOutputFormat('jsonl')
+    printConnection({
+      connection: {
+        nodes: [{ id: '1' }],
+        pageInfo: { hasNextPage: true, endCursor: 'CURSOR' },
+      },
+      format: 'jsonl',
+      quiet: false,
+      nextPageArgs: { base: 'shop products list', first: 50 },
+    })
+    expect(stdout).toBe('{"id":"1"}\n')
+    expect(stderr).toBe('Next page: shop products list --after "CURSOR"\n')
   })
 })
-

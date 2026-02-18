@@ -5,7 +5,7 @@ import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 import { coerceGid } from '../gid'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const abandonedCheckoutSummarySelection = {
   id: true,
@@ -91,7 +91,12 @@ export const runAbandonedCheckouts = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.abandonedCheckouts, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.abandonedCheckouts,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('abandoned-checkouts', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

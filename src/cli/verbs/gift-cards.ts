@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseCsv, parseFirst, parseIds, requireId } from './_shared'
+import { buildListNextPageArgs, parseCsv, parseFirst, parseIds, requireId } from './_shared'
 
 const giftCardSummarySelection = {
   id: true,
@@ -178,7 +178,12 @@ export const runGiftCards = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.giftCards, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.giftCards,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('gift-cards', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

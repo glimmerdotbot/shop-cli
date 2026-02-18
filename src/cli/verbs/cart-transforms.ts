@@ -4,7 +4,7 @@ import { printConnection, printJson } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, parseJsonArg, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseJsonArg, requireId } from './_shared'
 
 const cartTransformSelection = {
   id: true,
@@ -52,7 +52,12 @@ export const runCartTransforms = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.cartTransforms, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.cartTransforms,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('cart-transforms', { first, reverse }),
+    })
     return
   }
 

@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, parseStringList, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseStringList, requireId } from './_shared'
 
 const deliveryCustomizationSelection = {
   id: true,
@@ -95,7 +95,12 @@ export const runDeliveryCustomizations = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.deliveryCustomizations, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.deliveryCustomizations,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('delivery-customizations', { first, reverse }),
+    })
     return
   }
 

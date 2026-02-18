@@ -8,6 +8,16 @@ export const setGlobalOutputFormat = (format: OutputFormat) => {
   globalOutputFormat = format
 }
 
+type NextPageExtraFlag = { flag: string; value?: string | number | boolean }
+type NextPageArgs = {
+  base: string
+  first?: number
+  query?: string
+  sort?: string
+  reverse?: boolean
+  extraFlags?: NextPageExtraFlag[]
+}
+
 export const writeJson = (
   data: unknown,
   {
@@ -28,6 +38,47 @@ export const printIds = (ids: Array<string | undefined | null>) => {
   for (const id of ids) {
     if (id) process.stdout.write(`${id}\n`)
   }
+}
+
+const doubleQuote = (value: string): string =>
+  `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`
+
+const buildNextPageCommand = ({
+  base,
+  endCursor,
+  first,
+  query,
+  sort,
+  reverse,
+  extraFlags,
+}: NextPageArgs & { endCursor: string }): string => {
+  const parts: string[] = [base]
+
+  for (const extra of extraFlags ?? []) {
+    if (!extra?.flag) continue
+    const value = extra.value
+    if (typeof value === 'boolean') {
+      if (value) parts.push(extra.flag)
+      continue
+    }
+    if (typeof value === 'number') {
+      if (Number.isFinite(value)) parts.push(extra.flag, String(value))
+      continue
+    }
+    if (typeof value === 'string' && value) {
+      parts.push(extra.flag, doubleQuote(value))
+    }
+  }
+
+  if (typeof first === 'number' && Number.isFinite(first) && first > 0 && first !== 50) {
+    parts.push(`--first ${Math.floor(first)}`)
+  }
+  parts.push(`--after ${doubleQuote(endCursor)}`)
+  if (query) parts.push(`--query ${doubleQuote(query)}`)
+  if (sort) parts.push(`--sort ${sort}`)
+  if (reverse) parts.push('--reverse')
+
+  return parts.join(' ')
 }
 
 const toTableCell = (value: unknown): string => {
@@ -188,17 +239,27 @@ export const printConnection = ({
   connection,
   format,
   quiet,
+  nextPageArgs,
 }: {
   connection: { nodes?: any[]; pageInfo?: any }
   format: OutputFormat
   quiet: boolean
+  nextPageArgs?: NextPageArgs
 }) => {
   const nodes = connection.nodes ?? []
+  const pageInfo = connection.pageInfo
+  const hasNextPage = pageInfo?.hasNextPage === true
+  const endCursor = typeof pageInfo?.endCursor === 'string' ? (pageInfo.endCursor as string) : undefined
 
   if (quiet) {
     printIds(nodes.map((n) => n?.id))
     return
   }
+
+  const nextPageCommand =
+    hasNextPage && endCursor && nextPageArgs
+      ? buildNextPageCommand({ ...nextPageArgs, endCursor })
+      : undefined
 
   if (format === 'table') {
     const rows = nodes.map((n) => {
@@ -206,7 +267,7 @@ export const printConnection = ({
       return flattenSingleKeyPaths(n as Record<string, unknown>)
     })
     printMarkdownTable(rows)
-    if (connection.pageInfo) printJson({ pageInfo: connection.pageInfo })
+    if (nextPageCommand) process.stderr.write(`\nNext page: ${nextPageCommand}\n`)
     return
   }
 
@@ -221,26 +282,32 @@ export const printConnection = ({
         printMarkdownNode(n as Record<string, unknown>, 2)
       }
     }
-    if (connection.pageInfo) {
-      process.stdout.write('---\n\n')
-      printJson({ pageInfo: connection.pageInfo })
-    }
+    if (nextPageCommand) process.stderr.write(`\nNext page: ${nextPageCommand}\n`)
     return
   }
 
   if (format === 'jsonl') {
     for (const n of nodes) writeJson(n, { pretty: false })
-    if (connection.pageInfo) writeJson({ pageInfo: connection.pageInfo }, { pretty: false })
+    if (nextPageCommand) process.stderr.write(`Next page: ${nextPageCommand}\n`)
     return
   }
 
   if (format === 'raw') {
-    printJson(connection, false)
+    printJson(nodes, false)
+    if (nextPageCommand) process.stderr.write(`Next page: ${nextPageCommand}\n`)
     return
   }
 
   if (format === 'json') {
-    printJson(connection, true)
+    const output: any = { nodes }
+    if (hasNextPage) {
+      output.pageInfo = {
+        hasNextPage: true,
+        ...(endCursor ? { endCursor } : {}),
+        ...(nextPageCommand ? { nextPageCommand } : {}),
+      }
+    }
+    printJson(output, true)
     return
   }
 

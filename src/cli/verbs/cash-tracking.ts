@@ -3,7 +3,7 @@ import { printConnection, printNode } from '../output'
 import { parseStandardArgs, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const cashTrackingSessionSummarySelection = {
   id: true,
@@ -92,7 +92,12 @@ export const runCashTracking = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.cashTrackingSessions, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.cashTrackingSessions,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('cash-tracking', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

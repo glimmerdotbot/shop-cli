@@ -84,19 +84,20 @@ export const runStoreCredit = async ({
 
     const ownerId = ownerIdArg as string
     const first = parseFirst(args.first)
+    const after = args.after as any
     const result = await runQuery(ctx, {
       node: {
         __args: { id: ownerId },
         on_Customer: {
           storeCreditAccounts: {
-            __args: { first },
+            __args: { first, after },
             pageInfo: { hasNextPage: true, endCursor: true },
             nodes: selection,
           },
         },
         on_CompanyLocation: {
           storeCreditAccounts: {
-            __args: { first },
+            __args: { first, after },
             pageInfo: { hasNextPage: true, endCursor: true },
             nodes: selection,
           },
@@ -113,7 +114,16 @@ export const runStoreCredit = async ({
       throw new CliError('Owner does not have store credit accounts or ID is invalid', 2)
     }
 
-    printConnection({ connection, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop store-credit get',
+        first,
+        extraFlags: [{ flag: '--owner-id', value: ownerId }],
+      },
+    })
     return
   }
 

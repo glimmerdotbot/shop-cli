@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseCsv, parseFirst, parseJsonArg, requireId } from './_shared'
+import { buildListNextPageArgs, parseCsv, parseFirst, parseJsonArg, requireId } from './_shared'
 
 const customerSummarySelection = {
   id: true,
@@ -202,7 +202,12 @@ export const runCustomers = async ({
     })
     if (result === undefined) return
 
-    printConnection({ connection: result.customers, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.customers,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('customers', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

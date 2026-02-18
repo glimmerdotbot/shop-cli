@@ -7,7 +7,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseCsv, parseFirst, parseIds, requireId } from './_shared'
+import { buildListNextPageArgs, parseCsv, parseFirst, parseIds, requireId } from './_shared'
 
 const locationSummarySelection = {
   id: true,
@@ -155,7 +155,19 @@ export const runLocations = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.locations, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.locations,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs(
+        'locations',
+        { first, query, sort: sortKey, reverse },
+        [
+          ...(includeInactive ? [{ flag: '--include-inactive', value: true }] : []),
+          ...(includeLegacy ? [{ flag: '--include-legacy', value: true }] : []),
+        ],
+      ),
+    })
     return
   }
 

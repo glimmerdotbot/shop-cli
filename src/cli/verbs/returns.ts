@@ -228,7 +228,21 @@ export const runReturns = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.returnReasonDefinitions, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.returnReasonDefinitions,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop returns reason-definitions',
+        first,
+        query,
+        reverse,
+        extraFlags: [
+          ...(ids && ids.length > 0 ? [{ flag: '--ids', value: ids.join(',') }] : []),
+          ...(handles && handles.length > 0 ? [{ flag: '--handles', value: handles.join(',') }] : []),
+        ],
+      },
+    })
     return
   }
 
@@ -247,7 +261,17 @@ export const runReturns = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.returnableFulfillments, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.returnableFulfillments,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop returns returnable-fulfillments',
+        first,
+        reverse,
+        extraFlags: [{ flag: '--order-id', value: orderId }],
+      },
+    })
     return
   }
 

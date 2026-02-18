@@ -6,7 +6,7 @@ import { maybeFailOnUserErrors } from '../userErrors'
 import { resolveInventoryItemId } from '../workflows/inventory/resolveInventoryItemId'
 import { printConnection, printJson } from '../output'
 
-import { parseFirst, parseIntFlag, requireLocationId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseIntFlag, requireLocationId } from './_shared'
 
 const inventoryAdjustmentGroupSelection = ({
   inventoryItemId,
@@ -90,7 +90,16 @@ export const runInventory = async ({
     })
     if (result === undefined) return
     const connection = result.location?.inventoryLevels ?? { nodes: [], pageInfo: undefined }
-    printConnection({ connection, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs(
+        'inventory',
+        { first, query },
+        [{ flag: '--location-id', value: locationId }],
+      ),
+    })
     return
   }
 

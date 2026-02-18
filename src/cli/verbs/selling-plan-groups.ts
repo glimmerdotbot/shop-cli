@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, parseIds, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseIds, requireId } from './_shared'
 
 const sellingPlanGroupSummarySelection = {
   id: true,
@@ -96,7 +96,12 @@ export const runSellingPlanGroups = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.sellingPlanGroups, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.sellingPlanGroups,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('selling-plan-groups', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

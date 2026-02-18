@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseCsv, parseFirst, parseIds, requireId } from './_shared'
+import { buildListNextPageArgs, parseCsv, parseFirst, parseIds, requireId } from './_shared'
 
 const codeDiscountNodeSummarySelection = {
   id: true,
@@ -180,7 +180,12 @@ export const runDiscountsCode = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.codeDiscountNodes, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.codeDiscountNodes,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('discounts-code', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

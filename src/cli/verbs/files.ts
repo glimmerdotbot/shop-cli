@@ -4,7 +4,7 @@ import { maybeFailOnUserErrors } from '../userErrors'
 import { buildLocalFilesForStagedUpload, stagedUploadLocalFiles } from '../workflows/files/stagedUploads'
 import { printConnection, printIds, printJson, printNode } from '../output'
 
-import { parseFirst, parseIds, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseIds, requireId } from './_shared'
 
 const fileSelection = {
   id: true,
@@ -84,7 +84,12 @@ export const runFiles = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.files, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.files,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('files', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

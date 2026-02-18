@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const webhookSummarySelection = {
   id: true,
@@ -101,7 +101,12 @@ export const runWebhooks = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.webhookSubscriptions, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.webhookSubscriptions,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('webhooks', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

@@ -64,5 +64,19 @@ export const runTaxonomy = async ({
   })
   if (result === undefined) return
   const connection = result.taxonomy?.categories ?? { nodes: [], pageInfo: undefined }
-  printConnection({ connection, format: ctx.format, quiet: ctx.quiet })
+  printConnection({
+    connection,
+    format: ctx.format,
+    quiet: ctx.quiet,
+    nextPageArgs: {
+      base: `shop taxonomy ${verb}`,
+      first,
+      extraFlags: [
+        ...(search ? [{ flag: '--search', value: search }] : []),
+        ...(childrenOf ? [{ flag: '--children-of', value: childrenOf }] : []),
+        ...(descendantsOf ? [{ flag: '--descendants-of', value: descendantsOf }] : []),
+        ...(siblingsOf ? [{ flag: '--siblings-of', value: siblingsOf }] : []),
+      ],
+    },
+  })
 }

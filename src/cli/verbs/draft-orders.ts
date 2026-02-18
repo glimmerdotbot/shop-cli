@@ -6,7 +6,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseCsv, parseFirst, parseIds, requireId } from './_shared'
+import { buildListNextPageArgs, parseCsv, parseFirst, parseIds, requireId } from './_shared'
 
 const draftOrderSummarySelection = {
   id: true,
@@ -107,7 +107,12 @@ export const runDraftOrders = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.draftOrders, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.draftOrders,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('draft-orders', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 
@@ -378,6 +383,7 @@ export const runDraftOrders = async ({
       connection: result.draftOrderSavedSearches,
       format: ctx.format,
       quiet: ctx.quiet,
+      nextPageArgs: { base: 'shop draft-orders saved-searches', first, reverse },
     })
     return
   }

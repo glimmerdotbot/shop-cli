@@ -4,7 +4,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, parseTextArg, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseTextArg, requireId } from './_shared'
 
 const bulkOperationSelection = {
   id: true,
@@ -214,7 +214,12 @@ export const runBulkOperations = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.bulkOperations, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.bulkOperations,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('bulk-operations', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

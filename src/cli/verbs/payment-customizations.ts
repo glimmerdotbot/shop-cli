@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, parseIds, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseIds, requireId } from './_shared'
 
 const parseBool = (flag: string, value: unknown) => {
   if (typeof value !== 'string' || !value.trim()) throw new CliError(`Missing ${flag}`, 2)
@@ -87,7 +87,12 @@ export const runPaymentCustomizations = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.paymentCustomizations, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.paymentCustomizations,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('payment-customizations', { first, query, reverse }),
+    })
     return
   }
 

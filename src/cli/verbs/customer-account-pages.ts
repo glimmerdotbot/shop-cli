@@ -3,7 +3,7 @@ import { printConnection, printNode } from '../output'
 import { parseStandardArgs, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const pageSummarySelection = {
   id: true,
@@ -70,7 +70,12 @@ export const runCustomerAccountPages = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.customerAccountPages, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.customerAccountPages,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('customer-account-pages', { first, reverse }),
+    })
     return
   }
 

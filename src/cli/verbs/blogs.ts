@@ -6,7 +6,7 @@ import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 import { parsePublishDate } from '../workflows/products/publishablePublish'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const blogSummarySelection = {
   id: true,
@@ -175,7 +175,12 @@ export const runBlogs = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.blogs, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.blogs,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('blogs', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

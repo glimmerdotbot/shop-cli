@@ -6,7 +6,14 @@ import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 import { upsertProductVariants } from '../workflows/productVariants/upsert'
 
-import { parseFirst, parseIds, parseJsonArg, parseStringList, requireId } from './_shared'
+import {
+  buildListNextPageArgs,
+  parseFirst,
+  parseIds,
+  parseJsonArg,
+  parseStringList,
+  requireId,
+} from './_shared'
 
 const productVariantSummarySelection = {
   id: true,
@@ -217,7 +224,12 @@ export const runProductVariants = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.productVariants, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.productVariants,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('product-variants', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

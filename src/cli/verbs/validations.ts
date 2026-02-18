@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const validationSelection = {
   id: true,
@@ -91,7 +91,12 @@ export const runValidations = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.validations, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.validations,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('validations', { first, reverse }),
+    })
     return
   }
 

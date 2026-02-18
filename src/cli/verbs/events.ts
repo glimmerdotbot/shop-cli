@@ -3,7 +3,7 @@ import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const eventSummarySelection = {
   id: true,
@@ -100,7 +100,12 @@ export const runEvents = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.events, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.events,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('events', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

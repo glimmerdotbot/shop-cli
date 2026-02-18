@@ -5,7 +5,14 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseCsv, parseFirst, parseJsonArg, parseTextArg, requireId } from './_shared'
+import {
+  buildListNextPageArgs,
+  parseCsv,
+  parseFirst,
+  parseJsonArg,
+  parseTextArg,
+  requireId,
+} from './_shared'
 
 const orderSummarySelection = {
   id: true,
@@ -132,7 +139,12 @@ export const runOrders = async ({
     })
     if (result === undefined) return
 
-    printConnection({ connection: result.orders, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.orders,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('orders', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

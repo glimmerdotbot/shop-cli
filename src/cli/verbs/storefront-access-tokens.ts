@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const storefrontAccessTokenSummarySelection = {
   id: true,
@@ -64,7 +64,12 @@ export const runStorefrontAccessTokens = async ({
     })
     if (result === undefined) return
     const connection = result.shop?.storefrontAccessTokens ?? { nodes: [], pageInfo: undefined }
-    printConnection({ connection, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('storefront-access-tokens', { first, reverse }),
+    })
     return
   }
 

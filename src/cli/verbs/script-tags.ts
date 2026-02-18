@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const scriptTagSelection = {
   id: true,
@@ -92,7 +92,12 @@ export const runScriptTags = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.scriptTags, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.scriptTags,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('script-tags', { first, reverse }),
+    })
     return
   }
 

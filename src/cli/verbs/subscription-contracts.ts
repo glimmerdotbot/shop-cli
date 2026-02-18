@@ -6,7 +6,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
 const subscriptionContractSummarySelection = {
   id: true,
@@ -220,7 +220,12 @@ export const runSubscriptionContracts = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.subscriptionContracts, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.subscriptionContracts,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('subscription-contracts', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 

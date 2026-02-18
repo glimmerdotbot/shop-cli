@@ -4,7 +4,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, parseJsonArg, parseStringList } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseJsonArg, parseStringList } from './_shared'
 
 const buildTranslatableResourceSelection = (locale: string) =>
   ({
@@ -105,7 +105,19 @@ export const runTranslations = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.translatableResources, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.translatableResources,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs(
+        'translations',
+        { first, reverse },
+        [
+          { flag: '--resource-type', value: resourceType },
+          { flag: '--locale', value: locale },
+        ],
+      ),
+    })
     return
   }
 
@@ -138,7 +150,20 @@ export const runTranslations = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.translatableResourcesByIds, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.translatableResourcesByIds,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop translations list-by-ids',
+        first,
+        reverse,
+        extraFlags: [
+          { flag: '--resource-ids', value: resourceIds.join(',') },
+          { flag: '--locale', value: locale },
+        ],
+      },
+    })
     return
   }
 

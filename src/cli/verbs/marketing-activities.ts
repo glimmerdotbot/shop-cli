@@ -5,7 +5,14 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseFirst, parseIds, parseJsonArg, parseStringList, requireId } from './_shared'
+import {
+  buildListNextPageArgs,
+  parseFirst,
+  parseIds,
+  parseJsonArg,
+  parseStringList,
+  requireId,
+} from './_shared'
 
 const marketingActivitySummarySelection = {
   id: true,
@@ -125,7 +132,12 @@ export const runMarketingActivities = async ({
       },
     })
     if (result === undefined) return
-    printConnection({ connection: result.marketingActivities, format: ctx.format, quiet: ctx.quiet })
+    printConnection({
+      connection: result.marketingActivities,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: buildListNextPageArgs('marketing-activities', { first, query, sort: sortKey, reverse }),
+    })
     return
   }
 
