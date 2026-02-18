@@ -9,6 +9,7 @@
   "scripts": {
     "schema:admin": "node scripts/download-admin-schema.js",
     "codegen:admin": "genql --schema schema/2026-04.graphql --output src/generated/admin-2026-04 --sort -S ARN:string -S BigInt:string -S Color:string -S Date:string -S DateTime:string -S Decimal:string -S FormattedString:string -S HTML:string -S JSON:unknown -S Money:string -S StorefrontID:string -S URL:string -S UnsignedInt64:string -S UtcOffset:string",
+    "codegen:help": "tsx scripts/extract-schema-help.ts",
     "dev:shop-name": "tsx dev/shop-name.ts",
     "dev:shop": "tsx src/cli.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -24,6 +25,7 @@
     "@genql/cli": "^6.3.3",
     "@types/node": "^25.2.3",
     "dotenv": "^17.3.1",
+    "graphql": "^16.12.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
