@@ -49,10 +49,11 @@ const resolveGraphqlEndpoint = ({
     )
   }
   const normalizedShopDomain = normalizeShopDomain(shopDomain)
-  if (apiVersion) {
-    return `https://${normalizedShopDomain}/admin/api/${apiVersion}/graphql.json`
-  }
-  return `https://${normalizedShopDomain}/admin/api/graphql.json`
+  const resolvedApiVersion =
+    typeof apiVersion === 'string' && apiVersion.trim().length > 0
+      ? apiVersion.trim()
+      : '2026-04'
+  return `https://${normalizedShopDomain}/admin/api/${resolvedApiVersion}/graphql.json`
 }
 
 export const createShopifyAdminClient = ({
