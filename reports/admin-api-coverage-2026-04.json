@@ -3,22 +3,17 @@
   "totals": {
     "queryFields": 269,
     "mutationFields": 496,
-    "usedQueryFields": 228,
-    "usedMutationFields": 423,
-    "missingQueryFields": 41,
-    "missingMutationFields": 73
+    "usedQueryFields": 249,
+    "usedMutationFields": 459,
+    "missingQueryFields": 20,
+    "missingMutationFields": 37
   },
   "missing": {
     "queries": [
       "assignedFulfillmentOrders",
-      "catalogOperations",
-      "catalogsCount",
       "checkoutBranding",
       "checkoutProfile",
       "checkoutProfiles",
-      "collectionByHandle",
-      "collectionByIdentifier",
-      "collectionRulesConditions",
       "deletionEvents",
       "deliveryPromiseProvider",
       "inventoryLevel",
@@ -32,34 +27,14 @@
       "orderEditSession",
       "orderPaymentStatus",
       "pendingOrdersCount",
-      "productByHandle",
-      "productByIdentifier",
-      "productDuplicateJob",
-      "productFeed",
-      "productFeeds",
-      "productOperation",
-      "productResourceFeedback",
-      "productTags",
-      "productTypes",
-      "productVariantByIdentifier",
-      "productVendors",
-      "publicationsCount",
-      "publishedProductsCount",
       "returnableFulfillment",
       "reverseDelivery",
-      "reverseFulfillmentOrder",
-      "urlRedirectImport",
-      "urlRedirectSavedSearches",
-      "urlRedirectsCount"
+      "reverseFulfillmentOrder"
     ],
     "mutations": [
       "appSubscriptionTrialExtend",
-      "bulkProductResourceFeedbackCreate",
-      "catalogContextUpdate",
       "checkoutBrandingUpsert",
       "collectionAddProducts",
-      "collectionReorderProducts",
-      "combinedListingUpdate",
       "deliveryCustomizationActivation",
       "deliveryPromiseProviderUpsert",
       "deliverySettingUpdate",
@@ -88,63 +63,15 @@
       "orderInvoiceSend",
       "orderOpen",
       "orderRiskAssessmentCreate",
-      "productChangeStatus",
-      "productCreateMedia",
-      "productDeleteMedia",
-      "productFeedCreate",
-      "productFeedDelete",
-      "productFullSync",
-      "productJoinSellingPlanGroups",
-      "productLeaveSellingPlanGroups",
-      "productOptionsCreate",
-      "productOptionsDelete",
-      "productOptionsReorder",
-      "productOptionUpdate",
       "productPublish",
-      "productReorderMedia",
-      "productSet",
       "productUnpublish",
-      "productUpdateMedia",
-      "productVariantAppendMedia",
-      "productVariantDetachMedia",
-      "productVariantJoinSellingPlanGroups",
-      "productVariantLeaveSellingPlanGroups",
-      "productVariantsBulkCreate",
-      "productVariantsBulkDelete",
-      "productVariantsBulkReorder",
-      "productVariantsBulkUpdate",
-      "publishablePublishToCurrentChannel",
-      "publishableUnpublishToCurrentChannel",
       "returnLineItemRemoveFromReturn",
       "reverseDeliveryCreateWithShipping",
       "reverseDeliveryShippingUpdate",
-      "reverseFulfillmentOrderDispose",
-      "shopResourceFeedbackCreate",
-      "urlRedirectBulkDeleteAll",
-      "urlRedirectBulkDeleteByIds",
-      "urlRedirectBulkDeleteBySavedSearch",
-      "urlRedirectBulkDeleteBySearch",
-      "urlRedirectImportCreate",
-      "urlRedirectImportSubmit"
+      "reverseFulfillmentOrderDispose"
     ],
     "grouped": {
       "queries": [
-        {
-          "prefix": "product",
-          "ops": [
-            "productByHandle",
-            "productByIdentifier",
-            "productDuplicateJob",
-            "productFeed",
-            "productFeeds",
-            "productOperation",
-            "productResourceFeedback",
-            "productTags",
-            "productTypes",
-            "productVariantByIdentifier",
-            "productVendors"
-          ]
-        },
         {
           "prefix": "checkout",
           "ops": [
@@ -154,27 +81,11 @@
           ]
         },
         {
-          "prefix": "collection",
-          "ops": [
-            "collectionByHandle",
-            "collectionByIdentifier",
-            "collectionRulesConditions"
-          ]
-        },
-        {
           "prefix": "order",
           "ops": [
             "orderByIdentifier",
             "orderEditSession",
             "orderPaymentStatus"
-          ]
-        },
-        {
-          "prefix": "url",
-          "ops": [
-            "urlRedirectImport",
-            "urlRedirectSavedSearches",
-            "urlRedirectsCount"
           ]
         },
         {
@@ -202,18 +113,6 @@
           "prefix": "assigned",
           "ops": [
             "assignedFulfillmentOrders"
-          ]
-        },
-        {
-          "prefix": "catalog",
-          "ops": [
-            "catalogOperations"
-          ]
-        },
-        {
-          "prefix": "catalogs",
-          "ops": [
-            "catalogsCount"
           ]
         },
         {
@@ -253,18 +152,6 @@
           ]
         },
         {
-          "prefix": "publications",
-          "ops": [
-            "publicationsCount"
-          ]
-        },
-        {
-          "prefix": "published",
-          "ops": [
-            "publishedProductsCount"
-          ]
-        },
-        {
           "prefix": "returnable",
           "ops": [
             "returnableFulfillment"
@@ -272,36 +159,6 @@
         }
       ],
       "mutations": [
-        {
-          "prefix": "product",
-          "ops": [
-            "productChangeStatus",
-            "productCreateMedia",
-            "productDeleteMedia",
-            "productFeedCreate",
-            "productFeedDelete",
-            "productFullSync",
-            "productJoinSellingPlanGroups",
-            "productLeaveSellingPlanGroups",
-            "productOptionsCreate",
-            "productOptionsDelete",
-            "productOptionsReorder",
-            "productOptionUpdate",
-            "productPublish",
-            "productReorderMedia",
-            "productSet",
-            "productUnpublish",
-            "productUpdateMedia",
-            "productVariantAppendMedia",
-            "productVariantDetachMedia",
-            "productVariantJoinSellingPlanGroups",
-            "productVariantLeaveSellingPlanGroups",
-            "productVariantsBulkCreate",
-            "productVariantsBulkDelete",
-            "productVariantsBulkReorder",
-            "productVariantsBulkUpdate"
-          ]
-        },
         {
           "prefix": "order",
           "ops": [
@@ -324,17 +181,6 @@
             "inventorySetOnHandQuantities",
             "inventorySetScheduledChanges",
             "inventoryTransferSetItems"
-          ]
-        },
-        {
-          "prefix": "url",
-          "ops": [
-            "urlRedirectBulkDeleteAll",
-            "urlRedirectBulkDeleteByIds",
-            "urlRedirectBulkDeleteBySavedSearch",
-            "urlRedirectBulkDeleteBySearch",
-            "urlRedirectImportCreate",
-            "urlRedirectImportSubmit"
           ]
         },
         {
@@ -365,13 +211,6 @@
           ]
         },
         {
-          "prefix": "collection",
-          "ops": [
-            "collectionAddProducts",
-            "collectionReorderProducts"
-          ]
-        },
-        {
           "prefix": "event",
           "ops": [
             "eventBridgeWebhookSubscriptionCreate",
@@ -386,10 +225,10 @@
           ]
         },
         {
-          "prefix": "publishable",
+          "prefix": "product",
           "ops": [
-            "publishablePublishToCurrentChannel",
-            "publishableUnpublishToCurrentChannel"
+            "productPublish",
+            "productUnpublish"
           ]
         },
         {
@@ -399,27 +238,15 @@
           ]
         },
         {
-          "prefix": "bulk",
-          "ops": [
-            "bulkProductResourceFeedbackCreate"
-          ]
-        },
-        {
-          "prefix": "catalog",
-          "ops": [
-            "catalogContextUpdate"
-          ]
-        },
-        {
           "prefix": "checkout",
           "ops": [
             "checkoutBrandingUpsert"
           ]
         },
         {
-          "prefix": "combined",
+          "prefix": "collection",
           "ops": [
-            "combinedListingUpdate"
+            "collectionAddProducts"
           ]
         },
         {
@@ -433,12 +260,6 @@
           "ops": [
             "returnLineItemRemoveFromReturn"
           ]
-        },
-        {
-          "prefix": "shop",
-          "ops": [
-            "shopResourceFeedbackCreate"
-          ]
         }
       ]
     }
@@ -446,6 +267,27 @@
   "used": {
     "grouped": {
       "queries": [
+        {
+          "prefix": "product",
+          "ops": [
+            "product",
+            "productByHandle",
+            "productByIdentifier",
+            "productDuplicateJob",
+            "productFeed",
+            "productFeeds",
+            "productOperation",
+            "productResourceFeedback",
+            "productSavedSearches",
+            "productTags",
+            "productTypes",
+            "productVariant",
+            "productVariantByIdentifier",
+            "productVariants",
+            "productVariantsCount",
+            "productVendors"
+          ]
+        },
         {
           "prefix": "customer",
           "ops": [
@@ -532,6 +374,16 @@
           ]
         },
         {
+          "prefix": "collection",
+          "ops": [
+            "collection",
+            "collectionByHandle",
+            "collectionByIdentifier",
+            "collectionRulesConditions",
+            "collectionSavedSearches"
+          ]
+        },
+        {
           "prefix": "company",
           "ops": [
             "company",
@@ -582,16 +434,6 @@
           ]
         },
         {
-          "prefix": "product",
-          "ops": [
-            "product",
-            "productSavedSearches",
-            "productVariant",
-            "productVariants",
-            "productVariantsCount"
-          ]
-        },
-        {
           "prefix": "segment",
           "ops": [
             "segment",
@@ -609,6 +451,16 @@
             "shopLocales",
             "shopPayPaymentRequestReceipt",
             "shopPayPaymentRequestReceipts"
+          ]
+        },
+        {
+          "prefix": "url",
+          "ops": [
+            "urlRedirect",
+            "urlRedirectImport",
+            "urlRedirects",
+            "urlRedirectSavedSearches",
+            "urlRedirectsCount"
           ]
         },
         {
@@ -760,10 +612,17 @@
           ]
         },
         {
-          "prefix": "collection",
+          "prefix": "catalog",
           "ops": [
-            "collection",
-            "collectionSavedSearches"
+            "catalog",
+            "catalogOperations"
+          ]
+        },
+        {
+          "prefix": "catalogs",
+          "ops": [
+            "catalogs",
+            "catalogsCount"
           ]
         },
         {
@@ -872,6 +731,13 @@
           ]
         },
         {
+          "prefix": "publications",
+          "ops": [
+            "publications",
+            "publicationsCount"
+          ]
+        },
+        {
           "prefix": "script",
           "ops": [
             "scriptTag",
@@ -897,13 +763,6 @@
           "ops": [
             "staffMember",
             "staffMembers"
-          ]
-        },
-        {
-          "prefix": "url",
-          "ops": [
-            "urlRedirect",
-            "urlRedirects"
           ]
         },
         {
@@ -935,18 +794,6 @@
           "prefix": "cart",
           "ops": [
             "cartTransforms"
-          ]
-        },
-        {
-          "prefix": "catalog",
-          "ops": [
-            "catalog"
-          ]
-        },
-        {
-          "prefix": "catalogs",
-          "ops": [
-            "catalogs"
           ]
         },
         {
@@ -1082,9 +929,9 @@
           ]
         },
         {
-          "prefix": "publications",
+          "prefix": "published",
           "ops": [
-            "publications"
+            "publishedProductsCount"
           ]
         },
         {
@@ -1233,6 +1080,41 @@
             "companyLocationUpdate",
             "companyRevokeMainContact",
             "companyUpdate"
+          ]
+        },
+        {
+          "prefix": "product",
+          "ops": [
+            "productBundleCreate",
+            "productBundleUpdate",
+            "productChangeStatus",
+            "productCreate",
+            "productCreateMedia",
+            "productDelete",
+            "productDeleteMedia",
+            "productDuplicate",
+            "productFeedCreate",
+            "productFeedDelete",
+            "productFullSync",
+            "productJoinSellingPlanGroups",
+            "productLeaveSellingPlanGroups",
+            "productOptionsCreate",
+            "productOptionsDelete",
+            "productOptionsReorder",
+            "productOptionUpdate",
+            "productReorderMedia",
+            "productSet",
+            "productUpdate",
+            "productUpdateMedia",
+            "productVariantAppendMedia",
+            "productVariantDetachMedia",
+            "productVariantJoinSellingPlanGroups",
+            "productVariantLeaveSellingPlanGroups",
+            "productVariantRelationshipBulkUpdate",
+            "productVariantsBulkCreate",
+            "productVariantsBulkDelete",
+            "productVariantsBulkReorder",
+            "productVariantsBulkUpdate"
           ]
         },
         {
@@ -1417,6 +1299,20 @@
           ]
         },
         {
+          "prefix": "collection",
+          "ops": [
+            "collectionAddProductsV2",
+            "collectionCreate",
+            "collectionDelete",
+            "collectionDuplicate",
+            "collectionPublish",
+            "collectionRemoveProducts",
+            "collectionReorderProducts",
+            "collectionUnpublish",
+            "collectionUpdate"
+          ]
+        },
+        {
           "prefix": "marketing",
           "ops": [
             "marketingActivitiesDeleteAllExternal",
@@ -1445,16 +1341,17 @@
           ]
         },
         {
-          "prefix": "collection",
+          "prefix": "url",
           "ops": [
-            "collectionAddProductsV2",
-            "collectionCreate",
-            "collectionDelete",
-            "collectionDuplicate",
-            "collectionPublish",
-            "collectionRemoveProducts",
-            "collectionUnpublish",
-            "collectionUpdate"
+            "urlRedirectBulkDeleteAll",
+            "urlRedirectBulkDeleteByIds",
+            "urlRedirectBulkDeleteBySavedSearch",
+            "urlRedirectBulkDeleteBySearch",
+            "urlRedirectCreate",
+            "urlRedirectDelete",
+            "urlRedirectImportCreate",
+            "urlRedirectImportSubmit",
+            "urlRedirectUpdate"
           ]
         },
         {
@@ -1545,18 +1442,6 @@
           ]
         },
         {
-          "prefix": "product",
-          "ops": [
-            "productBundleCreate",
-            "productBundleUpdate",
-            "productCreate",
-            "productDelete",
-            "productDuplicate",
-            "productUpdate",
-            "productVariantRelationshipBulkUpdate"
-          ]
-        },
-        {
           "prefix": "selling",
           "ops": [
             "sellingPlanGroupAddProducts",
@@ -1601,6 +1486,34 @@
           ]
         },
         {
+          "prefix": "shop",
+          "ops": [
+            "shopLocaleDisable",
+            "shopLocaleEnable",
+            "shopLocaleUpdate",
+            "shopPolicyUpdate",
+            "shopResourceFeedbackCreate"
+          ]
+        },
+        {
+          "prefix": "bulk",
+          "ops": [
+            "bulkOperationCancel",
+            "bulkOperationRunMutation",
+            "bulkOperationRunQuery",
+            "bulkProductResourceFeedbackCreate"
+          ]
+        },
+        {
+          "prefix": "catalog",
+          "ops": [
+            "catalogContextUpdate",
+            "catalogCreate",
+            "catalogDelete",
+            "catalogUpdate"
+          ]
+        },
+        {
           "prefix": "comment",
           "ops": [
             "commentApprove",
@@ -1619,12 +1532,12 @@
           ]
         },
         {
-          "prefix": "shop",
+          "prefix": "publishable",
           "ops": [
-            "shopLocaleDisable",
-            "shopLocaleEnable",
-            "shopLocaleUpdate",
-            "shopPolicyUpdate"
+            "publishablePublish",
+            "publishablePublishToCurrentChannel",
+            "publishableUnpublish",
+            "publishableUnpublishToCurrentChannel"
           ]
         },
         {
@@ -1644,27 +1557,11 @@
           ]
         },
         {
-          "prefix": "bulk",
-          "ops": [
-            "bulkOperationCancel",
-            "bulkOperationRunMutation",
-            "bulkOperationRunQuery"
-          ]
-        },
-        {
           "prefix": "carrier",
           "ops": [
             "carrierServiceCreate",
             "carrierServiceDelete",
             "carrierServiceUpdate"
-          ]
-        },
-        {
-          "prefix": "catalog",
-          "ops": [
-            "catalogCreate",
-            "catalogDelete",
-            "catalogUpdate"
           ]
         },
         {
@@ -1748,14 +1645,6 @@
           ]
         },
         {
-          "prefix": "url",
-          "ops": [
-            "urlRedirectCreate",
-            "urlRedirectDelete",
-            "urlRedirectUpdate"
-          ]
-        },
-        {
           "prefix": "validation",
           "ops": [
             "validationCreate",
@@ -1804,13 +1693,6 @@
           "ops": [
             "metafieldsDelete",
             "metafieldsSet"
-          ]
-        },
-        {
-          "prefix": "publishable",
-          "ops": [
-            "publishablePublish",
-            "publishableUnpublish"
           ]
         },
         {
@@ -1866,6 +1748,12 @@
           "prefix": "backup",
           "ops": [
             "backupRegionUpdate"
+          ]
+        },
+        {
+          "prefix": "combined",
+          "ops": [
+            "combinedListingUpdate"
           ]
         },
         {

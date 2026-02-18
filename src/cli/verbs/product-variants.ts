@@ -85,7 +85,7 @@ export const runProductVariants = async ({
         '  shop product-variants <verb> [flags]',
         '',
         'Verbs:',
-        '  get|get-by-identifier|list|count',
+        '  get|get-by-identifier|by-identifier|list|count',
         '  bulk-create|bulk-update|bulk-delete|bulk-reorder',
         '  append-media|detach-media',
         '  join-selling-plans|leave-selling-plans',
@@ -100,6 +100,8 @@ export const runProductVariants = async ({
     )
     return
   }
+
+  if (verb === 'by-identifier') verb = 'get-by-identifier'
 
   if (verb === 'upsert') {
     const args = parseStandardArgs({

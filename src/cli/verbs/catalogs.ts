@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseJsonArg, requireId } from './_shared'
 
 const catalogSummarySelection = {
   id: true,
@@ -35,7 +35,7 @@ export const runCatalogs = async ({
         '  shop catalogs <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete',
+        '  create|get|list|count|operations|context-update|update|delete',
         '',
         'Common output flags:',
         '  --view summary|ids|raw',
@@ -43,6 +43,101 @@ export const runCatalogs = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'operations') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const selection = resolveSelection({
+      typeName: 'ResourceOperation',
+      view: ctx.view,
+      baseSelection: {
+        id: true,
+        status: true,
+        processedRowCount: true,
+        rowCount: { count: true, exceedsMax: true },
+        __typename: true,
+      } as const,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
+    const result = await runQuery(ctx, { catalogOperations: selection })
+    if (result === undefined) return
+    printNode({ node: result.catalogOperations, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'count') {
+    const args = parseStandardArgs({ argv, extraOptions: { limit: { type: 'string' } } })
+    const query = args.query as any
+    const type = args.type as any
+    const limitRaw = args.limit as any
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const result = await runQuery(ctx, {
+      catalogsCount: {
+        __args: {
+          ...(query ? { query } : {}),
+          ...(type ? { type } : {}),
+          ...(limit !== undefined ? { limit: Math.floor(limit) } : {}),
+        },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.catalogsCount?.count ?? '')
+    printJson(result.catalogsCount, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'context-update') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'catalog-id': { type: 'string' },
+        'contexts-to-add': { type: 'string' },
+        'contexts-to-remove': { type: 'string' },
+      },
+    })
+    const catalogId = requireId((args as any)['catalog-id'], 'Catalog')
+
+    const contextsToAdd = (args as any)['contexts-to-add']
+      ? parseJsonArg((args as any)['contexts-to-add'], '--contexts-to-add')
+      : undefined
+    const contextsToRemove = (args as any)['contexts-to-remove']
+      ? parseJsonArg((args as any)['contexts-to-remove'], '--contexts-to-remove')
+      : undefined
+
+    if (contextsToAdd === undefined && contextsToRemove === undefined) {
+      throw new CliError('Missing --contexts-to-add and/or --contexts-to-remove', 2)
+    }
+
+    const result = await runMutation(ctx, {
+      catalogContextUpdate: {
+        __args: {
+          catalogId,
+          ...(contextsToAdd !== undefined ? { contextsToAdd } : {}),
+          ...(contextsToRemove !== undefined ? { contextsToRemove } : {}),
+        },
+        catalog: catalogSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.catalogContextUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.catalogContextUpdate?.catalog?.id ?? '')
+    printJson(result.catalogContextUpdate, ctx.format !== 'raw')
     return
   }
 

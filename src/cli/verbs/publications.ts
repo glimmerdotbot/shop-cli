@@ -1,4 +1,5 @@
 import { CliError } from '../errors'
+import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
@@ -42,7 +43,7 @@ export const runPublications = async ({
         '  shop publications <verb> [flags]',
         '',
         'Verbs:',
-        '  resolve|create|get|list|update|delete',
+        '  resolve|create|get|list|count|published-products-count|update|delete',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -50,6 +51,68 @@ export const runPublications = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'count') {
+    const args = parseStandardArgs({ argv, extraOptions: { limit: { type: 'string' } } })
+    const type = args.type as any
+    const limitRaw = (args as any).limit as any
+
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const result = await runQuery(ctx, {
+      publicationsCount: {
+        __args: {
+          ...(type ? { catalogType: type } : {}),
+          ...(limit !== undefined ? { limit: Math.floor(limit) } : {}),
+        },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.publicationsCount?.count ?? '')
+    printJson(result.publicationsCount, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'published-products-count') {
+    const args = parseStandardArgs({ argv, extraOptions: { limit: { type: 'string' }, 'publication-id': { type: 'string' } } })
+    const raw = (args as any)['publication-id'] as string | undefined
+    if (!raw) throw new CliError('Missing --publication-id', 2)
+    const publicationId = coerceGid(raw, 'Publication')
+
+    const limitRaw = (args as any).limit as any
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const result = await runQuery(ctx, {
+      publishedProductsCount: {
+        __args: {
+          publicationId,
+          ...(limit !== undefined ? { limit: Math.floor(limit) } : {}),
+        },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.publishedProductsCount?.count ?? '')
+    printJson(result.publishedProductsCount, ctx.format !== 'raw')
     return
   }
 

@@ -66,7 +66,8 @@ export const runCollections = async ({
         '  shop collections <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|count|update|delete|duplicate',
+        '  create|get|by-handle|by-identifier|list|count|update|delete|duplicate',
+        '  rules-conditions',
         '  add-products|remove-products|reorder-products',
         '  publish|unpublish',
         '',
@@ -76,6 +77,150 @@ export const runCollections = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'by-handle') {
+    const args = parseStandardArgs({ argv, extraOptions: { handle: { type: 'string' } } })
+    const handle = args.handle as string | undefined
+    if (!handle) throw new CliError('Missing --handle', 2)
+
+    const selectValues = Array.isArray(args.select)
+      ? args.select
+      : args.select
+        ? [args.select]
+        : []
+    const selectionOverride =
+      typeof (args as any).selection === 'string' && (args as any).selection.length > 0
+    const select =
+      !selectionOverride && ctx.view !== 'raw' && ctx.view !== 'ids'
+        ? Array.from(new Set([...selectValues, 'resourcePublicationsV2.nodes.publication.name']))
+        : args.select
+
+    const includeValues = Array.isArray(args.include)
+      ? args.include
+      : args.include
+        ? [args.include]
+        : []
+    const include =
+      ctx.view === 'all'
+        ? Array.from(new Set([...includeValues, 'resourcePublicationsV2']))
+        : args.include
+
+    const selection = resolveSelection({
+      resource: 'collections',
+      view: ctx.view,
+      baseSelection: getCollectionSelectionForGet(ctx.view) as any,
+      select,
+      selection: (args as any).selection,
+      include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
+    const result = await runQuery(ctx, {
+      collectionByHandle: { __args: { handle }, ...selection },
+    })
+    if (result === undefined) return
+
+    const wantsResourcePublicationsV2 =
+      Array.isArray(args.select) &&
+      args.select.some((p: unknown) => typeof p === 'string' && p.startsWith('resourcePublicationsV2'))
+    const wantsResourcePublicationsV2ViaSelection =
+      typeof (args as any).selection === 'string' && (args as any).selection.includes('resourcePublicationsV2')
+    const stripResourcePublicationsV2 = !(wantsResourcePublicationsV2 || wantsResourcePublicationsV2ViaSelection)
+
+    const withComputed = applyComputedFieldsToNode(result.collectionByHandle, {
+      view: ctx.view,
+      stripResourcePublicationsV2,
+    })
+    printNode({ node: withComputed, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'by-identifier') {
+    const args = parseStandardArgs({ argv, extraOptions: { identifier: { type: 'string' } } })
+    const identifier = parseJsonArg((args as any).identifier, '--identifier')
+
+    const selectValues = Array.isArray(args.select)
+      ? args.select
+      : args.select
+        ? [args.select]
+        : []
+    const selectionOverride =
+      typeof (args as any).selection === 'string' && (args as any).selection.length > 0
+    const select =
+      !selectionOverride && ctx.view !== 'raw' && ctx.view !== 'ids'
+        ? Array.from(new Set([...selectValues, 'resourcePublicationsV2.nodes.publication.name']))
+        : args.select
+
+    const includeValues = Array.isArray(args.include)
+      ? args.include
+      : args.include
+        ? [args.include]
+        : []
+    const include =
+      ctx.view === 'all'
+        ? Array.from(new Set([...includeValues, 'resourcePublicationsV2']))
+        : args.include
+
+    const selection = resolveSelection({
+      resource: 'collections',
+      view: ctx.view,
+      baseSelection: getCollectionSelectionForGet(ctx.view) as any,
+      select,
+      selection: (args as any).selection,
+      include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
+    const result = await runQuery(ctx, {
+      collectionByIdentifier: { __args: { identifier }, ...selection },
+    })
+    if (result === undefined) return
+
+    const wantsResourcePublicationsV2 =
+      Array.isArray(args.select) &&
+      args.select.some((p: unknown) => typeof p === 'string' && p.startsWith('resourcePublicationsV2'))
+    const wantsResourcePublicationsV2ViaSelection =
+      typeof (args as any).selection === 'string' && (args as any).selection.includes('resourcePublicationsV2')
+    const stripResourcePublicationsV2 = !(wantsResourcePublicationsV2 || wantsResourcePublicationsV2ViaSelection)
+
+    const withComputed = applyComputedFieldsToNode(result.collectionByIdentifier, {
+      view: ctx.view,
+      stripResourcePublicationsV2,
+    })
+    printNode({ node: withComputed, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'rules-conditions') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const selection = resolveSelection({
+      typeName: 'CollectionRuleConditions',
+      view: ctx.view,
+      baseSelection: {
+        ruleType: true,
+        defaultRelation: true,
+        allowedRelations: true,
+        ruleObject: {
+          __typename: true,
+          on_CollectionRuleMetafieldCondition: {
+            metafieldDefinition: { id: true, name: true, namespace: true, key: true },
+          },
+        },
+        __typename: true,
+      } as const,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: false,
+    })
+
+    const result = await runQuery(ctx, { collectionRulesConditions: selection })
+    if (result === undefined) return
+    printJson(result.collectionRulesConditions, ctx.format !== 'raw')
     return
   }
 

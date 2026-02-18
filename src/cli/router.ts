@@ -118,6 +118,9 @@ import { runTags } from './verbs/tags'
 import { runTax } from './verbs/tax'
 import { runTypes } from './verbs/types'
 import { runWebPresences } from './verbs/web-presences'
+import { runProductFeeds } from './verbs/product-feeds'
+import { runResourceFeedback } from './verbs/resource-feedback'
+import { runPublishables } from './verbs/publishables'
 
 export type CliView = 'summary' | 'ids' | 'full' | 'raw' | 'all'
 
@@ -202,7 +205,10 @@ export const runCommand = async ({
 
   if (resource === 'products') return runProducts({ ctx, verb, argv })
   if (resource === 'product-variants') return runProductVariants({ ctx, verb, argv })
+  if (resource === 'product-feeds') return runProductFeeds({ ctx, verb, argv })
   if (resource === 'collections') return runCollections({ ctx, verb, argv })
+  if (resource === 'resource-feedback') return runResourceFeedback({ ctx, verb, argv })
+  if (resource === 'publishables') return runPublishables({ ctx, verb, argv })
   if (resource === 'customers') return runCustomers({ ctx, verb, argv })
   if (resource === 'orders') return runOrders({ ctx, verb, argv })
   if (resource === 'order-edit') return runOrderEdit({ ctx, verb, argv })

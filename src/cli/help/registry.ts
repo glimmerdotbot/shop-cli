@@ -26,9 +26,11 @@ const flagInclude = flag('--include <connection>', 'Include a connection field w
 const flagSelection = flag('--selection <graphql>', 'Override selection (can be @file.gql)')
 const flagQuiet = flag('--quiet', 'IDs only when possible')
 const flagTags = flag('--tags <csv>', 'Comma-separated tags')
+const flagIdentifierJsonFile = flag('--identifier <json|@file>', 'Identifier JSON (inline or @file.json)')
 const flagStatus = flag('--status <value>', 'Status value')
 const flagNewTitle = flag('--new-title <string>', 'Title for the duplicate')
 const flagSavedSearchId = flag('--saved-search-id <gid>', 'Saved search ID')
+const flagSynchronous = flag('--synchronous <bool>', 'Run synchronously (default: true)')
 
 const flagOrderId = flag('--order-id <gid>', 'Order ID')
 const flagCustomerId = flag('--customer-id <gid>', 'Customer ID')
@@ -209,6 +211,7 @@ const flagMoves = flag('--moves <json>', 'Moves JSON array (or @file.json)')
 const flagMove = flag('--move <id>:<newPosition>', 'Move entry (repeatable)')
 const flagMediaIds = flag('--media-ids <gid>', 'Media IDs (repeatable)')
 const flagMediaId = flag('--media-id <gid>', 'Media ID (repeatable)')
+const flagMedia = flag('--media <json|@file>', 'Media JSON array (inline or @file.json)')
 const flagVariantMedia = flag('--variant-media <json>', 'Variant media JSON')
 const flagHandles = flag('--handles <csv>', 'Handles (repeatable)')
 const flagDeclineReason = flag('--decline-reason <string>', 'Decline reason')
@@ -240,6 +243,26 @@ const flagDescription = flag('--description <string>', 'Description')
 const flagIdempotencyKey = flag('--idempotency-key <string>', 'Unique key to identify a request')
 const flagProrate = flag('--prorate', 'Prorate the cancellation')
 const flagDays = flag('--days <n>', 'Number of days')
+
+const flagCatalogId = flag('--catalog-id <gid>', 'Catalog ID')
+const flagContextsToAdd = flag('--contexts-to-add <json|@file>', 'Catalog contexts to add (JSON)')
+const flagContextsToRemove = flag('--contexts-to-remove <json|@file>', 'Catalog contexts to remove (JSON)')
+const flagUpdatedAtSince = flag('--updated-at-since <iso>', 'Only updated since timestamp')
+const flagBeforeUpdatedAt = flag('--before-updated-at <iso>', 'Only updated before timestamp')
+
+const flagOptions = flag('--options <json|@file>', 'Options JSON array (inline or @file.json)')
+const flagOption = flag('--option <json|@file>', 'Option JSON object (inline or @file.json)')
+const flagOptionIds = flag('--option-ids <id,id,...>', 'Option IDs (comma-separated or repeatable)')
+const flagVariantStrategy = flag('--variant-strategy <value>', 'Variant strategy')
+const flagOptionValuesToAdd = flag('--option-values-to-add <json|@file>', 'Option values to add (JSON)')
+const flagOptionValuesToDelete = flag('--option-values-to-delete <json|@file>', 'Option value IDs to delete (JSON)')
+const flagOptionValuesToUpdate = flag('--option-values-to-update <json|@file>', 'Option values to update (JSON)')
+
+const flagParentProductId = flag('--parent-product-id <gid>', 'Parent product ID')
+const flagProductsAdded = flag('--products-added <json|@file>', 'Child products to add (JSON)')
+const flagProductsEdited = flag('--products-edited <json|@file>', 'Child products to edit (JSON)')
+const flagProductsRemovedIds = flag('--products-removed-ids <gid>', 'Product IDs to remove (repeatable or comma-separated)')
+const flagOptionsAndValues = flag('--options-and-values <json|@file>', 'Options and values to reorder (JSON)')
 
 const inputFlags = [flagInput, flagSet, flagSetJson]
 
@@ -434,6 +457,20 @@ const baseCommandRegistry: ResourceSpec[] = [
     verbs: [
       createVerb({ operation: 'productCreate', description: 'Create a new product.' }),
       getVerb({ operation: 'product', description: 'Fetch a product by ID.' }),
+      {
+        verb: 'by-handle',
+        description: 'Fetch a product by handle.',
+        operation: { type: 'query', name: 'productByHandle' },
+        requiredFlags: [flagHandle],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'by-identifier',
+        description: 'Fetch a product by identifier.',
+        operation: { type: 'query', name: 'productByIdentifier' },
+        requiredFlags: [flagIdentifierJsonFile],
+        output: { view: true, selection: true },
+      },
       listVerb({
         operation: 'products',
         description: 'List products.',
@@ -444,6 +481,24 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'Count products.',
         flags: [flagQuery, flagLimit, flagSavedSearchId],
       }),
+      {
+        verb: 'tags',
+        description: 'List product tags in the shop.',
+        operation: { type: 'query', name: 'productTags' },
+        output: { pagination: true },
+      },
+      {
+        verb: 'types',
+        description: 'List product types in the shop.',
+        operation: { type: 'query', name: 'productTypes' },
+        output: { pagination: true },
+      },
+      {
+        verb: 'vendors',
+        description: 'List product vendors in the shop.',
+        operation: { type: 'query', name: 'productVendors' },
+        output: { pagination: true },
+      },
       updateVerb({ operation: 'productUpdate', description: 'Update a product.' }),
       deleteVerb({ operation: 'productDelete', description: 'Delete a product.' }),
       duplicateVerb({
@@ -477,6 +532,91 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'Set product status.',
         operation: { type: 'mutation', name: 'productUpdate' },
         requiredFlags: [flagId, flagStatus],
+      },
+      {
+        verb: 'change-status',
+        description: 'Change product status (deprecated).',
+        operation: { type: 'mutation', name: 'productChangeStatus' },
+        requiredFlags: [flagId, flagStatus],
+        notes: ['Prefer `shop products set-status` (productUpdate).'],
+      },
+      {
+        verb: 'set',
+        description: 'Create or update products via productSet.',
+        operation: { type: 'mutation', name: 'productSet', inputArg: 'input' },
+        input: { mode: 'set', arg: 'input', required: true },
+        flags: [...inputFlags, flagIdentifierJsonFile, flagSynchronous],
+      },
+      {
+        verb: 'operation',
+        description: 'Fetch a product operation by ID.',
+        operation: { type: 'query', name: 'productOperation' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'duplicate-job',
+        description: 'Fetch a product duplicate job by ID.',
+        operation: { type: 'query', name: 'productDuplicateJob' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'join-selling-plan-groups',
+        description: 'Join selling plan groups.',
+        operation: { type: 'mutation', name: 'productJoinSellingPlanGroups' },
+        requiredFlags: [flagId, flagGroupIds],
+      },
+      {
+        verb: 'leave-selling-plan-groups',
+        description: 'Leave selling plan groups.',
+        operation: { type: 'mutation', name: 'productLeaveSellingPlanGroups' },
+        requiredFlags: [flagId, flagGroupIds],
+      },
+      {
+        verb: 'option-update',
+        description: 'Update a product option.',
+        operation: { type: 'mutation', name: 'productOptionUpdate' },
+        requiredFlags: [flagProductId, flagOption],
+        flags: [
+          flagOptionValuesToAdd,
+          flagOptionValuesToDelete,
+          flagOptionValuesToUpdate,
+          flagVariantStrategy,
+        ],
+      },
+      {
+        verb: 'options-create',
+        description: 'Create product options.',
+        operation: { type: 'mutation', name: 'productOptionsCreate' },
+        requiredFlags: [flagProductId, flagOptions],
+        flags: [flagVariantStrategy],
+      },
+      {
+        verb: 'options-delete',
+        description: 'Delete product options.',
+        operation: { type: 'mutation', name: 'productOptionsDelete' },
+        requiredFlags: [flagProductId, flagOptionIds],
+        flags: [flagStrategy],
+      },
+      {
+        verb: 'options-reorder',
+        description: 'Reorder product options and values.',
+        operation: { type: 'mutation', name: 'productOptionsReorder' },
+        requiredFlags: [flagProductId, flagOptions],
+      },
+      {
+        verb: 'combined-listing-update',
+        description: 'Update a combined listing for a parent product.',
+        operation: { type: 'mutation', name: 'combinedListingUpdate' },
+        requiredFlags: [flagParentProductId],
+        flags: [
+          flagTitle,
+          flagProductsAdded,
+          flagProductsEdited,
+          flagProductsRemovedIds,
+          flagOptionsAndValues,
+        ],
       },
       {
         verb: 'add-tags',
@@ -574,6 +714,32 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flagMoves, flagMove],
         notes: ['Pass either --moves or one or more --move entries.'],
       },
+      {
+        verb: 'reorder-media',
+        description: 'Reorder a product’s media.',
+        operation: { type: 'mutation', name: 'productReorderMedia' },
+        requiredFlags: [flagId],
+        flags: [flagMoves, flagMove],
+        notes: ['Alias for `shop products media reorder`.'],
+      },
+      {
+        verb: 'create-media',
+        description: 'Create media for a product (deprecated).',
+        operation: { type: 'mutation', name: 'productCreateMedia' },
+        requiredFlags: [flagProductId, flagMedia],
+      },
+      {
+        verb: 'update-media',
+        description: 'Update media for a product (deprecated).',
+        operation: { type: 'mutation', name: 'productUpdateMedia' },
+        requiredFlags: [flagProductId, flagMedia],
+      },
+      {
+        verb: 'delete-media',
+        description: 'Delete media from a product (deprecated).',
+        operation: { type: 'mutation', name: 'productDeleteMedia' },
+        requiredFlags: [flagProductId, flagMediaIds],
+      },
       inputVerb({
         verb: 'bundle-create',
         description: 'Create a product bundle.',
@@ -606,6 +772,14 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flagProductId, flag('--sku <string>', 'SKU'), flag('--barcode <string>', 'Barcode')],
         output: { view: true, selection: true },
         notes: ['Provide --product-id plus --sku or --barcode, or pass --input.'],
+      },
+      {
+        verb: 'by-identifier',
+        description: 'Alias for get-by-identifier.',
+        operation: { type: 'query', name: 'productVariantByIdentifier' },
+        flags: [flagProductId, flag('--sku <string>', 'SKU'), flag('--barcode <string>', 'Barcode')],
+        output: { view: true, selection: true },
+        notes: ['Alias for `shop product-variants get-by-identifier`.'],
       },
       listVerb({ operation: 'productVariants', description: 'List product variants.' }),
       countVerb({ operation: 'productVariantsCount', description: 'Count product variants.', flags: [flagQuery] }),
@@ -671,11 +845,94 @@ const baseCommandRegistry: ResourceSpec[] = [
     ],
   },
   {
+    resource: 'product-feeds',
+    description: 'Manage product feeds.',
+    verbs: [
+      createVerb({ operation: 'productFeedCreate', inputArg: 'input', description: 'Create a product feed.' }),
+      getVerb({ operation: 'productFeed', description: 'Fetch a product feed by ID.' }),
+      listVerb({ operation: 'productFeeds', description: 'List product feeds.' }),
+      deleteVerb({ operation: 'productFeedDelete', description: 'Delete a product feed.' }),
+      {
+        verb: 'full-sync',
+        description: 'Run a full product sync for a product feed.',
+        operation: { type: 'mutation', name: 'productFullSync' },
+        requiredFlags: [flagId],
+        flags: [flagUpdatedAtSince, flagBeforeUpdatedAt],
+      },
+    ],
+  },
+  {
+    resource: 'resource-feedback',
+    description: 'Manage resource feedback.',
+    verbs: [
+      {
+        verb: 'product-get',
+        description: 'Get product resource feedback for this app.',
+        operation: { type: 'query', name: 'productResourceFeedback' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'product-bulk-create',
+        description: 'Create resource feedback for multiple products.',
+        operation: { type: 'mutation', name: 'bulkProductResourceFeedbackCreate' },
+        requiredFlags: [flagInput],
+        notes: ['--input must be a JSON array (up to 50 items).'],
+      },
+      {
+        verb: 'shop-create',
+        description: 'Create shop resource feedback for this app.',
+        operation: { type: 'mutation', name: 'shopResourceFeedbackCreate', inputArg: 'input' },
+        input: { mode: 'set', arg: 'input', required: true },
+        flags: [...inputFlags],
+      },
+    ],
+  },
+  {
+    resource: 'publishables',
+    description: 'Publish/unpublish resources via the current channel.',
+    verbs: [
+      {
+        verb: 'publish-to-current-channel',
+        description: 'Publish a resource to the current channel (deprecated).',
+        operation: { type: 'mutation', name: 'publishablePublishToCurrentChannel' },
+        requiredFlags: [flagId],
+        notes: ['--id must be a full gid://shopify/... publishable ID (e.g. Product or Collection).'],
+      },
+      {
+        verb: 'unpublish-to-current-channel',
+        description: 'Unpublish a resource from the current channel (deprecated).',
+        operation: { type: 'mutation', name: 'publishableUnpublishToCurrentChannel' },
+        requiredFlags: [flagId],
+        notes: ['--id must be a full gid://shopify/... publishable ID (e.g. Product or Collection).'],
+      },
+    ],
+  },
+  {
     resource: 'collections',
     description: 'Manage collections.',
     verbs: [
       createVerb({ operation: 'collectionCreate', description: 'Create a collection.' }),
       getVerb({ operation: 'collection', description: 'Fetch a collection by ID.' }),
+      {
+        verb: 'by-handle',
+        description: 'Fetch a collection by handle.',
+        operation: { type: 'query', name: 'collectionByHandle' },
+        requiredFlags: [flagHandle],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'by-identifier',
+        description: 'Fetch a collection by identifier.',
+        operation: { type: 'query', name: 'collectionByIdentifier' },
+        requiredFlags: [flagIdentifierJsonFile],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'rules-conditions',
+        description: 'List available smart collection rule conditions.',
+        operation: { type: 'query', name: 'collectionRulesConditions' },
+        output: { view: true, selection: true },
+      },
       listVerb({ operation: 'collections', description: 'List collections.' }),
       countVerb({
         operation: 'collectionsCount',
@@ -1673,6 +1930,18 @@ const baseCommandRegistry: ResourceSpec[] = [
       createVerb({ operation: 'publicationCreate', description: 'Create a publication.' }),
       getVerb({ operation: 'publication', description: 'Fetch a publication by ID.' }),
       listVerb({ operation: 'publications', description: 'List publications.' }),
+      countVerb({
+        operation: 'publicationsCount',
+        description: 'Count publications.',
+        flags: [flagType, flagLimit],
+      }),
+      {
+        verb: 'published-products-count',
+        description: 'Count published products for a publication.',
+        operation: { type: 'query', name: 'publishedProductsCount' },
+        requiredFlags: [flagPublicationId],
+        flags: [flagLimit],
+      },
       updateVerb({ operation: 'publicationUpdate', description: 'Update a publication.' }),
       deleteVerb({ operation: 'publicationDelete', description: 'Delete a publication.' }),
     ],
@@ -1844,6 +2113,25 @@ const baseCommandRegistry: ResourceSpec[] = [
       createVerb({ operation: 'catalogCreate', description: 'Create a catalog.' }),
       getVerb({ operation: 'catalog', description: 'Fetch a catalog by ID.' }),
       listVerb({ operation: 'catalogs', description: 'List catalogs.' }),
+      countVerb({
+        operation: 'catalogsCount',
+        description: 'Count catalogs.',
+        flags: [flagQuery, flagLimit, flagType],
+      }),
+      {
+        verb: 'operations',
+        description: 'Fetch recent catalog operations.',
+        operation: { type: 'query', name: 'catalogOperations' },
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'context-update',
+        description: 'Update catalog contexts (markets, company locations, etc).',
+        operation: { type: 'mutation', name: 'catalogContextUpdate' },
+        requiredFlags: [flagCatalogId],
+        flags: [flagContextsToAdd, flagContextsToRemove],
+        notes: ['Pass --contexts-to-add and/or --contexts-to-remove.'],
+      },
       updateVerb({ operation: 'catalogUpdate', description: 'Update a catalog.' }),
       deleteVerb({ operation: 'catalogDelete', description: 'Delete a catalog.' }),
     ],
@@ -2054,6 +2342,60 @@ const baseCommandRegistry: ResourceSpec[] = [
       createVerb({ operation: 'urlRedirectCreate', description: 'Create a URL redirect.' }),
       getVerb({ operation: 'urlRedirect', description: 'Fetch a URL redirect by ID.' }),
       listVerb({ operation: 'urlRedirects', description: 'List URL redirects.' }),
+      countVerb({
+        operation: 'urlRedirectsCount',
+        description: 'Count URL redirects.',
+        flags: [flagQuery, flagLimit, flagSavedSearchId],
+      }),
+      {
+        verb: 'saved-searches',
+        description: 'List URL redirect saved searches.',
+        operation: { type: 'query', name: 'urlRedirectSavedSearches' },
+        output: { pagination: true },
+      },
+      {
+        verb: 'import-create',
+        description: 'Create a URL redirect import from a staged upload URL.',
+        operation: { type: 'mutation', name: 'urlRedirectImportCreate' },
+        requiredFlags: [flagUrl],
+      },
+      {
+        verb: 'import-submit',
+        description: 'Submit a URL redirect import for processing.',
+        operation: { type: 'mutation', name: 'urlRedirectImportSubmit' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'import-get',
+        description: 'Fetch a URL redirect import by ID.',
+        operation: { type: 'query', name: 'urlRedirectImport' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'bulk-delete-all',
+        description: 'Bulk delete all URL redirects.',
+        operation: { type: 'mutation', name: 'urlRedirectBulkDeleteAll' },
+        requiredFlags: [flagYes],
+      },
+      {
+        verb: 'bulk-delete-ids',
+        description: 'Bulk delete URL redirects by IDs.',
+        operation: { type: 'mutation', name: 'urlRedirectBulkDeleteByIds' },
+        requiredFlags: [flagIds, flagYes],
+      },
+      {
+        verb: 'bulk-delete-saved-search',
+        description: 'Bulk delete URL redirects by saved search.',
+        operation: { type: 'mutation', name: 'urlRedirectBulkDeleteBySavedSearch' },
+        requiredFlags: [flagSavedSearchId, flagYes],
+      },
+      {
+        verb: 'bulk-delete-search',
+        description: 'Bulk delete URL redirects by search string.',
+        operation: { type: 'mutation', name: 'urlRedirectBulkDeleteBySearch' },
+        requiredFlags: [flagSearch, flagYes],
+      },
       updateVerb({ operation: 'urlRedirectUpdate', description: 'Update a URL redirect.' }),
       deleteVerb({ operation: 'urlRedirectDelete', description: 'Delete a URL redirect.' }),
     ],
@@ -4952,6 +5294,17 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'Run a ShopifyQL query.',
         operation: { type: 'query', name: 'shopifyqlQuery' },
         requiredFlags: [flag('--query <string>', 'ShopifyQL query')],
+      },
+    ],
+  },
+  {
+    resource: 'types',
+    description: 'Explore input types and enums from the Shopify Admin API schema.',
+    verbs: [
+      {
+        verb: 'help',
+        description: 'Show help for exploring schema types.',
+        examples: ['shop types --help', 'shop types ProductStatus', 'shop types CountryCode --all'],
       },
     ],
   },

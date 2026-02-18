@@ -79,6 +79,67 @@ const defaultValueForFlag = (flag: string) => {
 }
 
 const guessBaseArgs = ({ resource, verb }: { resource: string; verb: string }): string[] => {
+  // Add verb-specific args so --dry-run covers more root fields without changing CLI behavior.
+  // Keep these narrowly scoped to commands that otherwise need non-standard flags / JSON inputs.
+  if (resource === 'products') {
+    if (verb === 'create-media' || verb === 'update-media') {
+      return ['--product-id', '1', '--media', '[]']
+    }
+    if (verb === 'delete-media') {
+      return ['--product-id', '1', '--media-ids', 'gid://shopify/MediaImage/1,gid://shopify/MediaImage/2']
+    }
+    if (verb === 'join-selling-plan-groups' || verb === 'leave-selling-plan-groups') {
+      return ['--id', '1', '--group-ids', '1,2']
+    }
+    if (verb === 'option-update') {
+      return ['--product-id', '1', '--option', '{}']
+    }
+    if (verb === 'options-create') {
+      return ['--product-id', '1', '--options', '[]']
+    }
+    if (verb === 'options-delete') {
+      return ['--product-id', '1', '--option-ids', '1,2']
+    }
+    if (verb === 'options-reorder') {
+      return ['--product-id', '1', '--options', '[]']
+    }
+    if (verb === 'combined-listing-update') {
+      return ['--parent-product-id', '1']
+    }
+    if (verb === 'reorder-media') {
+      return ['--id', '1', '--moves', '[{\"id\":\"gid://shopify/MediaImage/1\",\"newPosition\":0}]']
+    }
+  }
+
+  if (resource === 'catalogs' && verb === 'context-update') {
+    return ['--catalog-id', '1', '--contexts-to-add', '[]']
+  }
+
+  if (resource === 'collections' && verb === 'reorder-products') {
+    return ['--id', '1', '--moves', '[{\"id\":\"1\",\"newPosition\":0}]']
+  }
+
+  if (resource === 'product-variants') {
+    if (verb === 'get-by-identifier' || verb === 'by-identifier') {
+      return ['--product-id', '1', '--sku', 'test']
+    }
+    if (verb === 'bulk-create' || verb === 'bulk-update') {
+      return ['--product-id', '1', '--input', '[]']
+    }
+    if (verb === 'bulk-delete') {
+      return ['--product-id', '1', '--variant-ids', '1,2']
+    }
+    if (verb === 'bulk-reorder') {
+      return ['--product-id', '1', '--positions', '[{\"id\":\"gid://shopify/ProductVariant/1\",\"newPosition\":0}]']
+    }
+    if (verb === 'append-media' || verb === 'detach-media') {
+      return ['--id', '1', '--product-id', '1', '--media-ids', 'gid://shopify/MediaImage/1']
+    }
+    if (verb === 'join-selling-plans' || verb === 'leave-selling-plans') {
+      return ['--id', '1', '--group-ids', '1,2']
+    }
+  }
+
   if (resource === 'graphql' && (verb === 'query' || verb === 'mutation')) {
     if (verb === 'query') return ['{ shop { name } }']
     return ['mutation { metafieldsSet(metafields: []) { userErrors { message } } }']

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-18T19:50:15.121Z",
+  "generatedAt": "2026-02-18T21:16:06.211Z",
   "schemaVersion": "2026-04",
   "entries": [
     {
@@ -578,6 +578,21 @@
     },
     {
       "resource": "catalogs",
+      "verb": "context-update",
+      "argv": [
+        "--catalog-id",
+        "1",
+        "--contexts-to-add",
+        "[]"
+      ]
+    },
+    {
+      "resource": "catalogs",
+      "verb": "count",
+      "argv": []
+    },
+    {
+      "resource": "catalogs",
       "verb": "create",
       "argv": [
         "--input",
@@ -605,6 +620,14 @@
       "resource": "catalogs",
       "verb": "list",
       "argv": []
+    },
+    {
+      "resource": "catalogs",
+      "verb": "operations",
+      "argv": [
+        "--id",
+        "1"
+      ]
     },
     {
       "resource": "catalogs",
@@ -655,6 +678,26 @@
         "1",
         "--product-id",
         "1"
+      ]
+    },
+    {
+      "resource": "collections",
+      "verb": "by-handle",
+      "argv": [
+        "--id",
+        "1",
+        "--handle",
+        "test"
+      ]
+    },
+    {
+      "resource": "collections",
+      "verb": "by-identifier",
+      "argv": [
+        "--id",
+        "1",
+        "--identifier",
+        "{}"
       ]
     },
     {
@@ -727,9 +770,18 @@
       "verb": "reorder-products",
       "argv": [
         "--id",
+        "1",
+        "--moves",
+        "[{\"id\":\"1\",\"newPosition\":0}]"
+      ]
+    },
+    {
+      "resource": "collections",
+      "verb": "rules-conditions",
+      "argv": [
+        "--id",
         "1"
-      ],
-      "skipReason": "Missing moves: pass either --moves <json|@file> or --move <productId>:<newPosition> (repeatable)"
+      ]
     },
     {
       "resource": "collections",
@@ -4537,49 +4589,104 @@
       ]
     },
     {
+      "resource": "product-feeds",
+      "verb": "create",
+      "argv": [
+        "--input",
+        "{}"
+      ]
+    },
+    {
+      "resource": "product-feeds",
+      "verb": "delete",
+      "argv": [
+        "--id",
+        "1",
+        "--yes"
+      ]
+    },
+    {
+      "resource": "product-feeds",
+      "verb": "full-sync",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "product-feeds",
+      "verb": "get",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "product-feeds",
+      "verb": "list",
+      "argv": []
+    },
+    {
       "resource": "product-variants",
       "verb": "append-media",
       "argv": [
         "--id",
-        "1"
-      ],
-      "skipReason": "--dry-run cannot resolve product ID from variant; pass --product-id"
+        "1",
+        "--product-id",
+        "1",
+        "--media-ids",
+        "gid://shopify/MediaImage/1"
+      ]
     },
     {
       "resource": "product-variants",
       "verb": "bulk-create",
       "argv": [
-        "--id",
-        "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+        "--product-id",
+        "1",
+        "--input",
+        "[]"
+      ]
     },
     {
       "resource": "product-variants",
       "verb": "bulk-delete",
       "argv": [
-        "--id",
-        "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+        "--product-id",
+        "1",
+        "--variant-ids",
+        "1,2"
+      ]
     },
     {
       "resource": "product-variants",
       "verb": "bulk-reorder",
       "argv": [
-        "--id",
-        "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+        "--product-id",
+        "1",
+        "--positions",
+        "[{\"id\":\"gid://shopify/ProductVariant/1\",\"newPosition\":0}]"
+      ]
     },
     {
       "resource": "product-variants",
       "verb": "bulk-update",
       "argv": [
-        "--id",
-        "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+        "--product-id",
+        "1",
+        "--input",
+        "[]"
+      ]
+    },
+    {
+      "resource": "product-variants",
+      "verb": "by-identifier",
+      "argv": [
+        "--product-id",
+        "1",
+        "--sku",
+        "test"
+      ]
     },
     {
       "resource": "product-variants",
@@ -4591,9 +4698,12 @@
       "verb": "detach-media",
       "argv": [
         "--id",
-        "1"
-      ],
-      "skipReason": "--dry-run cannot resolve product ID from variant; pass --product-id"
+        "1",
+        "--product-id",
+        "1",
+        "--media-ids",
+        "gid://shopify/MediaImage/1"
+      ]
     },
     {
       "resource": "product-variants",
@@ -4607,10 +4717,11 @@
       "resource": "product-variants",
       "verb": "get-by-identifier",
       "argv": [
-        "--id",
-        "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+        "--product-id",
+        "1",
+        "--sku",
+        "test"
+      ]
     },
     {
       "resource": "product-variants",
@@ -4618,10 +4729,9 @@
       "argv": [
         "--id",
         "1",
-        "--ids",
+        "--group-ids",
         "1,2"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+      ]
     },
     {
       "resource": "product-variants",
@@ -4629,10 +4739,9 @@
       "argv": [
         "--id",
         "1",
-        "--ids",
+        "--group-ids",
         "1,2"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+      ]
     },
     {
       "resource": "product-variants",
@@ -4702,6 +4811,44 @@
     },
     {
       "resource": "products",
+      "verb": "by-handle",
+      "argv": [
+        "--id",
+        "1",
+        "--handle",
+        "test"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "by-identifier",
+      "argv": [
+        "--id",
+        "1",
+        "--identifier",
+        "{}"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "change-status",
+      "argv": [
+        "--id",
+        "1",
+        "--status",
+        "ACTIVE"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "combined-listing-update",
+      "argv": [
+        "--parent-product-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "products",
       "verb": "count",
       "argv": []
     },
@@ -4715,11 +4862,31 @@
     },
     {
       "resource": "products",
+      "verb": "create-media",
+      "argv": [
+        "--product-id",
+        "1",
+        "--media",
+        "[]"
+      ]
+    },
+    {
+      "resource": "products",
       "verb": "delete",
       "argv": [
         "--id",
         "1",
         "--yes"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "delete-media",
+      "argv": [
+        "--product-id",
+        "1",
+        "--media-ids",
+        "gid://shopify/MediaImage/1,gid://shopify/MediaImage/2"
       ]
     },
     {
@@ -4734,10 +4901,38 @@
     },
     {
       "resource": "products",
+      "verb": "duplicate-job",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "products",
       "verb": "get",
       "argv": [
         "--id",
         "1"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "join-selling-plan-groups",
+      "argv": [
+        "--id",
+        "1",
+        "--group-ids",
+        "1,2"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "leave-selling-plan-groups",
+      "argv": [
+        "--id",
+        "1",
+        "--group-ids",
+        "1,2"
       ]
     },
     {
@@ -4820,6 +5015,54 @@
     },
     {
       "resource": "products",
+      "verb": "operation",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "option-update",
+      "argv": [
+        "--product-id",
+        "1",
+        "--option",
+        "{}"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "options-create",
+      "argv": [
+        "--product-id",
+        "1",
+        "--options",
+        "[]"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "options-delete",
+      "argv": [
+        "--product-id",
+        "1",
+        "--option-ids",
+        "1,2"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "options-reorder",
+      "argv": [
+        "--product-id",
+        "1",
+        "--options",
+        "[]"
+      ]
+    },
+    {
+      "resource": "products",
       "verb": "publish",
       "argv": [
         "--id",
@@ -4848,6 +5091,26 @@
     },
     {
       "resource": "products",
+      "verb": "reorder-media",
+      "argv": [
+        "--id",
+        "1",
+        "--moves",
+        "[{\"id\":\"gid://shopify/MediaImage/1\",\"newPosition\":0}]"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "set",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}"
+      ]
+    },
+    {
+      "resource": "products",
       "verb": "set-price",
       "argv": [
         "--id",
@@ -4863,6 +5126,22 @@
         "1",
         "--status",
         "ACTIVE"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "tags",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "types",
+      "argv": [
+        "--id",
+        "1"
       ]
     },
     {
@@ -4892,6 +5171,29 @@
         "--input",
         "{}"
       ]
+    },
+    {
+      "resource": "products",
+      "verb": "update-media",
+      "argv": [
+        "--product-id",
+        "1",
+        "--media",
+        "[]"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "vendors",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "publications",
+      "verb": "count",
+      "argv": []
     },
     {
       "resource": "publications",
@@ -4925,6 +5227,14 @@
     },
     {
       "resource": "publications",
+      "verb": "published-products-count",
+      "argv": [
+        "--publication-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "publications",
       "verb": "resolve",
       "argv": [
         "--id",
@@ -4939,6 +5249,22 @@
         "1",
         "--input",
         "{}"
+      ]
+    },
+    {
+      "resource": "publishables",
+      "verb": "publish-to-current-channel",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "publishables",
+      "verb": "unpublish-to-current-channel",
+      "argv": [
+        "--id",
+        "1"
       ]
     },
     {
@@ -4969,6 +5295,34 @@
       "argv": [
         "--id",
         "1"
+      ]
+    },
+    {
+      "resource": "resource-feedback",
+      "verb": "product-bulk-create",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "[]"
+      ]
+    },
+    {
+      "resource": "resource-feedback",
+      "verb": "product-get",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "resource-feedback",
+      "verb": "shop-create",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}"
       ]
     },
     {
@@ -6380,6 +6734,53 @@
     },
     {
       "resource": "url-redirects",
+      "verb": "bulk-delete-all",
+      "argv": [
+        "--id",
+        "1",
+        "--yes"
+      ]
+    },
+    {
+      "resource": "url-redirects",
+      "verb": "bulk-delete-ids",
+      "argv": [
+        "--id",
+        "1",
+        "--yes",
+        "--ids",
+        "1,2"
+      ]
+    },
+    {
+      "resource": "url-redirects",
+      "verb": "bulk-delete-saved-search",
+      "argv": [
+        "--id",
+        "1",
+        "--yes",
+        "--saved-search-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "url-redirects",
+      "verb": "bulk-delete-search",
+      "argv": [
+        "--id",
+        "1",
+        "--yes",
+        "--search",
+        "test"
+      ]
+    },
+    {
+      "resource": "url-redirects",
+      "verb": "count",
+      "argv": []
+    },
+    {
+      "resource": "url-redirects",
       "verb": "create",
       "argv": [
         "--input",
@@ -6405,8 +6806,42 @@
     },
     {
       "resource": "url-redirects",
+      "verb": "import-create",
+      "argv": [
+        "--id",
+        "1",
+        "--url",
+        "https://example.com"
+      ]
+    },
+    {
+      "resource": "url-redirects",
+      "verb": "import-get",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "url-redirects",
+      "verb": "import-submit",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "url-redirects",
       "verb": "list",
       "argv": []
+    },
+    {
+      "resource": "url-redirects",
+      "verb": "saved-searches",
+      "argv": [
+        "--id",
+        "1"
+      ]
     },
     {
       "resource": "url-redirects",

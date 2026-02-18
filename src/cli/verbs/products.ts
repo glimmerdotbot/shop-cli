@@ -20,7 +20,7 @@ import {
 } from '../workflows/products/publishablePublish'
 import { listPublications } from '../workflows/publications/resolvePublicationId'
 
-import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseIds, parseJsonArg, parseStringList, requireId } from './_shared'
 
 type MediaContentType = 'IMAGE' | 'VIDEO' | 'MODEL_3D' | 'EXTERNAL_VIDEO'
 
@@ -132,11 +132,18 @@ export const runProducts = async ({
         '',
         'Verbs:',
         '  create|get|list|count|update|delete|duplicate|set-status|archive|unarchive',
+        '  by-handle|by-identifier|operation|duplicate-job',
+        '  tags|types|vendors',
+        '  change-status|set',
+        '  join-selling-plan-groups|leave-selling-plan-groups',
+        '  option-update|options-create|options-delete|options-reorder',
+        '  combined-listing-update',
         '  add-tags|remove-tags|set-price',
         '  publish|unpublish|publish-all',
         '  bundle-create|bundle-update',
         '  metafields upsert',
         '  media add|media upload|media list|media remove|media reorder|media update',
+        '  create-media|update-media|delete-media|reorder-media',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -144,6 +151,570 @@ export const runProducts = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'reorder-media') verb = 'media reorder'
+
+  if (verb === 'by-handle') {
+    const args = parseStandardArgs({ argv, extraOptions: { handle: { type: 'string' } } })
+    const handle = args.handle as string | undefined
+    if (!handle) throw new CliError('Missing --handle', 2)
+
+    const selectValues = Array.isArray(args.select)
+      ? args.select
+      : args.select
+        ? [args.select]
+        : []
+    const selectionOverride =
+      typeof (args as any).selection === 'string' && (args as any).selection.length > 0
+    const select =
+      !selectionOverride && ctx.view !== 'raw' && ctx.view !== 'ids'
+        ? Array.from(new Set([...selectValues, 'resourcePublicationsV2.nodes.publication.name']))
+        : args.select
+
+    const includeValues = Array.isArray(args.include)
+      ? args.include
+      : args.include
+        ? [args.include]
+        : []
+    const include =
+      ctx.view === 'all' ? Array.from(new Set([...includeValues, 'resourcePublicationsV2'])) : args.include
+
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelectionForGet(ctx.view) as any,
+      select,
+      selection: (args as any).selection,
+      include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
+    const result = await runQuery(ctx, { productByHandle: { __args: { handle }, ...selection } })
+    if (result === undefined) return
+
+    const wantsResourcePublicationsV2 =
+      Array.isArray(args.select) &&
+      args.select.some((p: unknown) => typeof p === 'string' && p.startsWith('resourcePublicationsV2'))
+    const wantsResourcePublicationsV2ViaSelection =
+      typeof (args as any).selection === 'string' && (args as any).selection.includes('resourcePublicationsV2')
+    const stripResourcePublicationsV2 = !(wantsResourcePublicationsV2 || wantsResourcePublicationsV2ViaSelection)
+
+    const withComputed = applyComputedFieldsToNode(result.productByHandle, {
+      view: ctx.view,
+      stripResourcePublicationsV2,
+    })
+    printNode({ node: withComputed, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'by-identifier') {
+    const args = parseStandardArgs({ argv, extraOptions: { identifier: { type: 'string' } } })
+    const identifier = parseJsonArg((args as any).identifier, '--identifier')
+
+    const selectValues = Array.isArray(args.select)
+      ? args.select
+      : args.select
+        ? [args.select]
+        : []
+    const selectionOverride =
+      typeof (args as any).selection === 'string' && (args as any).selection.length > 0
+    const select =
+      !selectionOverride && ctx.view !== 'raw' && ctx.view !== 'ids'
+        ? Array.from(new Set([...selectValues, 'resourcePublicationsV2.nodes.publication.name']))
+        : args.select
+
+    const includeValues = Array.isArray(args.include)
+      ? args.include
+      : args.include
+        ? [args.include]
+        : []
+    const include =
+      ctx.view === 'all' ? Array.from(new Set([...includeValues, 'resourcePublicationsV2'])) : args.include
+
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelectionForGet(ctx.view) as any,
+      select,
+      selection: (args as any).selection,
+      include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
+    const result = await runQuery(ctx, { productByIdentifier: { __args: { identifier }, ...selection } })
+    if (result === undefined) return
+
+    const wantsResourcePublicationsV2 =
+      Array.isArray(args.select) &&
+      args.select.some((p: unknown) => typeof p === 'string' && p.startsWith('resourcePublicationsV2'))
+    const wantsResourcePublicationsV2ViaSelection =
+      typeof (args as any).selection === 'string' && (args as any).selection.includes('resourcePublicationsV2')
+    const stripResourcePublicationsV2 = !(wantsResourcePublicationsV2 || wantsResourcePublicationsV2ViaSelection)
+
+    const withComputed = applyComputedFieldsToNode(result.productByIdentifier, {
+      view: ctx.view,
+      stripResourcePublicationsV2,
+    })
+    printNode({ node: withComputed, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'duplicate-job') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = args.id as any
+    if (typeof id !== 'string' || !id) throw new CliError('Missing --id', 2)
+
+    const selection = resolveSelection({
+      typeName: 'ProductDuplicateJob',
+      view: ctx.view,
+      baseSelection: { id: true, done: true } as const,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
+    const result = await runQuery(ctx, { productDuplicateJob: { __args: { id }, ...selection } })
+    if (result === undefined) return
+    printNode({ node: result.productDuplicateJob, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'operation') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = args.id as any
+    if (typeof id !== 'string' || !id) throw new CliError('Missing --id', 2)
+
+    const getProductOperationSelection = (view: CommandContext['view']) => {
+      if (view === 'raw') return {} as const
+      if (view === 'ids') {
+        return {
+          __typename: true,
+          on_ProductBundleOperation: { id: true },
+          on_ProductDeleteOperation: { id: true },
+          on_ProductDuplicateOperation: { id: true, newProduct: { id: true }, product: { id: true } },
+          on_ProductSetOperation: { id: true, product: { id: true } },
+        } as const
+      }
+      return {
+        __typename: true,
+        status: true,
+        product: { id: true, title: true, handle: true, status: true },
+        on_ProductBundleOperation: {
+          id: true,
+          status: true,
+          product: { id: true, title: true },
+          userErrors: { field: true, message: true },
+        },
+        on_ProductDeleteOperation: {
+          id: true,
+          status: true,
+          product: { id: true, title: true },
+          userErrors: { field: true, message: true },
+        },
+        on_ProductDuplicateOperation: {
+          id: true,
+          status: true,
+          product: { id: true, title: true },
+          newProduct: { id: true, title: true },
+          userErrors: { field: true, message: true },
+        },
+        on_ProductSetOperation: {
+          id: true,
+          status: true,
+          product: { id: true, title: true },
+          userErrors: { code: true, field: true, message: true },
+        },
+      } as const
+    }
+
+    const selection = resolveSelection({
+      typeName: 'ProductOperation',
+      view: ctx.view,
+      baseSelection: getProductOperationSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
+    const result = await runQuery(ctx, { productOperation: { __args: { id }, ...selection } })
+    if (result === undefined) return
+    printNode({ node: result.productOperation, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'tags' || verb === 'types' || verb === 'vendors') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const reverse = args.reverse as any
+
+    const field =
+      verb === 'tags' ? 'productTags' : verb === 'types' ? 'productTypes' : 'productVendors'
+
+    const result = await runQuery(ctx, {
+      [field]: {
+        __args: { first, after, reverse },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: true,
+      },
+    } as any)
+    if (result === undefined) return
+
+    const connection = (result as any)[field]
+    if (ctx.quiet) {
+      for (const value of (connection?.nodes ?? []) as any[]) {
+        if (typeof value === 'string' && value) process.stdout.write(`${value}\n`)
+      }
+      return
+    }
+
+    printConnection({
+      connection,
+      format: ctx.format,
+      quiet: false,
+      nextPageArgs: { base: `shop products ${verb}`, first, reverse: reverse === true },
+    })
+    return
+  }
+
+  if (verb === 'change-status') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const productId = requireId(args.id, 'Product')
+    const status = args.status as string | undefined
+    if (!status) throw new CliError('Missing --status (ACTIVE|DRAFT|ARCHIVED)', 2)
+
+    const result = await runMutation(ctx, {
+      productChangeStatus: {
+        __args: { productId, status: status as any },
+        product: productSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productChangeStatus, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.productChangeStatus?.product?.id ?? '')
+    printJson(result.productChangeStatus, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'set') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        identifier: { type: 'string' },
+        synchronous: { type: 'string' },
+      },
+    })
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
+
+    const identifier = (args as any).identifier ? parseJsonArg((args as any).identifier, '--identifier') : undefined
+    const synchronousRaw = (args as any).synchronous as string | undefined
+    const synchronous = (() => {
+      if (synchronousRaw === undefined || synchronousRaw === null || synchronousRaw === '') return undefined
+      const v = String(synchronousRaw).toLowerCase()
+      if (v === 'true' || v === '1') return true
+      if (v === 'false' || v === '0') return false
+      throw new CliError('--synchronous must be true|false', 2)
+    })()
+
+    const result = await runMutation(ctx, {
+      productSet: {
+        __args: {
+          input: built.input,
+          ...(identifier !== undefined ? { identifier } : {}),
+          ...(synchronous !== undefined ? { synchronous } : {}),
+        },
+        product: productSummarySelection,
+        productSetOperation: {
+          id: true,
+          status: true,
+          product: productSummarySelection,
+          userErrors: { code: true, field: true, message: true },
+        },
+        userErrors: { code: true, field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productSet, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) {
+      const pid = result.productSet?.product?.id
+      const opId = result.productSet?.productSetOperation?.id
+      return console.log(pid ?? opId ?? '')
+    }
+    printJson(result.productSet, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'join-selling-plan-groups' || verb === 'leave-selling-plan-groups') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'group-ids': { type: 'string', multiple: true } } })
+    const id = requireId(args.id, 'Product')
+    const sellingPlanGroupIds = parseIds((args as any)['group-ids'], 'SellingPlanGroup')
+
+    const mutation = verb === 'join-selling-plan-groups'
+      ? 'productJoinSellingPlanGroups'
+      : 'productLeaveSellingPlanGroups'
+
+    const result = await runMutation(ctx, {
+      [mutation]: {
+        __args: { id, sellingPlanGroupIds },
+        product: { id: true, title: true },
+        userErrors: { field: true, message: true },
+      },
+    } as any)
+    if (result === undefined) return
+    const payload = (result as any)[mutation]
+    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(payload?.product?.id ?? '')
+    printJson(payload, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'create-media' || verb === 'update-media') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'product-id': { type: 'string' },
+        media: { type: 'string' },
+      },
+    })
+    const productId = requireId((args as any)['product-id'], 'Product')
+    const media = parseJsonArg((args as any).media, '--media')
+    if (!Array.isArray(media)) throw new CliError('--media must be a JSON array', 2)
+
+    const mutation = verb === 'create-media' ? 'productCreateMedia' : 'productUpdateMedia'
+    const result = await runMutation(ctx, {
+      [mutation]: {
+        __args: { productId, media },
+        media: productMediaSelection,
+        mediaUserErrors: { code: true, field: true, message: true },
+        product: { id: true, title: true },
+      },
+    } as any)
+    if (result === undefined) return
+    const payload = (result as any)[mutation]
+    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(payload?.product?.id ?? '')
+    printJson(payload, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'delete-media') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'product-id': { type: 'string' },
+        'media-ids': { type: 'string', multiple: true },
+      },
+    })
+    const productId = requireId((args as any)['product-id'], 'Product')
+    const mediaIds = parseStringList((args as any)['media-ids'], '--media-ids')
+
+    const result = await runMutation(ctx, {
+      productDeleteMedia: {
+        __args: { productId, mediaIds },
+        deletedMediaIds: true,
+        deletedProductImageIds: true,
+        mediaUserErrors: { code: true, field: true, message: true },
+        product: { id: true, title: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productDeleteMedia, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.productDeleteMedia?.product?.id ?? '')
+    printJson(result.productDeleteMedia, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'option-update') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'product-id': { type: 'string' },
+        option: { type: 'string' },
+        'option-values-to-add': { type: 'string' },
+        'option-values-to-delete': { type: 'string' },
+        'option-values-to-update': { type: 'string' },
+        'variant-strategy': { type: 'string' },
+      },
+    })
+    const productId = requireId((args as any)['product-id'], 'Product')
+    const option = parseJsonArg((args as any).option, '--option')
+
+    const optionValuesToAdd = (args as any)['option-values-to-add']
+      ? parseJsonArg((args as any)['option-values-to-add'], '--option-values-to-add')
+      : undefined
+    const optionValuesToDelete = (args as any)['option-values-to-delete']
+      ? parseJsonArg((args as any)['option-values-to-delete'], '--option-values-to-delete')
+      : undefined
+    const optionValuesToUpdate = (args as any)['option-values-to-update']
+      ? parseJsonArg((args as any)['option-values-to-update'], '--option-values-to-update')
+      : undefined
+    const variantStrategy = (args as any)['variant-strategy'] as string | undefined
+
+    const result = await runMutation(ctx, {
+      productOptionUpdate: {
+        __args: {
+          productId,
+          option,
+          ...(optionValuesToAdd !== undefined ? { optionValuesToAdd } : {}),
+          ...(optionValuesToDelete !== undefined ? { optionValuesToDelete } : {}),
+          ...(optionValuesToUpdate !== undefined ? { optionValuesToUpdate } : {}),
+          ...(variantStrategy ? { variantStrategy } : {}),
+        },
+        product: productSummarySelection,
+        userErrors: { code: true, field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productOptionUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.productOptionUpdate?.product?.id ?? '')
+    printJson(result.productOptionUpdate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'options-create') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'product-id': { type: 'string' },
+        options: { type: 'string' },
+        'variant-strategy': { type: 'string' },
+      },
+    })
+    const productId = requireId((args as any)['product-id'], 'Product')
+    const options = parseJsonArg((args as any).options, '--options')
+    if (!Array.isArray(options)) throw new CliError('--options must be a JSON array', 2)
+    const variantStrategy = (args as any)['variant-strategy'] as string | undefined
+
+    const result = await runMutation(ctx, {
+      productOptionsCreate: {
+        __args: {
+          productId,
+          options,
+          ...(variantStrategy ? { variantStrategy } : {}),
+        },
+        product: productSummarySelection,
+        userErrors: { code: true, field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productOptionsCreate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.productOptionsCreate?.product?.id ?? '')
+    printJson(result.productOptionsCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'options-delete') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'product-id': { type: 'string' },
+        'option-ids': { type: 'string', multiple: true },
+        strategy: { type: 'string' },
+      },
+    })
+    const productId = requireId((args as any)['product-id'], 'Product')
+    const options = parseStringList((args as any)['option-ids'], '--option-ids')
+    const strategy = args.strategy as string | undefined
+
+    const result = await runMutation(ctx, {
+      productOptionsDelete: {
+        __args: { productId, options, ...(strategy ? { strategy } : {}) },
+        deletedOptionsIds: true,
+        product: productSummarySelection,
+        userErrors: { code: true, field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productOptionsDelete, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.productOptionsDelete?.product?.id ?? '')
+    printJson(result.productOptionsDelete, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'options-reorder') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'product-id': { type: 'string' },
+        options: { type: 'string' },
+      },
+    })
+    const productId = requireId((args as any)['product-id'], 'Product')
+    const options = parseJsonArg((args as any).options, '--options')
+    if (!Array.isArray(options)) throw new CliError('--options must be a JSON array', 2)
+
+    const result = await runMutation(ctx, {
+      productOptionsReorder: {
+        __args: { productId, options },
+        product: productSummarySelection,
+        userErrors: { code: true, field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.productOptionsReorder, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.productOptionsReorder?.product?.id ?? '')
+    printJson(result.productOptionsReorder, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'combined-listing-update') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'parent-product-id': { type: 'string' },
+        title: { type: 'string' },
+        'products-added': { type: 'string' },
+        'products-edited': { type: 'string' },
+        'products-removed-ids': { type: 'string', multiple: true },
+        'options-and-values': { type: 'string' },
+      },
+    })
+    const parentProductId = requireId((args as any)['parent-product-id'], 'Product')
+
+    const optionsAndValues = (args as any)['options-and-values']
+      ? parseJsonArg((args as any)['options-and-values'], '--options-and-values')
+      : undefined
+    const productsAdded = (args as any)['products-added']
+      ? parseJsonArg((args as any)['products-added'], '--products-added')
+      : undefined
+    const productsEdited = (args as any)['products-edited']
+      ? parseJsonArg((args as any)['products-edited'], '--products-edited')
+      : undefined
+    const productsRemovedIds = (args as any)['products-removed-ids']
+      ? parseIds((args as any)['products-removed-ids'], 'Product')
+      : undefined
+    const title = args.title as string | undefined
+
+    const result = await runMutation(ctx, {
+      combinedListingUpdate: {
+        __args: {
+          parentProductId,
+          ...(title ? { title } : {}),
+          ...(optionsAndValues !== undefined ? { optionsAndValues } : {}),
+          ...(productsAdded !== undefined ? { productsAdded } : {}),
+          ...(productsEdited !== undefined ? { productsEdited } : {}),
+          ...(productsRemovedIds !== undefined ? { productsRemovedIds } : {}),
+        },
+        product: productSummarySelection,
+        userErrors: { code: true, field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.combinedListingUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.combinedListingUpdate?.product?.id ?? '')
+    printJson(result.combinedListingUpdate, ctx.format !== 'raw')
     return
   }
 

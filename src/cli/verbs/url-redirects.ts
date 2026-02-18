@@ -1,11 +1,12 @@
 import { CliError } from '../errors'
+import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseIds, requireId } from './_shared'
 
 const urlRedirectSummarySelection = {
   id: true,
@@ -24,6 +25,40 @@ const getUrlRedirectSelection = (view: CommandContext['view']) => {
   return urlRedirectSummarySelection
 }
 
+const savedSearchSummarySelection = {
+  id: true,
+  name: true,
+  query: true,
+} as const
+
+const getSavedSearchSelection = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'raw') return {} as const
+  return savedSearchSummarySelection
+}
+
+const urlRedirectImportSummarySelection = {
+  id: true,
+  finished: true,
+  count: true,
+  createdCount: true,
+  updatedCount: true,
+  failedCount: true,
+} as const
+
+const urlRedirectImportFullSelection = {
+  ...urlRedirectImportSummarySelection,
+  finishedAt: true,
+  previewRedirects: { path: true, target: true },
+} as const
+
+const getUrlRedirectImportSelection = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'full') return urlRedirectImportFullSelection
+  if (view === 'raw') return {} as const
+  return urlRedirectImportSummarySelection
+}
+
 export const runUrlRedirects = async ({
   ctx,
   verb,
@@ -40,7 +75,9 @@ export const runUrlRedirects = async ({
         '  shop url-redirects <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete',
+        '  create|get|list|count|saved-searches|update|delete',
+        '  import-create|import-submit|import-get',
+        '  bulk-delete-all|bulk-delete-ids|bulk-delete-saved-search|bulk-delete-search',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -48,6 +85,228 @@ export const runUrlRedirects = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'count') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { limit: { type: 'string' }, 'saved-search-id': { type: 'string' } },
+    })
+    const query = args.query as any
+    const limitRaw = (args as any).limit as any
+    const savedSearchIdRaw = (args as any)['saved-search-id'] as any
+
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const savedSearchId = savedSearchIdRaw
+      ? coerceGid(String(savedSearchIdRaw), 'SavedSearch')
+      : undefined
+
+    const result = await runQuery(ctx, {
+      urlRedirectsCount: {
+        __args: {
+          ...(query ? { query } : {}),
+          ...(savedSearchId ? { savedSearchId } : {}),
+          ...(limit !== undefined ? { limit: Math.floor(limit) } : {}),
+        },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.urlRedirectsCount?.count ?? '')
+    printJson(result.urlRedirectsCount, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'saved-searches') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const reverse = args.reverse as any
+
+    const nodeSelection = resolveSelection({
+      typeName: 'SavedSearch',
+      view: ctx.view,
+      baseSelection: getSavedSearchSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
+    const result = await runQuery(ctx, {
+      urlRedirectSavedSearches: {
+        __args: { first, after, reverse },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: nodeSelection,
+      },
+    })
+    if (result === undefined) return
+
+    printConnection({
+      connection: result.urlRedirectSavedSearches,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: { base: 'shop url-redirects saved-searches', first, reverse: reverse === true },
+    })
+    return
+  }
+
+  if (verb === 'import-create') {
+    const args = parseStandardArgs({ argv, extraOptions: { url: { type: 'string' } } })
+    const url = (args as any).url as string | undefined
+    if (!url) throw new CliError('Missing --url', 2)
+
+    const result = await runMutation(ctx, {
+      urlRedirectImportCreate: {
+        __args: { url },
+        urlRedirectImport: {
+          id: true,
+          finished: true,
+          count: true,
+          createdCount: true,
+          updatedCount: true,
+          failedCount: true,
+          finishedAt: true,
+          previewRedirects: { path: true, target: true },
+        },
+        userErrors: { code: true, field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.urlRedirectImportCreate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.urlRedirectImportCreate?.urlRedirectImport?.id ?? '')
+    printJson(result.urlRedirectImportCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'import-submit') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id, 'UrlRedirectImport')
+
+    const result = await runMutation(ctx, {
+      urlRedirectImportSubmit: {
+        __args: { id },
+        job: { id: true, done: true },
+        userErrors: { code: true, field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.urlRedirectImportSubmit, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.urlRedirectImportSubmit?.job?.id ?? '')
+    printJson(result.urlRedirectImportSubmit, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'import-get') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id, 'UrlRedirectImport')
+
+    const selection = resolveSelection({
+      typeName: 'UrlRedirectImport',
+      view: ctx.view,
+      baseSelection: getUrlRedirectImportSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
+    const result = await runQuery(ctx, { urlRedirectImport: { __args: { id }, ...selection } })
+    if (result === undefined) return
+    printNode({ node: result.urlRedirectImport, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'bulk-delete-all' || verb === 'bulk-delete-ids' || verb === 'bulk-delete-saved-search' || verb === 'bulk-delete-search') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'saved-search-id': { type: 'string' },
+        search: { type: 'string' },
+      },
+    })
+
+    if (!args.yes) throw new CliError('Refusing to delete without --yes', 2)
+
+    if (verb === 'bulk-delete-all') {
+      const result = await runMutation(ctx, {
+        urlRedirectBulkDeleteAll: {
+          job: { id: true, done: true },
+          userErrors: { field: true, message: true },
+        },
+      })
+      if (result === undefined) return
+      maybeFailOnUserErrors({ payload: result.urlRedirectBulkDeleteAll, failOnUserErrors: ctx.failOnUserErrors })
+      if (ctx.quiet) return console.log(result.urlRedirectBulkDeleteAll?.job?.id ?? '')
+      printJson(result.urlRedirectBulkDeleteAll, ctx.format !== 'raw')
+      return
+    }
+
+    if (verb === 'bulk-delete-ids') {
+      const ids = parseIds(args.ids, 'UrlRedirect')
+      const result = await runMutation(ctx, {
+        urlRedirectBulkDeleteByIds: {
+          __args: { ids },
+          job: { id: true, done: true },
+          userErrors: { code: true, field: true, message: true },
+        },
+      })
+      if (result === undefined) return
+      maybeFailOnUserErrors({ payload: result.urlRedirectBulkDeleteByIds, failOnUserErrors: ctx.failOnUserErrors })
+      if (ctx.quiet) return console.log(result.urlRedirectBulkDeleteByIds?.job?.id ?? '')
+      printJson(result.urlRedirectBulkDeleteByIds, ctx.format !== 'raw')
+      return
+    }
+
+    if (verb === 'bulk-delete-saved-search') {
+      const raw = (args as any)['saved-search-id'] as string | undefined
+      if (!raw) throw new CliError('Missing --saved-search-id', 2)
+      const savedSearchId = coerceGid(raw, 'SavedSearch')
+
+      const result = await runMutation(ctx, {
+        urlRedirectBulkDeleteBySavedSearch: {
+          __args: { savedSearchId },
+          job: { id: true, done: true },
+          userErrors: { code: true, field: true, message: true },
+        },
+      })
+      if (result === undefined) return
+      maybeFailOnUserErrors({
+        payload: result.urlRedirectBulkDeleteBySavedSearch,
+        failOnUserErrors: ctx.failOnUserErrors,
+      })
+      if (ctx.quiet) return console.log(result.urlRedirectBulkDeleteBySavedSearch?.job?.id ?? '')
+      printJson(result.urlRedirectBulkDeleteBySavedSearch, ctx.format !== 'raw')
+      return
+    }
+
+    const search = (args as any).search as string | undefined
+    if (!search) throw new CliError('Missing --search', 2)
+
+    const result = await runMutation(ctx, {
+      urlRedirectBulkDeleteBySearch: {
+        __args: { search },
+        job: { id: true, done: true },
+        userErrors: { code: true, field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.urlRedirectBulkDeleteBySearch,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.urlRedirectBulkDeleteBySearch?.job?.id ?? '')
+    printJson(result.urlRedirectBulkDeleteBySearch, ctx.format !== 'raw')
     return
   }
 

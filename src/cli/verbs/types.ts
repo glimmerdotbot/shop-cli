@@ -235,8 +235,13 @@ export const runTypes = async ({
   verb: string
   argv: string[]
 }) => {
+  if (verb === 'help') {
+    printHelp()
+    return
+  }
+
   // Check for help first
-  if (argv.includes('--help') || argv.includes('-h') || verb === 'help' || !verb) {
+  if (argv.includes('--help') || argv.includes('-h') || !verb) {
     printHelp()
     return
   }
