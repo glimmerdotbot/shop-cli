@@ -66,11 +66,6 @@ export const buildAllSelection = (
   const fields = getFields(typeName)
   const selection: GenqlSelection = {}
 
-  // Expand all safe scalar fields via genql's __scalar mechanism.
-  if (type.scalar && type.scalar.length > 0) {
-    ;(selection as any).__scalar = true
-  }
-
   for (const field of fields) {
     if (field.hasRequiredArgs) continue
 
@@ -102,7 +97,7 @@ export const buildAllSelection = (
     }
 
     if (field.isScalar) {
-      // Scalars are handled by __scalar above.
+      selection[field.name] = true
       continue
     }
 
@@ -120,4 +115,3 @@ export const buildAllSelection = (
 
   return selection
 }
-

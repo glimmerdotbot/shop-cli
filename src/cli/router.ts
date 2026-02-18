@@ -270,6 +270,121 @@ const hasNotAuthorizedError = (err: GenqlError) =>
       error.message.toLowerCase().includes('not authorized'),
   )
 
+type GraphqlErrorLike = {
+  message?: string
+  path?: Array<string | number>
+  extensions?: Record<string, unknown>
+}
+
+const isAccessDeniedError = (error: GraphqlErrorLike) =>
+  typeof (error as any)?.extensions?.code === 'string' && (error as any).extensions.code === 'ACCESS_DENIED'
+
+const normalizeErrorPath = (path: unknown): string[] => {
+  if (!Array.isArray(path)) return []
+  return path.filter((p) => typeof p === 'string') as string[]
+}
+
+const hasAnySelectedFields = (selection: Record<string, unknown>) =>
+  Object.keys(selection).some((k) => k !== '__args')
+
+const deleteSelectionAtPath = (root: Record<string, any>, path: string[]): boolean => {
+  if (path.length === 0) return false
+
+  const stack: Array<{ parent: Record<string, any>; key: string; node: Record<string, any> }> = []
+  let cursor: any = root
+
+  for (let i = 0; i < path.length - 1; i++) {
+    const key = path[i]!
+    const next = cursor?.[key]
+    if (typeof next !== 'object' || next === null || Array.isArray(next)) return false
+    stack.push({ parent: cursor, key, node: next })
+    cursor = next
+  }
+
+  const leafKey = path[path.length - 1]!
+  if (!cursor || typeof cursor !== 'object' || Array.isArray(cursor)) return false
+  if (!(leafKey in cursor)) return false
+
+  delete cursor[leafKey]
+
+  // If we deleted the only selected field(s) under some object selection, delete that object too.
+  let child: Record<string, any> = cursor
+  for (let i = stack.length - 1; i >= 0; i--) {
+    if (hasAnySelectedFields(child)) break
+    const { parent, key } = stack[i]!
+    delete parent[key]
+    child = parent
+  }
+
+  return true
+}
+
+const pruneAccessDeniedFields = (
+  request: Record<string, any>,
+  errors: GraphqlErrorLike[],
+  pruned: Map<string, string | undefined>,
+): boolean => {
+  let changed = false
+
+  for (const error of errors) {
+    if (!isAccessDeniedError(error)) continue
+    const path = normalizeErrorPath(error.path)
+    if (path.length === 0) continue
+
+    const removed = deleteSelectionAtPath(request, path)
+    if (!removed) continue
+
+    const requiredAccess = typeof (error as any)?.extensions?.requiredAccess === 'string'
+      ? ((error as any).extensions.requiredAccess as string)
+      : undefined
+
+    pruned.set(path.join('.'), requiredAccess)
+    changed = true
+  }
+
+  return changed
+}
+
+const runWithAccessDeniedPruning = async (
+  ctx: CommandContext,
+  request: any,
+  op: 'query' | 'mutation',
+): Promise<any> => {
+  const pruned = new Map<string, string | undefined>()
+  let lastGenqlError: GenqlError | undefined
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    try {
+      const result =
+        op === 'query' ? await ctx.client.query(request) : await ctx.client.mutation(request)
+
+      if (!ctx.quiet && pruned.size > 0) {
+        const details = Array.from(pruned.entries())
+          .map(([path, requiredAccess]) =>
+            requiredAccess ? `${path} (${requiredAccess})` : path,
+          )
+          .join(', ')
+        console.error(`Omitted ${pruned.size} access-denied field(s): ${details}`)
+      }
+
+      return result
+    } catch (err) {
+      if (!(err instanceof GenqlError)) throw err
+      lastGenqlError = err
+
+      const changed = pruneAccessDeniedFields(request as any, err.errors as any, pruned)
+      if (!changed) throw err
+
+      if (typeof request !== 'object' || request === null || Object.keys(request).length === 0) {
+        throw err
+      }
+    }
+  }
+
+  if (lastGenqlError) throw lastGenqlError
+  throw new Error('Internal error: pruning retry loop exhausted without an error')
+}
+
 export const parseStandardArgs = ({
   argv,
   extraOptions,
@@ -322,6 +437,7 @@ export const runQuery = async (ctx: CommandContext, request: any): Promise<any> 
     return undefined
   }
   try {
+    if (ctx.view === 'all') return await runWithAccessDeniedPruning(ctx, request, 'query')
     return await ctx.client.query(request)
   } catch (err) {
     if (err instanceof GenqlError) {
@@ -342,6 +458,7 @@ export const runMutation = async (ctx: CommandContext, request: any): Promise<an
     return undefined
   }
   try {
+    if (ctx.view === 'all') return await runWithAccessDeniedPruning(ctx, request, 'mutation')
     return await ctx.client.mutation(request)
   } catch (err) {
     if (err instanceof GenqlError) {
