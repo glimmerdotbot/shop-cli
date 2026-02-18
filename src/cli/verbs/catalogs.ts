@@ -1,10 +1,11 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { applySelect, parseFirst, requireId } from './_shared'
+import { parseFirst, requireId } from './_shared'
 
 const catalogSummarySelection = {
   id: true,
@@ -14,6 +15,7 @@ const catalogSummarySelection = {
 
 const getCatalogSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
+  if (view === 'raw') return {} as const
   return catalogSummarySelection
 }
 
@@ -26,15 +28,38 @@ export const runCatalogs = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop catalogs <verb> [flags]',
+        '',
+        'Verbs:',
+        '  create|get|list|update|delete',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Catalog')
-    const selection = applySelect(getCatalogSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getCatalogSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, { catalog: { __args: { id }, ...selection } })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.catalog?.id ?? '')
-    printJson(result.catalog)
+    printNode({ node: result.catalog, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -47,7 +72,13 @@ export const runCatalogs = async ({
     const sortKey = args.sort as any
     const type = args.type as any
 
-    const nodeSelection = applySelect(getCatalogSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getCatalogSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
     const result = await runQuery(ctx, {
       catalogs: {
         __args: { first, after, query, reverse, sortKey, ...(type ? { type } : {}) },
@@ -79,7 +110,8 @@ export const runCatalogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.catalogCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.catalogCreate?.catalog?.id ?? '')
-    printJson(result.catalogCreate)
+    if (ctx.format === 'raw') printJson(result.catalogCreate, false)
+    else printJson(result.catalogCreate)
     return
   }
 
@@ -103,7 +135,8 @@ export const runCatalogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.catalogUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.catalogUpdate?.catalog?.id ?? '')
-    printJson(result.catalogUpdate)
+    if (ctx.format === 'raw') printJson(result.catalogUpdate, false)
+    else printJson(result.catalogUpdate)
     return
   }
 
@@ -128,10 +161,10 @@ export const runCatalogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.catalogDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.catalogDelete?.deletedId ?? '')
-    printJson(result.catalogDelete)
+    if (ctx.format === 'raw') printJson(result.catalogDelete, false)
+    else printJson(result.catalogDelete)
     return
   }
 
   throw new CliError(`Unknown verb for catalogs: ${verb}`, 2)
 }
-

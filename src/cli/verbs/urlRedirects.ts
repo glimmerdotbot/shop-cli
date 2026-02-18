@@ -1,10 +1,11 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { applySelect, parseFirst, requireId } from './_shared'
+import { parseFirst, requireId } from './_shared'
 
 const urlRedirectSummarySelection = {
   id: true,
@@ -14,6 +15,7 @@ const urlRedirectSummarySelection = {
 
 const getUrlRedirectSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
+  if (view === 'raw') return {} as const
   return urlRedirectSummarySelection
 }
 
@@ -26,15 +28,38 @@ export const runUrlRedirects = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop url-redirects <verb> [flags]',
+        '',
+        'Verbs:',
+        '  create|get|list|update|delete',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'UrlRedirect')
-    const selection = applySelect(getUrlRedirectSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getUrlRedirectSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, { urlRedirect: { __args: { id }, ...selection } })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.urlRedirect?.id ?? '')
-    printJson(result.urlRedirect)
+    printNode({ node: result.urlRedirect, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -46,7 +71,13 @@ export const runUrlRedirects = async ({
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
-    const nodeSelection = applySelect(getUrlRedirectSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getUrlRedirectSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
     const result = await runQuery(ctx, {
       urlRedirects: {
         __args: { first, after, query, reverse, sortKey },
@@ -78,7 +109,8 @@ export const runUrlRedirects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.urlRedirectCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.urlRedirectCreate?.urlRedirect?.id ?? '')
-    printJson(result.urlRedirectCreate)
+    if (ctx.format === 'raw') printJson(result.urlRedirectCreate, false)
+    else printJson(result.urlRedirectCreate)
     return
   }
 
@@ -102,7 +134,8 @@ export const runUrlRedirects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.urlRedirectUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.urlRedirectUpdate?.urlRedirect?.id ?? '')
-    printJson(result.urlRedirectUpdate)
+    if (ctx.format === 'raw') printJson(result.urlRedirectUpdate, false)
+    else printJson(result.urlRedirectUpdate)
     return
   }
 
@@ -121,10 +154,10 @@ export const runUrlRedirects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.urlRedirectDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.urlRedirectDelete?.deletedUrlRedirectId ?? '')
-    printJson(result.urlRedirectDelete)
+    if (ctx.format === 'raw') printJson(result.urlRedirectDelete, false)
+    else printJson(result.urlRedirectDelete)
     return
   }
 
   throw new CliError(`Unknown verb for url-redirects: ${verb}`, 2)
 }
-

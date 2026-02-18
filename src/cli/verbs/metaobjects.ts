@@ -1,10 +1,11 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { applySelect, parseFirst, requireId } from './_shared'
+import { parseFirst, requireId } from './_shared'
 
 const metaobjectSummarySelection = {
   id: true,
@@ -16,6 +17,7 @@ const metaobjectSummarySelection = {
 
 const getMetaobjectSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
+  if (view === 'raw') return {} as const
   return metaobjectSummarySelection
 }
 
@@ -28,15 +30,38 @@ export const runMetaobjects = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop metaobjects <verb> [flags]',
+        '',
+        'Verbs:',
+        '  create|get|list|update|delete',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Metaobject')
-    const selection = applySelect(getMetaobjectSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getMetaobjectSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, { metaobject: { __args: { id }, ...selection } })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.metaobject?.id ?? '')
-    printJson(result.metaobject)
+    printNode({ node: result.metaobject, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -51,7 +76,13 @@ export const runMetaobjects = async ({
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
-    const nodeSelection = applySelect(getMetaobjectSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getMetaobjectSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
     const result = await runQuery(ctx, {
       metaobjects: {
         __args: { type, first, after, query, reverse, ...(sortKey ? { sortKey } : {}) },
@@ -83,7 +114,8 @@ export const runMetaobjects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.metaobjectCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.metaobjectCreate?.metaobject?.id ?? '')
-    printJson(result.metaobjectCreate)
+    if (ctx.format === 'raw') printJson(result.metaobjectCreate, false)
+    else printJson(result.metaobjectCreate)
     return
   }
 
@@ -107,7 +139,8 @@ export const runMetaobjects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.metaobjectUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.metaobjectUpdate?.metaobject?.id ?? '')
-    printJson(result.metaobjectUpdate)
+    if (ctx.format === 'raw') printJson(result.metaobjectUpdate, false)
+    else printJson(result.metaobjectUpdate)
     return
   }
 
@@ -126,10 +159,10 @@ export const runMetaobjects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.metaobjectDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.metaobjectDelete?.deletedId ?? '')
-    printJson(result.metaobjectDelete)
+    if (ctx.format === 'raw') printJson(result.metaobjectDelete, false)
+    else printJson(result.metaobjectDelete)
     return
   }
 
   throw new CliError(`Unknown verb for metaobjects: ${verb}`, 2)
 }
-

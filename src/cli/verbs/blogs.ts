@@ -1,10 +1,11 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { applySelect, parseFirst, requireId } from './_shared'
+import { parseFirst, requireId } from './_shared'
 
 const blogSummarySelection = {
   id: true,
@@ -22,6 +23,7 @@ const blogFullSelection = {
 const getBlogSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
   if (view === 'full') return blogFullSelection
+  if (view === 'raw') return {} as const
   return blogSummarySelection
 }
 
@@ -34,15 +36,38 @@ export const runBlogs = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop blogs <verb> [flags]',
+        '',
+        'Verbs:',
+        '  create|get|list|update|delete',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|full|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Blog')
-    const selection = applySelect(getBlogSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getBlogSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, { blog: { __args: { id }, ...selection } })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.blog?.id ?? '')
-    printJson(result.blog)
+    printNode({ node: result.blog, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -54,7 +79,13 @@ export const runBlogs = async ({
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
-    const nodeSelection = applySelect(getBlogSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getBlogSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
     const result = await runQuery(ctx, {
       blogs: {
         __args: { first, after, query, reverse, sortKey },
@@ -86,7 +117,8 @@ export const runBlogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.blogCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.blogCreate?.blog?.id ?? '')
-    printJson(result.blogCreate)
+    if (ctx.format === 'raw') printJson(result.blogCreate, false)
+    else printJson(result.blogCreate)
     return
   }
 
@@ -110,7 +142,8 @@ export const runBlogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.blogUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.blogUpdate?.blog?.id ?? '')
-    printJson(result.blogUpdate)
+    if (ctx.format === 'raw') printJson(result.blogUpdate, false)
+    else printJson(result.blogUpdate)
     return
   }
 
@@ -129,10 +162,10 @@ export const runBlogs = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.blogDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.blogDelete?.deletedBlogId ?? '')
-    printJson(result.blogDelete)
+    if (ctx.format === 'raw') printJson(result.blogDelete, false)
+    else printJson(result.blogDelete)
     return
   }
 
   throw new CliError(`Unknown verb for blogs: ${verb}`, 2)
 }
-

@@ -1,9 +1,10 @@
 import { CliError } from '../errors'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { applySelect, parseFirst, requireId } from './_shared'
+import { parseFirst, requireId } from './_shared'
 
 const commentSummarySelection = {
   id: true,
@@ -22,6 +23,7 @@ const commentFullSelection = {
 const getCommentSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
   if (view === 'full') return commentFullSelection
+  if (view === 'raw') return {} as const
   return commentSummarySelection
 }
 
@@ -34,15 +36,38 @@ export const runComments = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop comments <verb> [flags]',
+        '',
+        'Verbs:',
+        '  get|list|delete',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|full|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Comment')
-    const selection = applySelect(getCommentSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getCommentSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, { comment: { __args: { id }, ...selection } })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.comment?.id ?? '')
-    printJson(result.comment)
+    printNode({ node: result.comment, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -54,7 +79,13 @@ export const runComments = async ({
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
-    const nodeSelection = applySelect(getCommentSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getCommentSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
     const result = await runQuery(ctx, {
       comments: {
         __args: { first, after, query, reverse, sortKey },
@@ -82,10 +113,10 @@ export const runComments = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.commentDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.commentDelete?.deletedCommentId ?? '')
-    printJson(result.commentDelete)
+    if (ctx.format === 'raw') printJson(result.commentDelete, false)
+    else printJson(result.commentDelete)
     return
   }
 
   throw new CliError(`Unknown verb for comments: ${verb}`, 2)
 }
-

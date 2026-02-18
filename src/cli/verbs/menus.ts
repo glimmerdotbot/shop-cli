@@ -1,11 +1,12 @@
 import { CliError } from '../errors'
 import { coerceGid } from '../gid'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { applySelect, parseFirst, requireId } from './_shared'
+import { parseFirst, requireId } from './_shared'
 
 const menuSummarySelection = {
   id: true,
@@ -21,6 +22,7 @@ const menuFullSelection = {
 const getMenuSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
   if (view === 'full') return menuFullSelection
+  if (view === 'raw') return {} as const
   return menuSummarySelection
 }
 
@@ -41,15 +43,38 @@ export const runMenus = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop menus <verb> [flags]',
+        '',
+        'Verbs:',
+        '  create|get|list|update|delete',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|full|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Menu')
-    const selection = applySelect(getMenuSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getMenuSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, { menu: { __args: { id }, ...selection } })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.menu?.id ?? '')
-    printJson(result.menu)
+    printNode({ node: result.menu, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -61,7 +86,13 @@ export const runMenus = async ({
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
-    const nodeSelection = applySelect(getMenuSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getMenuSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
     const result = await runQuery(ctx, {
       menus: {
         __args: { first, after, query, reverse, sortKey },
@@ -94,7 +125,8 @@ export const runMenus = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.menuCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.menuCreate?.menu?.id ?? '')
-    printJson(result.menuCreate)
+    if (ctx.format === 'raw') printJson(result.menuCreate, false)
+    else printJson(result.menuCreate)
     return
   }
 
@@ -126,7 +158,8 @@ export const runMenus = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.menuUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.menuUpdate?.menu?.id ?? '')
-    printJson(result.menuUpdate)
+    if (ctx.format === 'raw') printJson(result.menuUpdate, false)
+    else printJson(result.menuUpdate)
     return
   }
 
@@ -145,10 +178,10 @@ export const runMenus = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.menuDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.menuDelete?.deletedMenuId ?? '')
-    printJson(result.menuDelete)
+    if (ctx.format === 'raw') printJson(result.menuDelete, false)
+    else printJson(result.menuDelete)
     return
   }
 
   throw new CliError(`Unknown verb for menus: ${verb}`, 2)
 }
-

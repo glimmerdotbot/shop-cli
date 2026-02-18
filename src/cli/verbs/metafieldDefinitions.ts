@@ -1,10 +1,11 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { applySelect, parseFirst, requireId } from './_shared'
+import { parseFirst, requireId } from './_shared'
 
 const metafieldDefinitionSummarySelection = {
   id: true,
@@ -17,6 +18,7 @@ const metafieldDefinitionSummarySelection = {
 
 const getMetafieldDefinitionSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
+  if (view === 'raw') return {} as const
   return metafieldDefinitionSummarySelection
 }
 
@@ -29,15 +31,38 @@ export const runMetafieldDefinitions = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop metafield-definitions <verb> [flags]',
+        '',
+        'Verbs:',
+        '  create|get|list|update|delete',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'MetafieldDefinition')
-    const selection = applySelect(getMetafieldDefinitionSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getMetafieldDefinitionSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, { metafieldDefinition: { __args: { id }, ...selection } })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.metafieldDefinition?.id ?? '')
-    printJson(result.metafieldDefinition)
+    printNode({ node: result.metafieldDefinition, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -55,7 +80,13 @@ export const runMetafieldDefinitions = async ({
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
-    const nodeSelection = applySelect(getMetafieldDefinitionSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getMetafieldDefinitionSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
     const result = await runQuery(ctx, {
       metafieldDefinitions: {
         __args: { ownerType, first, after, query, reverse, sortKey },
@@ -90,7 +121,8 @@ export const runMetafieldDefinitions = async ({
       failOnUserErrors: ctx.failOnUserErrors,
     })
     if (ctx.quiet) return console.log(result.metafieldDefinitionCreate?.createdDefinition?.id ?? '')
-    printJson(result.metafieldDefinitionCreate)
+    if (ctx.format === 'raw') printJson(result.metafieldDefinitionCreate, false)
+    else printJson(result.metafieldDefinitionCreate)
     return
   }
 
@@ -158,7 +190,8 @@ export const runMetafieldDefinitions = async ({
       failOnUserErrors: ctx.failOnUserErrors,
     })
     if (ctx.quiet) return console.log(result.metafieldDefinitionUpdate?.updatedDefinition?.id ?? '')
-    printJson(result.metafieldDefinitionUpdate)
+    if (ctx.format === 'raw') printJson(result.metafieldDefinitionUpdate, false)
+    else printJson(result.metafieldDefinitionUpdate)
     return
   }
 
@@ -187,10 +220,10 @@ export const runMetafieldDefinitions = async ({
       failOnUserErrors: ctx.failOnUserErrors,
     })
     if (ctx.quiet) return console.log(result.metafieldDefinitionDelete?.deletedDefinitionId ?? '')
-    printJson(result.metafieldDefinitionDelete)
+    if (ctx.format === 'raw') printJson(result.metafieldDefinitionDelete, false)
+    else printJson(result.metafieldDefinitionDelete)
     return
   }
 
   throw new CliError(`Unknown verb for metafield-definitions: ${verb}`, 2)
 }
-

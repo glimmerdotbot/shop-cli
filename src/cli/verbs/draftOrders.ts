@@ -1,11 +1,12 @@
 import { CliError } from '../errors'
 import { coerceGid } from '../gid'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { applySelect, parseCsv, parseFirst, parseIds, requireId } from './_shared'
+import { parseCsv, parseFirst, parseIds, requireId } from './_shared'
 
 const draftOrderSummarySelection = {
   id: true,
@@ -26,6 +27,7 @@ const draftOrderFullSelection = {
 const getDraftOrderSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
   if (view === 'full') return draftOrderFullSelection
+  if (view === 'raw') return {} as const
   return draftOrderSummarySelection
 }
 
@@ -38,15 +40,43 @@ export const runDraftOrders = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop draft-orders <verb> [flags]',
+        '',
+        'Verbs:',
+        '  get|list|count',
+        '  create|update|delete|duplicate|calculate|complete',
+        '  create-from-order',
+        '  preview-invoice|send-invoice',
+        '  bulk-add-tags|bulk-remove-tags|bulk-delete',
+        '  saved-searches|tags|delivery-options',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|full|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'DraftOrder')
-    const selection = applySelect(getDraftOrderSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getDraftOrderSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, { draftOrder: { __args: { id }, ...selection } })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.draftOrder?.id ?? '')
-    printJson(result.draftOrder)
+    printNode({ node: result.draftOrder, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -58,7 +88,13 @@ export const runDraftOrders = async ({
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
-    const nodeSelection = applySelect(getDraftOrderSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getDraftOrderSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
     const result = await runQuery(ctx, {
       draftOrders: {
         __args: { first, after, query, reverse, sortKey },
@@ -78,7 +114,7 @@ export const runDraftOrders = async ({
     const result = await runQuery(ctx, { draftOrdersCount: { __args: { query }, count: true, precision: true } })
     if (result === undefined) return
     if (ctx.quiet) return console.log(result.draftOrdersCount?.count ?? '')
-    printJson(result.draftOrdersCount)
+    printJson(result.draftOrdersCount, ctx.format !== 'raw')
     return
   }
 
@@ -101,7 +137,7 @@ export const runDraftOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.draftOrderCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.draftOrderCreate?.draftOrder?.id ?? '')
-    printJson(result.draftOrderCreate)
+    printJson(result.draftOrderCreate, ctx.format !== 'raw')
     return
   }
 
@@ -125,7 +161,7 @@ export const runDraftOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.draftOrderUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.draftOrderUpdate?.draftOrder?.id ?? '')
-    printJson(result.draftOrderUpdate)
+    printJson(result.draftOrderUpdate, ctx.format !== 'raw')
     return
   }
 
@@ -144,7 +180,7 @@ export const runDraftOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.draftOrderDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.draftOrderDelete?.deletedId ?? '')
-    printJson(result.draftOrderDelete)
+    printJson(result.draftOrderDelete, ctx.format !== 'raw')
     return
   }
 
@@ -162,7 +198,7 @@ export const runDraftOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.draftOrderDuplicate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.draftOrderDuplicate?.draftOrder?.id ?? '')
-    printJson(result.draftOrderDuplicate)
+    printJson(result.draftOrderDuplicate, ctx.format !== 'raw')
     return
   }
 
@@ -184,7 +220,7 @@ export const runDraftOrders = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.draftOrderCalculate, failOnUserErrors: ctx.failOnUserErrors })
-    printJson(result.draftOrderCalculate)
+    printJson(result.draftOrderCalculate, ctx.format !== 'raw')
     return
   }
 
@@ -207,7 +243,7 @@ export const runDraftOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.draftOrderComplete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.draftOrderComplete?.draftOrder?.id ?? '')
-    printJson(result.draftOrderComplete)
+    printJson(result.draftOrderComplete, ctx.format !== 'raw')
     return
   }
 
@@ -226,7 +262,7 @@ export const runDraftOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.draftOrderCreateFromOrder, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.draftOrderCreateFromOrder?.draftOrder?.id ?? '')
-    printJson(result.draftOrderCreateFromOrder)
+    printJson(result.draftOrderCreateFromOrder, ctx.format !== 'raw')
     return
   }
 
@@ -252,7 +288,7 @@ export const runDraftOrders = async ({
       if (result === undefined) return
       maybeFailOnUserErrors({ payload: result.draftOrderInvoicePreview, failOnUserErrors: ctx.failOnUserErrors })
       if (ctx.quiet) return console.log(result.draftOrderInvoicePreview?.previewHtml ?? '')
-      printJson(result.draftOrderInvoicePreview)
+      printJson(result.draftOrderInvoicePreview, ctx.format !== 'raw')
       return
     }
 
@@ -266,7 +302,7 @@ export const runDraftOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.draftOrderInvoiceSend, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.draftOrderInvoiceSend?.draftOrder?.id ?? '')
-    printJson(result.draftOrderInvoiceSend)
+    printJson(result.draftOrderInvoiceSend, ctx.format !== 'raw')
     return
   }
 
@@ -292,7 +328,7 @@ export const runDraftOrders = async ({
     const payload = (result as any)[mutationField]
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(payload?.job?.id ?? '')
-    printJson(payload)
+    printJson(payload, ctx.format !== 'raw')
     return
   }
 
@@ -314,7 +350,7 @@ export const runDraftOrders = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.draftOrderBulkDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.draftOrderBulkDelete?.job?.id ?? '')
-    printJson(result.draftOrderBulkDelete)
+    printJson(result.draftOrderBulkDelete, ctx.format !== 'raw')
     return
   }
 
@@ -348,7 +384,7 @@ export const runDraftOrders = async ({
     })
     if (result === undefined) return
     if (ctx.quiet) return console.log(result.draftOrderTag?.id ?? '')
-    printJson(result.draftOrderTag)
+    printJson(result.draftOrderTag, ctx.format !== 'raw')
     return
   }
 
@@ -390,7 +426,7 @@ export const runDraftOrders = async ({
       },
     })
     if (result === undefined) return
-    printJson(result.draftOrderAvailableDeliveryOptions)
+    printJson(result.draftOrderAvailableDeliveryOptions, ctx.format !== 'raw')
     return
   }
 

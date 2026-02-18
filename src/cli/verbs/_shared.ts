@@ -8,16 +8,6 @@ export const parseFirst = (value: unknown) => {
   return Math.floor(n)
 }
 
-export const applySelect = (selection: any, select: unknown) => {
-  if (!Array.isArray(select) || select.length === 0) return selection
-  if (select.some((s) => typeof s !== 'string' || s.includes('.'))) {
-    throw new CliError('--select currently only supports top-level fields (no dots)', 2)
-  }
-  const next = { ...selection }
-  for (const field of select as string[]) next[field] = true
-  return next
-}
-
 export const requireId = (id: unknown, type: ShopifyGidType) => {
   if (typeof id !== 'string' || !id) throw new CliError('Missing --id', 2)
   return coerceGid(id, type)
@@ -43,4 +33,3 @@ export const parseIds = (value: unknown, type: ShopifyGidType) => {
   if (parts.length === 0) throw new CliError('Missing --ids', 2)
   return parts.map((id) => coerceGid(id, type))
 }
-

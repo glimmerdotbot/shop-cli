@@ -1,10 +1,11 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { applySelect, parseFirst, requireId } from './_shared'
+import { parseFirst, requireId } from './_shared'
 
 const segmentSummarySelection = {
   id: true,
@@ -21,6 +22,7 @@ const segmentFullSelection = {
 const getSegmentSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
   if (view === 'full') return segmentFullSelection
+  if (view === 'raw') return {} as const
   return segmentSummarySelection
 }
 
@@ -41,15 +43,38 @@ export const runSegments = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop segments <verb> [flags]',
+        '',
+        'Verbs:',
+        '  create|get|list|update|delete',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|full|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Segment')
-    const selection = applySelect(getSegmentSelection(ctx.view), args.select)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getSegmentSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
 
     const result = await runQuery(ctx, { segment: { __args: { id }, ...selection } })
     if (result === undefined) return
-    if (ctx.quiet) return console.log(result.segment?.id ?? '')
-    printJson(result.segment)
+    printNode({ node: result.segment, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -61,7 +86,13 @@ export const runSegments = async ({
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
-    const nodeSelection = applySelect(getSegmentSelection(ctx.view), args.select)
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getSegmentSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
     const result = await runQuery(ctx, {
       segments: {
         __args: { first, after, query, reverse, sortKey },
@@ -96,7 +127,8 @@ export const runSegments = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.segmentCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.segmentCreate?.segment?.id ?? '')
-    printJson(result.segmentCreate)
+    if (ctx.format === 'raw') printJson(result.segmentCreate, false)
+    else printJson(result.segmentCreate)
     return
   }
 
@@ -124,7 +156,8 @@ export const runSegments = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.segmentUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.segmentUpdate?.segment?.id ?? '')
-    printJson(result.segmentUpdate)
+    if (ctx.format === 'raw') printJson(result.segmentUpdate, false)
+    else printJson(result.segmentUpdate)
     return
   }
 
@@ -143,10 +176,10 @@ export const runSegments = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.segmentDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.segmentDelete?.deletedSegmentId ?? '')
-    printJson(result.segmentDelete)
+    if (ctx.format === 'raw') printJson(result.segmentDelete, false)
+    else printJson(result.segmentDelete)
     return
   }
 
   throw new CliError(`Unknown verb for segments: ${verb}`, 2)
 }
-
