@@ -3,7 +3,7 @@ import { resolve } from 'path'
 
 // Load .env from the current working directory (where the CLI is invoked),
 // not from where the package is installed
-dotenv.config({ path: resolve(process.cwd(), '.env') })
+dotenv.config({ path: resolve(process.cwd(), '.env'), quiet: true })
 
 import { createCliClientFromEnv } from './cli/client'
 import { CliError } from './cli/errors'
