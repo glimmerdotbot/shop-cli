@@ -106,29 +106,55 @@ const collectNestedTypes = (
   return result
 }
 
-/** Format a field line with proper indentation for multiline descriptions */
+/** Word-wrap text to a given width */
+const wrapText = (text: string, width: number): string[] => {
+  const words = text.split(/\s+/).filter(Boolean)
+  if (words.length === 0) return ['']
+  const lines: string[] = []
+  let line = words[0]!
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i]!
+    if (line.length + 1 + word.length > width) {
+      lines.push(line)
+      line = word
+    } else {
+      line += ` ${word}`
+    }
+  }
+  lines.push(line)
+  return lines
+}
+
+/** Format a field line with proper indentation and word wrapping */
 const formatFieldLine = (
   field: InputFieldHelp,
   nameWidth: number,
   typeWidth: number,
   lineIndent: string,
+  totalWidth = 108,
 ): string => {
   const name = field.name.padEnd(nameWidth)
   const type = formatFieldType(field).padEnd(typeWidth)
   const required = field.required ? 'Required. ' : ''
   const desc = field.description ?? ''
 
-  // Calculate indent for continuation lines (align with description start)
+  // Calculate prefix and indent for continuation lines
   const prefix = `${lineIndent}${name}  ${type}  `
   const indent = ' '.repeat(prefix.length)
+  const descWidth = Math.max(20, totalWidth - prefix.length)
 
-  // Split description on newlines, filter blank lines, and indent continuation lines
-  const descLines = `${required}${desc}`.split('\n').filter((line) => line.trim() !== '')
-  const formattedDesc = descLines
-    .map((line, i) => (i === 0 ? line : `${indent}${line}`))
-    .join('\n')
+  // Normalize: remove blank lines, join into single string, then wrap
+  const normalizedDesc = `${required}${desc}`
+    .split('\n')
+    .filter((line) => line.trim() !== '')
+    .join(' ')
+  const wrappedLines = wrapText(normalizedDesc, descWidth)
 
-  return `${prefix}${formattedDesc}`
+  const lines = [`${prefix}${wrappedLines[0]}`]
+  for (let i = 1; i < wrappedLines.length; i++) {
+    lines.push(`${indent}${wrappedLines[i]}`)
+  }
+  return lines.join('\n')
 }
 
 const renderInputType = (

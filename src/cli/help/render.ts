@@ -138,8 +138,30 @@ const formatFieldTypeWithMarkers = (field: InputFieldHelp): string => {
   return label
 }
 
+/** Word-wrap text to a given width */
+const wrapText = (text: string, width: number): string[] => {
+  const words = text.split(/\s+/).filter(Boolean)
+  if (words.length === 0) return ['']
+  const lines: string[] = []
+  let line = words[0]!
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i]!
+    if (line.length + 1 + word.length > width) {
+      lines.push(line)
+      line = word
+    } else {
+      line += ` ${word}`
+    }
+  }
+  lines.push(line)
+  return lines
+}
+
 /** Render the collected type shapes section for --help-full */
-const renderTypeShapesSection = (types: Map<string, InputFieldHelp[]>): string[] => {
+const renderTypeShapesSection = (
+  types: Map<string, InputFieldHelp[]>,
+  totalWidth = 108,
+): string[] => {
   if (types.size === 0) return []
 
   const lines: string[] = ['Referenced types:']
@@ -157,17 +179,22 @@ const renderTypeShapesSection = (types: Map<string, InputFieldHelp[]>): string[]
       const required = field.required ? 'Required. ' : ''
       const desc = field.description ?? ''
 
-      // Calculate indent for continuation lines (align with description start)
+      // Calculate prefix and indent for continuation lines
       const prefix = `    ${name}  ${type}  `
       const indent = ' '.repeat(prefix.length)
+      const descWidth = Math.max(20, totalWidth - prefix.length)
 
-      // Split description on newlines, filter blank lines, and indent continuation lines
-      const descLines = `${required}${desc}`.split('\n').filter((line) => line.trim() !== '')
-      const formattedDesc = descLines
-        .map((line, i) => (i === 0 ? line : `${indent}${line}`))
-        .join('\n')
+      // Normalize: remove blank lines, join into single string, then wrap
+      const normalizedDesc = `${required}${desc}`
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .join(' ')
+      const wrappedLines = wrapText(normalizedDesc, descWidth)
 
-      lines.push(`${prefix}${formattedDesc}`)
+      lines.push(`${prefix}${wrappedLines[0]}`)
+      for (let i = 1; i < wrappedLines.length; i++) {
+        lines.push(`${indent}${wrappedLines[i]}`)
+      }
     }
   }
 
