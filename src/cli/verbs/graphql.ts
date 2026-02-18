@@ -158,18 +158,20 @@ export const runGraphQL = async ({
     return
   }
 
-  // Handle the case where verb is a multi-word string like "query { shop { name } }"
-  // because the main CLI parser joins all non-flag args as the verb.
-  // We need to split off the actual verb (query/mutation) from the GraphQL string.
+  // The main CLI parser joins all non-flag args as `verb`, so:
+  // - `shop graphql query '{ ... }'` becomes verb = "query { ... }"
+  // - `shop graphql '{ ... }'` becomes verb = "{ ... }"
   let actualVerb = verb
   let verbGraphQL: string | undefined
 
-  if (verb.startsWith('query ')) {
+  if (verb === 'query' || verb.startsWith('query')) {
+    const parts = verb.split(' ')
     actualVerb = 'query'
-    verbGraphQL = verb.slice('query '.length)
-  } else if (verb.startsWith('mutation ')) {
+    verbGraphQL = parts.slice(1).join(' ').trim() || undefined
+  } else if (verb === 'mutation' || verb.startsWith('mutation')) {
+    const parts = verb.split(' ')
     actualVerb = 'mutation'
-    verbGraphQL = verb.slice('mutation '.length)
+    verbGraphQL = parts.slice(1).join(' ').trim() || undefined
   }
 
   const parsed = parseArgs({

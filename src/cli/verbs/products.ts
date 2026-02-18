@@ -275,13 +275,8 @@ export const runProducts = async ({
     return
   }
 
-  if (verb === 'metafields') {
-    const [subverb, ...rest] = argv
-    if (subverb !== 'upsert') {
-      throw new CliError(`Unknown products metafields verb: ${subverb ?? '(missing)'}`, 2)
-    }
-
-    const args = parseStandardArgs({ argv: rest, extraOptions: {} })
+  if (verb === 'metafields upsert') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
     const built = buildInput({
       inputArg: args.input as any,
       setArgs: args.set as any,

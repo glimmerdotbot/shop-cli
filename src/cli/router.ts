@@ -71,6 +71,18 @@ import { runAppBilling } from './verbs/app-billing'
 import { runGraphQL } from './verbs/graphql'
 import { runDiscountsAutomatic } from './verbs/discounts-automatic'
 import { runDiscountsCode } from './verbs/discounts-code'
+import { runAbandonedCheckouts } from './verbs/abandoned-checkouts'
+import { runPaymentCustomizations } from './verbs/payment-customizations'
+import { runTaxonomy } from './verbs/taxonomy'
+import { runStaff } from './verbs/staff'
+import { runStorefrontAccessTokens } from './verbs/storefront-access-tokens'
+import { runFulfillmentConstraintRules } from './verbs/fulfillment-constraint-rules'
+import { runShopifyPayments } from './verbs/shopify-payments'
+import { runBusinessEntities } from './verbs/business-entities'
+import { runShopPolicies } from './verbs/shop-policies'
+import { runCashTracking } from './verbs/cash-tracking'
+import { runPointOfSale } from './verbs/point-of-sale'
+import { runCustomerAccountPages } from './verbs/customer-account-pages'
 
 export type CliView = 'summary' | 'ids' | 'full' | 'raw'
 
@@ -135,21 +147,33 @@ export const runCommand = async ({
   if (resource === 'orders') return runOrders({ ctx, verb, argv })
   if (resource === 'order-edit') return runOrderEdit({ ctx, verb, argv })
   if (resource === 'inventory') return runInventory({ ctx, verb, argv })
+  if (resource === 'abandoned-checkouts') return runAbandonedCheckouts({ ctx, verb, argv })
   if (resource === 'returns') return runReturns({ ctx, verb, argv })
   if (resource === 'fulfillment-orders') return runFulfillmentOrders({ ctx, verb, argv })
   if (resource === 'fulfillments') return runFulfillments({ ctx, verb, argv })
   if (resource === 'fulfillment-services') return runFulfillmentServices({ ctx, verb, argv })
+  if (resource === 'fulfillment-constraint-rules') return runFulfillmentConstraintRules({ ctx, verb, argv })
   if (resource === 'inventory-items') return runInventoryItems({ ctx, verb, argv })
   if (resource === 'inventory-shipments') return runInventoryShipments({ ctx, verb, argv })
   if (resource === 'inventory-transfers') return runInventoryTransfers({ ctx, verb, argv })
   if (resource === 'files') return runFiles({ ctx, verb, argv })
   if (resource === 'locations') return runLocations({ ctx, verb, argv })
+  if (resource === 'staff') return runStaff({ ctx, verb, argv })
+  if (resource === 'storefront-access-tokens') return runStorefrontAccessTokens({ ctx, verb, argv })
   if (resource === 'gift-cards') return runGiftCards({ ctx, verb, argv })
   if (resource === 'discounts-automatic') return runDiscountsAutomatic({ ctx, verb, argv })
   if (resource === 'discounts-code') return runDiscountsCode({ ctx, verb, argv })
+  if (resource === 'payment-customizations') return runPaymentCustomizations({ ctx, verb, argv })
   if (resource === 'price-lists') return runPriceLists({ ctx, verb, argv })
   if (resource === 'refunds') return runRefunds({ ctx, verb, argv })
   if (resource === 'payment-terms') return runPaymentTerms({ ctx, verb, argv })
+  if (resource === 'taxonomy') return runTaxonomy({ ctx, verb, argv })
+  if (resource === 'shopify-payments') return runShopifyPayments({ ctx, verb, argv })
+  if (resource === 'business-entities') return runBusinessEntities({ ctx, verb, argv })
+  if (resource === 'shop-policies') return runShopPolicies({ ctx, verb, argv })
+  if (resource === 'cash-tracking') return runCashTracking({ ctx, verb, argv })
+  if (resource === 'point-of-sale') return runPointOfSale({ ctx, verb, argv })
+  if (resource === 'customer-account-pages') return runCustomerAccountPages({ ctx, verb, argv })
   if (resource === 'publications') return runPublications({ ctx, verb, argv })
   if (resource === 'articles') return runArticles({ ctx, verb, argv })
   if (resource === 'blogs') return runBlogs({ ctx, verb, argv })

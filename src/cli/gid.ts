@@ -1,10 +1,13 @@
 import { CliError } from './errors'
 
 export type ShopifyGidType =
+  | 'AbandonedCheckout'
+  | 'Abandonment'
   | 'Product'
   | 'ProductVariant'
   | 'Collection'
   | 'Customer'
+  | 'StaffMember'
   | 'Order'
   | 'CalculatedOrder'
   | 'CalculatedLineItem'
@@ -24,6 +27,7 @@ export type ShopifyGidType =
   | 'Fulfillment'
   | 'FulfillmentHold'
   | 'FulfillmentService'
+  | 'FulfillmentConstraintRule'
   | 'GiftCard'
   | 'Return'
   | 'ReturnLineItem'
@@ -36,6 +40,7 @@ export type ShopifyGidType =
   | 'PaymentTerms'
   | 'PaymentTermsTemplate'
   | 'PaymentSchedule'
+  | 'PaymentCustomization'
   | 'PriceList'
   | 'Publication'
   | 'Refund'
@@ -47,6 +52,7 @@ export type ShopifyGidType =
   | 'Menu'
   | 'Catalog'
   | 'Market'
+  | 'BusinessEntity'
   | 'Company'
   | 'CompanyContact'
   | 'CompanyContactRole'
@@ -54,6 +60,7 @@ export type ShopifyGidType =
   | 'CompanyLocation'
   | 'CompanyLocationStaffMemberAssignment'
   | 'StoreCreditAccount'
+  | 'StorefrontAccessToken'
   | 'DraftOrder'
   | 'DraftOrderTag'
   | 'BulkOperation'
@@ -78,6 +85,9 @@ export type ShopifyGidType =
   | 'SubscriptionLine'
   | 'SubscriptionManualDiscount'
   | 'SubscriptionBillingAttempt'
+  | 'CashTrackingSession'
+  | 'PointOfSaleDevice'
+  | 'CustomerAccountPage'
 
 export const isGid = (value: string) => value.startsWith('gid://')
 

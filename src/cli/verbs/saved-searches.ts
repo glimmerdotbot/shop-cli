@@ -111,13 +111,7 @@ export const runSavedSearches = async ({
     return
   }
 
-  if (
-    verb === 'list-products' ||
-    verb === 'list-orders' ||
-    verb === 'list-customers' ||
-    verb === 'list-draft-orders' ||
-    verb === 'list-collections'
-  ) {
+  if (verb === 'list-products' || verb === 'list-orders' || verb === 'list-customers' || verb === 'list-draft-orders' || verb === 'list-collections') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const first = parseFirst(args.first)
     const after = args.after as any
