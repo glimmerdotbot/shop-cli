@@ -18,9 +18,9 @@ There's no way to say "give me everything".
 Add `--view all` that includes all scalar fields plus nested object fields, and `--include` to opt-in to connections:
 
 ```bash
-shop products get --id 123 --view all                            # all scalars + objects
-shop products get --id 123 --view all --include variants         # + variants connection
-shop products get --id 123 --view all --include variants,media   # + multiple connections
+shop products get --id 123 --view all                                      # all scalars + objects
+shop products get --id 123 --view all --include variants                   # + variants connection
+shop products get --id 123 --view all --include variants --include media   # + multiple connections
 ```
 
 ## Why This Design
@@ -53,8 +53,31 @@ Create `src/cli/selection/buildAllSelection.ts`:
 
 ```typescript
 import { getType, getFields, type FieldInfo } from '../introspection'
+import { CliError } from '../errors'
 
 type Selection = Record<string, any>
+
+/**
+ * Validate that all --include targets are valid connection fields without required args.
+ * Throws CliError if any are invalid.
+ */
+export const validateIncludes = (typeName: string, includes: string[]) => {
+  const fields = getFields(typeName)
+  const fieldMap = new Map(fields.map(f => [f.name, f]))
+
+  for (const name of includes) {
+    const field = fieldMap.get(name)
+    if (!field) {
+      throw new CliError(`Unknown field: ${name}`, 2)
+    }
+    if (!field.isConnection) {
+      throw new CliError(`Field "${name}" is not a connection field. Use --select for non-connection fields.`, 2)
+    }
+    if (field.hasRequiredArgs) {
+      throw new CliError(`Connection "${name}" has required arguments and cannot be used with --include.`, 2)
+    }
+  }
+}
 
 /**
  * Build a selection that includes all scalar fields and nested object fields.
@@ -111,7 +134,7 @@ export const buildAllSelection = (
 Modify `src/cli/selection/select.ts` to support `--view all`:
 
 ```typescript
-import { buildAllSelection } from './buildAllSelection'
+import { buildAllSelection, validateIncludes } from './buildAllSelection'
 import { resourceToType } from '../introspection/resources'
 
 export const resolveSelection = ({
@@ -135,6 +158,11 @@ export const resolveSelection = ({
   if (view === 'all' && resource) {
     const typeName = resourceToType[resource]
     if (typeName) {
+      // Validate --include targets before building selection
+      if (include?.length) {
+        validateIncludes(typeName, include)  // throws if invalid
+      }
+
       let result = buildAllSelection(typeName, include ?? [])
       // Merge any additional --select paths
       if (select) {
@@ -161,11 +189,11 @@ In `src/cli/router.ts`, add `--include` to `parseStandardArgs`:
 export const parseStandardArgs = ({ argv, extraOptions }: { ... }) => {
   // ... existing parsing
 
-  // Parse --include (repeatable or comma-separated)
+  // Parse --include (repeatable)
   const include: string[] = []
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--include' && argv[i + 1]) {
-      include.push(...argv[i + 1].split(',').map(s => s.trim()))
+      include.push(argv[i + 1])
       i++
     }
   }
@@ -195,11 +223,11 @@ const selection = resolveSelection({
 
 ### Step 5: Update help
 
-In `src/cli/help/registry.ts`, add the new flags:
+In `src/cli/help/registry.ts`, update the view flag and add --include:
 
 ```typescript
 const flagView = flag('--view summary|ids|full|raw|all', 'Select a built-in view')
-const flagInclude = flag('--include <connection>', 'Include connection fields with --view all (repeatable)')
+const flagInclude = flag('--include <connection>', 'Include a connection field with --view all (repeatable)')
 ```
 
 ## Example Output
@@ -294,6 +322,7 @@ query {
 ## Edge Cases
 
 1. **Unknown connection name**: Error if `--include foo` where `foo` isn't a connection field
-2. **Nested connections**: Only expand one level of connections (the included one); don't recurse into nested connections
-3. **Required args on nested fields**: Skip them, same as top-level
-4. **Empty types**: Some object fields may have no selectable sub-fields after filtering; skip them
+2. **Required args on connection**: Error if `--include` targets a connection with required arguments
+3. **Nested connections**: Only expand one level of connections (the included one); don't recurse into nested connections
+4. **Required args on nested fields**: Skip them, same as top-level
+5. **Empty types**: Some object fields may have no selectable sub-fields after filtering; skip them
