@@ -1,6 +1,8 @@
 import { readFileSync, statSync } from 'node:fs'
 import path from 'node:path'
 
+import { lookup } from 'mime-types'
+
 import { CliError } from '../../errors'
 import { runMutation, type CommandContext } from '../../router'
 import { maybeFailOnUserErrors } from '../../userErrors'
@@ -22,24 +24,8 @@ export type StagedUploadTarget = {
 }
 
 const guessMimeTypeFromFilename = (filename: string): string => {
-  const ext = path.extname(filename).toLowerCase()
-  if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg'
-  if (ext === '.png') return 'image/png'
-  if (ext === '.gif') return 'image/gif'
-  if (ext === '.webp') return 'image/webp'
-  if (ext === '.avif') return 'image/avif'
-  if (ext === '.svg') return 'image/svg+xml'
-  if (ext === '.mp4') return 'video/mp4'
-  if (ext === '.mov') return 'video/quicktime'
-  if (ext === '.webm') return 'video/webm'
-  if (ext === '.glb') return 'model/gltf-binary'
-  if (ext === '.gltf') return 'model/gltf+json'
-  if (ext === '.usdz') return 'model/vnd.usdz+zip'
-  if (ext === '.pdf') return 'application/pdf'
-  if (ext === '.txt') return 'text/plain'
-  if (ext === '.csv') return 'text/csv'
-  if (ext === '.json') return 'application/json'
-  if (ext === '.zip') return 'application/zip'
+  const mimeType = lookup(filename)
+  if (typeof mimeType === 'string') return mimeType
   return 'application/octet-stream'
 }
 
@@ -178,4 +164,3 @@ export const stagedUploadLocalFiles = async (
 
   return targets
 }
-
