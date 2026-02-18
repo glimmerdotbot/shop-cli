@@ -690,6 +690,55 @@ export const commandRegistry: ResourceSpec[] = [
       },
     ],
   },
+  {
+    resource: 'graphql',
+    description: 'Execute raw GraphQL queries and mutations.',
+    verbs: [
+      {
+        verb: 'query',
+        description: 'Execute a raw GraphQL query.',
+        operation: { type: 'query', name: 'raw' },
+        flags: [
+          flag('<graphql>', 'GraphQL query (inline or @file.graphql)'),
+          flag('--var <name>=<value>', 'Set a variable (repeatable)'),
+          flag('--var-json <name>=<json>', 'Set a variable with JSON value (repeatable)'),
+          flag('--variables <json>', 'Variables as JSON object (or @file.json)'),
+          flag('--operation <name>', 'Operation name (for multi-operation documents)'),
+          flag('--include-extensions', 'Include extensions in output'),
+        ],
+        examples: [
+          'shop graphql query \'{ shop { name } }\'',
+          'shop graphql query @get-products.graphql',
+          'shop graphql query \'query GetProduct($id: ID!) { product(id: $id) { title } }\' --var id=gid://shopify/Product/123',
+        ],
+        notes: [
+          'The query can be passed as an inline string or loaded from a file with @filename.',
+          'Variables can be set individually with --var or as a JSON object with --variables.',
+        ],
+      },
+      {
+        verb: 'mutation',
+        description: 'Execute a raw GraphQL mutation.',
+        operation: { type: 'mutation', name: 'raw' },
+        flags: [
+          flag('<graphql>', 'GraphQL mutation (inline or @file.graphql)'),
+          flag('--var <name>=<value>', 'Set a variable (repeatable)'),
+          flag('--var-json <name>=<json>', 'Set a variable with JSON value (repeatable)'),
+          flag('--variables <json>', 'Variables as JSON object (or @file.json)'),
+          flag('--operation <name>', 'Operation name (for multi-operation documents)'),
+          flag('--include-extensions', 'Include extensions in output'),
+        ],
+        examples: [
+          'shop graphql mutation \'mutation { productCreate(input: { title: "Test" }) { product { id } } }\'',
+          'shop graphql mutation @create-product.graphql --variables @vars.json',
+        ],
+        notes: [
+          'The mutation can be passed as an inline string or loaded from a file with @filename.',
+          'Use --var for simple string values, --var-json for complex JSON values.',
+        ],
+      },
+    ],
+  },
 ]
 
 export const commonOutputFlags = [flagView, flagSelect, flagSelection]

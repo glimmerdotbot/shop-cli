@@ -159,6 +159,9 @@ const printHelp = () => {
       '  subscription-drafts: get|commit|update|add-line|update-line|remove-line',
       '  subscription-drafts: add-discount|update-discount|remove-discount|apply-code|add-free-shipping|update-free-shipping',
       '',
+      'Raw GraphQL:',
+      '  graphql: query|mutation  (execute raw GraphQL queries/mutations)',
+      '',
       'Auth (flags override env):',
       '  --shop-domain <your-shop.myshopify.com> (or env SHOP_DOMAIN / SHOPIFY_SHOP)',
       '  --graphql-endpoint <url>          (or env GRAPHQL_ENDPOINT; overrides shop domain)',
@@ -209,8 +212,12 @@ const main = async () => {
   const rest =
     firstFlagIndex === -1 ? [] : afterResource.slice(firstFlagIndex)
 
-  const verb = verbParts.join(' ')
-  if (!verb) {
+  const verb = verbParts.join(' ') || 'help'
+
+  // Handle resource-level help (e.g., `shop graphql --help`)
+  if (!verbParts.length && (rest.includes('--help') || rest.includes('-h'))) {
+    // Let the resource handler show its own help
+  } else if (!verbParts.length && verb === 'help') {
     printHelp()
     throw new CliError('Missing <resource> or <verb>', 2)
   }
@@ -260,6 +267,12 @@ const main = async () => {
     dryRun,
     failOnUserErrors: !(parsed.noFailOnUserErrors ?? false),
     warnMissingAccessToken,
+    // Raw GraphQL client options (for graphql command)
+    shopDomain: shopDomain ?? process.env.SHOP_DOMAIN ?? process.env.SHOPIFY_SHOP,
+    graphqlEndpoint: graphqlEndpoint ?? process.env.GRAPHQL_ENDPOINT,
+    accessToken: resolvedAccessToken,
+    apiVersion: apiVersion ?? '2026-04',
+    headers,
   })
 }
 

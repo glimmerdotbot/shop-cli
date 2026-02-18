@@ -61,6 +61,7 @@ import { runWebPixels } from './verbs/web-pixels'
 import { runWebhooks } from './verbs/webhooks'
 import { runReturns } from './verbs/returns'
 import { runAppBilling } from './verbs/app-billing'
+import { runGraphQL } from './verbs/graphql'
 
 export type CliView = 'summary' | 'ids' | 'full' | 'raw'
 
@@ -72,6 +73,12 @@ export type CommandContext = {
   dryRun: boolean
   failOnUserErrors: boolean
   warnMissingAccessToken: boolean
+  // Raw GraphQL client options (for graphql command)
+  shopDomain?: string
+  graphqlEndpoint?: string
+  accessToken?: string
+  apiVersion?: string
+  headers?: Record<string, string>
 }
 
 export type RunCommandArgs = CommandContext & {
@@ -91,6 +98,11 @@ export const runCommand = async ({
   dryRun,
   failOnUserErrors,
   warnMissingAccessToken,
+  shopDomain,
+  graphqlEndpoint,
+  accessToken,
+  apiVersion,
+  headers,
 }: RunCommandArgs) => {
   const ctx: CommandContext = {
     client,
@@ -100,6 +112,11 @@ export const runCommand = async ({
     dryRun,
     failOnUserErrors,
     warnMissingAccessToken,
+    shopDomain,
+    graphqlEndpoint,
+    accessToken,
+    apiVersion,
+    headers,
   }
 
   if (resource === 'products') return runProducts({ ctx, verb, argv })
@@ -157,6 +174,7 @@ export const runCommand = async ({
   if (resource === 'translations') return runTranslations({ ctx, verb, argv })
   if (resource === 'events') return runEvents({ ctx, verb, argv })
   if (resource === 'functions') return runShopifyFunctions({ ctx, verb, argv })
+  if (resource === 'graphql') return runGraphQL({ ctx, verb, argv })
 
   throw new CliError(`Unknown resource: ${resource}`, 2)
 }
