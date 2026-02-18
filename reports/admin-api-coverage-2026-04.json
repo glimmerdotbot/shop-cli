@@ -1,0 +1,2333 @@
+{
+  "schemaVersion": "2026-04",
+  "totals": {
+    "queryFields": 269,
+    "mutationFields": 496,
+    "usedQueryFields": 157,
+    "usedMutationFields": 317,
+    "missingQueryFields": 112,
+    "missingMutationFields": 179
+  },
+  "missing": {
+    "queries": [
+      "app",
+      "appByHandle",
+      "appByKey",
+      "appDiscountType",
+      "appDiscountTypes",
+      "appDiscountTypesNodes",
+      "appInstallations",
+      "articleAuthors",
+      "articleTags",
+      "assignedFulfillmentOrders",
+      "automaticDiscount",
+      "automaticDiscounts",
+      "automaticDiscountSavedSearches",
+      "availableBackupRegions",
+      "availableLocales",
+      "backupRegion",
+      "blogsCount",
+      "catalogOperations",
+      "catalogsCount",
+      "channel",
+      "channels",
+      "checkoutBranding",
+      "checkoutProfile",
+      "checkoutProfiles",
+      "codeDiscountSavedSearches",
+      "collectionByHandle",
+      "collectionByIdentifier",
+      "collectionRulesConditions",
+      "companyContactRole",
+      "consentPolicy",
+      "consentPolicyRegions",
+      "currentAppInstallation",
+      "customerByIdentifier",
+      "customerMergeJobStatus",
+      "customerMergePreview",
+      "customerPaymentMethod",
+      "customerSegmentMembers",
+      "customerSegmentMembership",
+      "customerSegmentMembersQuery",
+      "deletionEvents",
+      "deliveryPromiseProvider",
+      "discountNode",
+      "discountNodes",
+      "discountNodesCount",
+      "discountRedeemCodeBulkCreation",
+      "discountRedeemCodeSavedSearches",
+      "domain",
+      "fileSavedSearches",
+      "financeAppAccessPolicy",
+      "financeKycInformation",
+      "inventoryLevel",
+      "inventoryProperties",
+      "job",
+      "locationByIdentifier",
+      "locationsAvailableForDeliveryProfiles",
+      "locationsAvailableForDeliveryProfilesConnection",
+      "manualHoldsFulfillmentOrders",
+      "marketByGeography",
+      "marketingEvent",
+      "marketingEvents",
+      "marketLocalizableResource",
+      "marketLocalizableResources",
+      "marketLocalizableResourcesByIds",
+      "marketsResolvedValues",
+      "metafieldDefinitionTypes",
+      "metaobjectByHandle",
+      "metaobjectDefinitionByType",
+      "nodes",
+      "onlineStore",
+      "orderByIdentifier",
+      "orderEditSession",
+      "orderPaymentStatus",
+      "pagesCount",
+      "pendingOrdersCount",
+      "primaryMarket",
+      "privacySettings",
+      "productByHandle",
+      "productByIdentifier",
+      "productDuplicateJob",
+      "productFeed",
+      "productFeeds",
+      "productOperation",
+      "productResourceFeedback",
+      "productTags",
+      "productTypes",
+      "productVariantByIdentifier",
+      "productVendors",
+      "publicApiVersions",
+      "publicationsCount",
+      "publishedProductsCount",
+      "returnableFulfillment",
+      "reverseDelivery",
+      "reverseFulfillmentOrder",
+      "segmentFilters",
+      "segmentFilterSuggestions",
+      "segmentMigrations",
+      "segmentsCount",
+      "segmentValueSuggestions",
+      "shopBillingPreferences",
+      "shopifyqlQuery",
+      "shopPayPaymentRequestReceipt",
+      "shopPayPaymentRequestReceipts",
+      "standardMetafieldDefinitionTemplates",
+      "subscriptionBillingAttempts",
+      "subscriptionBillingCycle",
+      "subscriptionBillingCycleBulkResults",
+      "tenderTransactions",
+      "urlRedirectImport",
+      "urlRedirectSavedSearches",
+      "urlRedirectsCount",
+      "webhookSubscriptionsCount",
+      "webPresences"
+    ],
+    "mutations": [
+      "appPurchaseOneTimeCreate",
+      "appRevokeAccessScopes",
+      "appSubscriptionCreate",
+      "appSubscriptionTrialExtend",
+      "appUninstall",
+      "appUsageRecordCreate",
+      "backupRegionUpdate",
+      "bulkOperationCancel",
+      "bulkProductResourceFeedbackCreate",
+      "catalogContextUpdate",
+      "checkoutBrandingUpsert",
+      "collectionAddProducts",
+      "collectionReorderProducts",
+      "combinedListingUpdate",
+      "commentApprove",
+      "commentNotSpam",
+      "commentSpam",
+      "companiesDelete",
+      "companyAddressDelete",
+      "companyAssignCustomerAsContact",
+      "companyAssignMainContact",
+      "companyContactAssignRole",
+      "companyContactCreate",
+      "companyContactRevokeRole",
+      "companyContactsDelete",
+      "companyLocationCreate",
+      "companyLocationsDelete",
+      "consentPolicyUpdate",
+      "customerAddressCreate",
+      "customerAddressDelete",
+      "customerAddressUpdate",
+      "customerAddTaxExemptions",
+      "customerCancelDataErasure",
+      "customerEmailMarketingConsentUpdate",
+      "customerGenerateAccountActivationUrl",
+      "customerPaymentMethodCreateFromDuplicationData",
+      "customerPaymentMethodCreditCardCreate",
+      "customerPaymentMethodCreditCardUpdate",
+      "customerPaymentMethodGetDuplicationData",
+      "customerPaymentMethodGetUpdateUrl",
+      "customerPaymentMethodPaypalBillingAgreementCreate",
+      "customerPaymentMethodPaypalBillingAgreementUpdate",
+      "customerPaymentMethodRemoteCreate",
+      "customerPaymentMethodRevoke",
+      "customerPaymentMethodSendUpdateEmail",
+      "customerRemoveTaxExemptions",
+      "customerReplaceTaxExemptions",
+      "customerRequestDataErasure",
+      "customerSegmentMembersQueryCreate",
+      "customerSet",
+      "customerSmsMarketingConsentUpdate",
+      "customerUpdateDefaultAddress",
+      "dataSaleOptOut",
+      "deliveryCustomizationActivation",
+      "deliveryPromiseProviderUpsert",
+      "deliverySettingUpdate",
+      "deliveryShippingOriginAssign",
+      "discountAutomaticBulkDelete",
+      "discountCodeBulkDelete",
+      "discountCodeRedeemCodeBulkDelete",
+      "draftOrderBulkDelete",
+      "eventBridgeWebhookSubscriptionCreate",
+      "eventBridgeWebhookSubscriptionUpdate",
+      "fileAcknowledgeUpdateFailed",
+      "fulfillmentCreate",
+      "fulfillmentServiceCreate",
+      "fulfillmentServiceUpdate",
+      "fulfillmentTrackingInfoUpdate",
+      "fulfillmentTrackingInfoUpdateV2",
+      "giftCardCredit",
+      "giftCardDebit",
+      "inventoryActivate",
+      "inventoryBulkToggleActivation",
+      "inventoryDeactivate",
+      "inventorySetOnHandQuantities",
+      "inventorySetScheduledChanges",
+      "inventoryTransferSetItems",
+      "locationLocalPickupEnable",
+      "marketCurrencySettingsUpdate",
+      "marketLocalizationsRegister",
+      "marketLocalizationsRemove",
+      "marketRegionDelete",
+      "marketRegionsCreate",
+      "marketRegionsDelete",
+      "marketWebPresenceCreate",
+      "marketWebPresenceDelete",
+      "marketWebPresenceUpdate",
+      "menuCreate",
+      "menuUpdate",
+      "metafieldDefinitionPin",
+      "metafieldDefinitionUnpin",
+      "metafieldDefinitionUpdate",
+      "metafieldsDelete",
+      "metaobjectBulkDelete",
+      "metaobjectUpsert",
+      "orderCapture",
+      "orderCreateManualPayment",
+      "orderCustomerRemove",
+      "orderCustomerSet",
+      "orderEditRemoveLineItemDiscount",
+      "orderInvoiceSend",
+      "orderOpen",
+      "orderRiskAssessmentCreate",
+      "paymentCustomizationActivation",
+      "paymentTermsCreate",
+      "paymentTermsUpdate",
+      "priceListFixedPricesAdd",
+      "priceListFixedPricesByProductUpdate",
+      "priceListFixedPricesDelete",
+      "priceListFixedPricesUpdate",
+      "privacyFeaturesDisable",
+      "productChangeStatus",
+      "productCreateMedia",
+      "productDeleteMedia",
+      "productFeedCreate",
+      "productFeedDelete",
+      "productFullSync",
+      "productJoinSellingPlanGroups",
+      "productLeaveSellingPlanGroups",
+      "productOptionsCreate",
+      "productOptionsDelete",
+      "productOptionsReorder",
+      "productOptionUpdate",
+      "productPublish",
+      "productReorderMedia",
+      "productSet",
+      "productUnpublish",
+      "productUpdateMedia",
+      "productVariantAppendMedia",
+      "productVariantDetachMedia",
+      "productVariantJoinSellingPlanGroups",
+      "productVariantLeaveSellingPlanGroups",
+      "productVariantsBulkCreate",
+      "productVariantsBulkDelete",
+      "productVariantsBulkReorder",
+      "productVariantsBulkUpdate",
+      "publishablePublishToCurrentChannel",
+      "publishableUnpublishToCurrentChannel",
+      "pubSubServerPixelUpdate",
+      "pubSubWebhookSubscriptionCreate",
+      "pubSubWebhookSubscriptionUpdate",
+      "quantityRulesAdd",
+      "quantityRulesDelete",
+      "returnLineItemRemoveFromReturn",
+      "reverseDeliveryCreateWithShipping",
+      "reverseDeliveryShippingUpdate",
+      "reverseFulfillmentOrderDispose",
+      "segmentCreate",
+      "segmentUpdate",
+      "sellingPlanGroupAddProducts",
+      "sellingPlanGroupAddProductVariants",
+      "sellingPlanGroupRemoveProducts",
+      "sellingPlanGroupRemoveProductVariants",
+      "shopifyPaymentsPayoutAlternateCurrencyCreate",
+      "shopResourceFeedbackCreate",
+      "stagedUploadTargetGenerate",
+      "stagedUploadTargetsGenerate",
+      "standardMetafieldDefinitionEnable",
+      "standardMetaobjectDefinitionEnable",
+      "storefrontAccessTokenCreate",
+      "subscriptionBillingCycleCharge",
+      "subscriptionBillingCycleContractDraftCommit",
+      "subscriptionBillingCycleContractDraftConcatenate",
+      "subscriptionBillingCycleContractEdit",
+      "subscriptionBillingCycleEditDelete",
+      "subscriptionBillingCycleEditsDelete",
+      "subscriptionBillingCycleScheduleEdit",
+      "subscriptionBillingCycleSkip",
+      "subscriptionBillingCycleUnskip",
+      "taxAppConfigure",
+      "urlRedirectBulkDeleteAll",
+      "urlRedirectBulkDeleteByIds",
+      "urlRedirectBulkDeleteBySavedSearch",
+      "urlRedirectBulkDeleteBySearch",
+      "urlRedirectImportCreate",
+      "urlRedirectImportSubmit",
+      "webPresenceCreate",
+      "webPresenceDelete",
+      "webPresenceUpdate"
+    ],
+    "grouped": {
+      "queries": [
+        {
+          "prefix": "product",
+          "ops": [
+            "productByHandle",
+            "productByIdentifier",
+            "productDuplicateJob",
+            "productFeed",
+            "productFeeds",
+            "productOperation",
+            "productResourceFeedback",
+            "productTags",
+            "productTypes",
+            "productVariantByIdentifier",
+            "productVendors"
+          ]
+        },
+        {
+          "prefix": "app",
+          "ops": [
+            "app",
+            "appByHandle",
+            "appByKey",
+            "appDiscountType",
+            "appDiscountTypes",
+            "appDiscountTypesNodes",
+            "appInstallations"
+          ]
+        },
+        {
+          "prefix": "customer",
+          "ops": [
+            "customerByIdentifier",
+            "customerMergeJobStatus",
+            "customerMergePreview",
+            "customerPaymentMethod",
+            "customerSegmentMembers",
+            "customerSegmentMembership",
+            "customerSegmentMembersQuery"
+          ]
+        },
+        {
+          "prefix": "discount",
+          "ops": [
+            "discountNode",
+            "discountNodes",
+            "discountNodesCount",
+            "discountRedeemCodeBulkCreation",
+            "discountRedeemCodeSavedSearches"
+          ]
+        },
+        {
+          "prefix": "market",
+          "ops": [
+            "marketByGeography",
+            "marketLocalizableResource",
+            "marketLocalizableResources",
+            "marketLocalizableResourcesByIds"
+          ]
+        },
+        {
+          "prefix": "segment",
+          "ops": [
+            "segmentFilters",
+            "segmentFilterSuggestions",
+            "segmentMigrations",
+            "segmentValueSuggestions"
+          ]
+        },
+        {
+          "prefix": "automatic",
+          "ops": [
+            "automaticDiscount",
+            "automaticDiscounts",
+            "automaticDiscountSavedSearches"
+          ]
+        },
+        {
+          "prefix": "checkout",
+          "ops": [
+            "checkoutBranding",
+            "checkoutProfile",
+            "checkoutProfiles"
+          ]
+        },
+        {
+          "prefix": "collection",
+          "ops": [
+            "collectionByHandle",
+            "collectionByIdentifier",
+            "collectionRulesConditions"
+          ]
+        },
+        {
+          "prefix": "order",
+          "ops": [
+            "orderByIdentifier",
+            "orderEditSession",
+            "orderPaymentStatus"
+          ]
+        },
+        {
+          "prefix": "shop",
+          "ops": [
+            "shopBillingPreferences",
+            "shopPayPaymentRequestReceipt",
+            "shopPayPaymentRequestReceipts"
+          ]
+        },
+        {
+          "prefix": "subscription",
+          "ops": [
+            "subscriptionBillingAttempts",
+            "subscriptionBillingCycle",
+            "subscriptionBillingCycleBulkResults"
+          ]
+        },
+        {
+          "prefix": "url",
+          "ops": [
+            "urlRedirectImport",
+            "urlRedirectSavedSearches",
+            "urlRedirectsCount"
+          ]
+        },
+        {
+          "prefix": "article",
+          "ops": [
+            "articleAuthors",
+            "articleTags"
+          ]
+        },
+        {
+          "prefix": "available",
+          "ops": [
+            "availableBackupRegions",
+            "availableLocales"
+          ]
+        },
+        {
+          "prefix": "consent",
+          "ops": [
+            "consentPolicy",
+            "consentPolicyRegions"
+          ]
+        },
+        {
+          "prefix": "finance",
+          "ops": [
+            "financeAppAccessPolicy",
+            "financeKycInformation"
+          ]
+        },
+        {
+          "prefix": "inventory",
+          "ops": [
+            "inventoryLevel",
+            "inventoryProperties"
+          ]
+        },
+        {
+          "prefix": "locations",
+          "ops": [
+            "locationsAvailableForDeliveryProfiles",
+            "locationsAvailableForDeliveryProfilesConnection"
+          ]
+        },
+        {
+          "prefix": "marketing",
+          "ops": [
+            "marketingEvent",
+            "marketingEvents"
+          ]
+        },
+        {
+          "prefix": "metaobject",
+          "ops": [
+            "metaobjectByHandle",
+            "metaobjectDefinitionByType"
+          ]
+        },
+        {
+          "prefix": "reverse",
+          "ops": [
+            "reverseDelivery",
+            "reverseFulfillmentOrder"
+          ]
+        },
+        {
+          "prefix": "assigned",
+          "ops": [
+            "assignedFulfillmentOrders"
+          ]
+        },
+        {
+          "prefix": "backup",
+          "ops": [
+            "backupRegion"
+          ]
+        },
+        {
+          "prefix": "blogs",
+          "ops": [
+            "blogsCount"
+          ]
+        },
+        {
+          "prefix": "catalog",
+          "ops": [
+            "catalogOperations"
+          ]
+        },
+        {
+          "prefix": "catalogs",
+          "ops": [
+            "catalogsCount"
+          ]
+        },
+        {
+          "prefix": "channel",
+          "ops": [
+            "channel"
+          ]
+        },
+        {
+          "prefix": "channels",
+          "ops": [
+            "channels"
+          ]
+        },
+        {
+          "prefix": "code",
+          "ops": [
+            "codeDiscountSavedSearches"
+          ]
+        },
+        {
+          "prefix": "company",
+          "ops": [
+            "companyContactRole"
+          ]
+        },
+        {
+          "prefix": "current",
+          "ops": [
+            "currentAppInstallation"
+          ]
+        },
+        {
+          "prefix": "deletion",
+          "ops": [
+            "deletionEvents"
+          ]
+        },
+        {
+          "prefix": "delivery",
+          "ops": [
+            "deliveryPromiseProvider"
+          ]
+        },
+        {
+          "prefix": "domain",
+          "ops": [
+            "domain"
+          ]
+        },
+        {
+          "prefix": "file",
+          "ops": [
+            "fileSavedSearches"
+          ]
+        },
+        {
+          "prefix": "job",
+          "ops": [
+            "job"
+          ]
+        },
+        {
+          "prefix": "location",
+          "ops": [
+            "locationByIdentifier"
+          ]
+        },
+        {
+          "prefix": "manual",
+          "ops": [
+            "manualHoldsFulfillmentOrders"
+          ]
+        },
+        {
+          "prefix": "markets",
+          "ops": [
+            "marketsResolvedValues"
+          ]
+        },
+        {
+          "prefix": "metafield",
+          "ops": [
+            "metafieldDefinitionTypes"
+          ]
+        },
+        {
+          "prefix": "nodes",
+          "ops": [
+            "nodes"
+          ]
+        },
+        {
+          "prefix": "online",
+          "ops": [
+            "onlineStore"
+          ]
+        },
+        {
+          "prefix": "pages",
+          "ops": [
+            "pagesCount"
+          ]
+        },
+        {
+          "prefix": "pending",
+          "ops": [
+            "pendingOrdersCount"
+          ]
+        },
+        {
+          "prefix": "primary",
+          "ops": [
+            "primaryMarket"
+          ]
+        },
+        {
+          "prefix": "privacy",
+          "ops": [
+            "privacySettings"
+          ]
+        },
+        {
+          "prefix": "public",
+          "ops": [
+            "publicApiVersions"
+          ]
+        },
+        {
+          "prefix": "publications",
+          "ops": [
+            "publicationsCount"
+          ]
+        },
+        {
+          "prefix": "published",
+          "ops": [
+            "publishedProductsCount"
+          ]
+        },
+        {
+          "prefix": "returnable",
+          "ops": [
+            "returnableFulfillment"
+          ]
+        },
+        {
+          "prefix": "segments",
+          "ops": [
+            "segmentsCount"
+          ]
+        },
+        {
+          "prefix": "shopifyql",
+          "ops": [
+            "shopifyqlQuery"
+          ]
+        },
+        {
+          "prefix": "standard",
+          "ops": [
+            "standardMetafieldDefinitionTemplates"
+          ]
+        },
+        {
+          "prefix": "tender",
+          "ops": [
+            "tenderTransactions"
+          ]
+        },
+        {
+          "prefix": "web",
+          "ops": [
+            "webPresences"
+          ]
+        },
+        {
+          "prefix": "webhook",
+          "ops": [
+            "webhookSubscriptionsCount"
+          ]
+        }
+      ],
+      "mutations": [
+        {
+          "prefix": "product",
+          "ops": [
+            "productChangeStatus",
+            "productCreateMedia",
+            "productDeleteMedia",
+            "productFeedCreate",
+            "productFeedDelete",
+            "productFullSync",
+            "productJoinSellingPlanGroups",
+            "productLeaveSellingPlanGroups",
+            "productOptionsCreate",
+            "productOptionsDelete",
+            "productOptionsReorder",
+            "productOptionUpdate",
+            "productPublish",
+            "productReorderMedia",
+            "productSet",
+            "productUnpublish",
+            "productUpdateMedia",
+            "productVariantAppendMedia",
+            "productVariantDetachMedia",
+            "productVariantJoinSellingPlanGroups",
+            "productVariantLeaveSellingPlanGroups",
+            "productVariantsBulkCreate",
+            "productVariantsBulkDelete",
+            "productVariantsBulkReorder",
+            "productVariantsBulkUpdate"
+          ]
+        },
+        {
+          "prefix": "customer",
+          "ops": [
+            "customerAddressCreate",
+            "customerAddressDelete",
+            "customerAddressUpdate",
+            "customerAddTaxExemptions",
+            "customerCancelDataErasure",
+            "customerEmailMarketingConsentUpdate",
+            "customerGenerateAccountActivationUrl",
+            "customerPaymentMethodCreateFromDuplicationData",
+            "customerPaymentMethodCreditCardCreate",
+            "customerPaymentMethodCreditCardUpdate",
+            "customerPaymentMethodGetDuplicationData",
+            "customerPaymentMethodGetUpdateUrl",
+            "customerPaymentMethodPaypalBillingAgreementCreate",
+            "customerPaymentMethodPaypalBillingAgreementUpdate",
+            "customerPaymentMethodRemoteCreate",
+            "customerPaymentMethodRevoke",
+            "customerPaymentMethodSendUpdateEmail",
+            "customerRemoveTaxExemptions",
+            "customerReplaceTaxExemptions",
+            "customerRequestDataErasure",
+            "customerSegmentMembersQueryCreate",
+            "customerSet",
+            "customerSmsMarketingConsentUpdate",
+            "customerUpdateDefaultAddress"
+          ]
+        },
+        {
+          "prefix": "company",
+          "ops": [
+            "companyAddressDelete",
+            "companyAssignCustomerAsContact",
+            "companyAssignMainContact",
+            "companyContactAssignRole",
+            "companyContactCreate",
+            "companyContactRevokeRole",
+            "companyContactsDelete",
+            "companyLocationCreate",
+            "companyLocationsDelete"
+          ]
+        },
+        {
+          "prefix": "market",
+          "ops": [
+            "marketCurrencySettingsUpdate",
+            "marketLocalizationsRegister",
+            "marketLocalizationsRemove",
+            "marketRegionDelete",
+            "marketRegionsCreate",
+            "marketRegionsDelete",
+            "marketWebPresenceCreate",
+            "marketWebPresenceDelete",
+            "marketWebPresenceUpdate"
+          ]
+        },
+        {
+          "prefix": "subscription",
+          "ops": [
+            "subscriptionBillingCycleCharge",
+            "subscriptionBillingCycleContractDraftCommit",
+            "subscriptionBillingCycleContractDraftConcatenate",
+            "subscriptionBillingCycleContractEdit",
+            "subscriptionBillingCycleEditDelete",
+            "subscriptionBillingCycleEditsDelete",
+            "subscriptionBillingCycleScheduleEdit",
+            "subscriptionBillingCycleSkip",
+            "subscriptionBillingCycleUnskip"
+          ]
+        },
+        {
+          "prefix": "order",
+          "ops": [
+            "orderCapture",
+            "orderCreateManualPayment",
+            "orderCustomerRemove",
+            "orderCustomerSet",
+            "orderEditRemoveLineItemDiscount",
+            "orderInvoiceSend",
+            "orderOpen",
+            "orderRiskAssessmentCreate"
+          ]
+        },
+        {
+          "prefix": "app",
+          "ops": [
+            "appPurchaseOneTimeCreate",
+            "appRevokeAccessScopes",
+            "appSubscriptionCreate",
+            "appSubscriptionTrialExtend",
+            "appUninstall",
+            "appUsageRecordCreate"
+          ]
+        },
+        {
+          "prefix": "inventory",
+          "ops": [
+            "inventoryActivate",
+            "inventoryBulkToggleActivation",
+            "inventoryDeactivate",
+            "inventorySetOnHandQuantities",
+            "inventorySetScheduledChanges",
+            "inventoryTransferSetItems"
+          ]
+        },
+        {
+          "prefix": "url",
+          "ops": [
+            "urlRedirectBulkDeleteAll",
+            "urlRedirectBulkDeleteByIds",
+            "urlRedirectBulkDeleteBySavedSearch",
+            "urlRedirectBulkDeleteBySearch",
+            "urlRedirectImportCreate",
+            "urlRedirectImportSubmit"
+          ]
+        },
+        {
+          "prefix": "fulfillment",
+          "ops": [
+            "fulfillmentCreate",
+            "fulfillmentServiceCreate",
+            "fulfillmentServiceUpdate",
+            "fulfillmentTrackingInfoUpdate",
+            "fulfillmentTrackingInfoUpdateV2"
+          ]
+        },
+        {
+          "prefix": "delivery",
+          "ops": [
+            "deliveryCustomizationActivation",
+            "deliveryPromiseProviderUpsert",
+            "deliverySettingUpdate",
+            "deliveryShippingOriginAssign"
+          ]
+        },
+        {
+          "prefix": "price",
+          "ops": [
+            "priceListFixedPricesAdd",
+            "priceListFixedPricesByProductUpdate",
+            "priceListFixedPricesDelete",
+            "priceListFixedPricesUpdate"
+          ]
+        },
+        {
+          "prefix": "selling",
+          "ops": [
+            "sellingPlanGroupAddProducts",
+            "sellingPlanGroupAddProductVariants",
+            "sellingPlanGroupRemoveProducts",
+            "sellingPlanGroupRemoveProductVariants"
+          ]
+        },
+        {
+          "prefix": "comment",
+          "ops": [
+            "commentApprove",
+            "commentNotSpam",
+            "commentSpam"
+          ]
+        },
+        {
+          "prefix": "discount",
+          "ops": [
+            "discountAutomaticBulkDelete",
+            "discountCodeBulkDelete",
+            "discountCodeRedeemCodeBulkDelete"
+          ]
+        },
+        {
+          "prefix": "metafield",
+          "ops": [
+            "metafieldDefinitionPin",
+            "metafieldDefinitionUnpin",
+            "metafieldDefinitionUpdate"
+          ]
+        },
+        {
+          "prefix": "payment",
+          "ops": [
+            "paymentCustomizationActivation",
+            "paymentTermsCreate",
+            "paymentTermsUpdate"
+          ]
+        },
+        {
+          "prefix": "pub",
+          "ops": [
+            "pubSubServerPixelUpdate",
+            "pubSubWebhookSubscriptionCreate",
+            "pubSubWebhookSubscriptionUpdate"
+          ]
+        },
+        {
+          "prefix": "reverse",
+          "ops": [
+            "reverseDeliveryCreateWithShipping",
+            "reverseDeliveryShippingUpdate",
+            "reverseFulfillmentOrderDispose"
+          ]
+        },
+        {
+          "prefix": "web",
+          "ops": [
+            "webPresenceCreate",
+            "webPresenceDelete",
+            "webPresenceUpdate"
+          ]
+        },
+        {
+          "prefix": "bulk",
+          "ops": [
+            "bulkOperationCancel",
+            "bulkProductResourceFeedbackCreate"
+          ]
+        },
+        {
+          "prefix": "collection",
+          "ops": [
+            "collectionAddProducts",
+            "collectionReorderProducts"
+          ]
+        },
+        {
+          "prefix": "event",
+          "ops": [
+            "eventBridgeWebhookSubscriptionCreate",
+            "eventBridgeWebhookSubscriptionUpdate"
+          ]
+        },
+        {
+          "prefix": "gift",
+          "ops": [
+            "giftCardCredit",
+            "giftCardDebit"
+          ]
+        },
+        {
+          "prefix": "menu",
+          "ops": [
+            "menuCreate",
+            "menuUpdate"
+          ]
+        },
+        {
+          "prefix": "metaobject",
+          "ops": [
+            "metaobjectBulkDelete",
+            "metaobjectUpsert"
+          ]
+        },
+        {
+          "prefix": "publishable",
+          "ops": [
+            "publishablePublishToCurrentChannel",
+            "publishableUnpublishToCurrentChannel"
+          ]
+        },
+        {
+          "prefix": "quantity",
+          "ops": [
+            "quantityRulesAdd",
+            "quantityRulesDelete"
+          ]
+        },
+        {
+          "prefix": "segment",
+          "ops": [
+            "segmentCreate",
+            "segmentUpdate"
+          ]
+        },
+        {
+          "prefix": "staged",
+          "ops": [
+            "stagedUploadTargetGenerate",
+            "stagedUploadTargetsGenerate"
+          ]
+        },
+        {
+          "prefix": "standard",
+          "ops": [
+            "standardMetafieldDefinitionEnable",
+            "standardMetaobjectDefinitionEnable"
+          ]
+        },
+        {
+          "prefix": "backup",
+          "ops": [
+            "backupRegionUpdate"
+          ]
+        },
+        {
+          "prefix": "catalog",
+          "ops": [
+            "catalogContextUpdate"
+          ]
+        },
+        {
+          "prefix": "checkout",
+          "ops": [
+            "checkoutBrandingUpsert"
+          ]
+        },
+        {
+          "prefix": "combined",
+          "ops": [
+            "combinedListingUpdate"
+          ]
+        },
+        {
+          "prefix": "companies",
+          "ops": [
+            "companiesDelete"
+          ]
+        },
+        {
+          "prefix": "consent",
+          "ops": [
+            "consentPolicyUpdate"
+          ]
+        },
+        {
+          "prefix": "data",
+          "ops": [
+            "dataSaleOptOut"
+          ]
+        },
+        {
+          "prefix": "draft",
+          "ops": [
+            "draftOrderBulkDelete"
+          ]
+        },
+        {
+          "prefix": "file",
+          "ops": [
+            "fileAcknowledgeUpdateFailed"
+          ]
+        },
+        {
+          "prefix": "location",
+          "ops": [
+            "locationLocalPickupEnable"
+          ]
+        },
+        {
+          "prefix": "metafields",
+          "ops": [
+            "metafieldsDelete"
+          ]
+        },
+        {
+          "prefix": "privacy",
+          "ops": [
+            "privacyFeaturesDisable"
+          ]
+        },
+        {
+          "prefix": "return",
+          "ops": [
+            "returnLineItemRemoveFromReturn"
+          ]
+        },
+        {
+          "prefix": "shop",
+          "ops": [
+            "shopResourceFeedbackCreate"
+          ]
+        },
+        {
+          "prefix": "shopify",
+          "ops": [
+            "shopifyPaymentsPayoutAlternateCurrencyCreate"
+          ]
+        },
+        {
+          "prefix": "storefront",
+          "ops": [
+            "storefrontAccessTokenCreate"
+          ]
+        },
+        {
+          "prefix": "tax",
+          "ops": [
+            "taxAppConfigure"
+          ]
+        }
+      ]
+    }
+  },
+  "used": {
+    "grouped": {
+      "queries": [
+        {
+          "prefix": "delivery",
+          "ops": [
+            "deliveryCustomization",
+            "deliveryCustomizations",
+            "deliveryProfile",
+            "deliveryProfiles",
+            "deliveryPromiseParticipants",
+            "deliveryPromiseSettings"
+          ]
+        },
+        {
+          "prefix": "draft",
+          "ops": [
+            "draftOrder",
+            "draftOrderAvailableDeliveryOptions",
+            "draftOrders",
+            "draftOrderSavedSearches",
+            "draftOrdersCount",
+            "draftOrderTag"
+          ]
+        },
+        {
+          "prefix": "fulfillment",
+          "ops": [
+            "fulfillment",
+            "fulfillmentConstraintRules",
+            "fulfillmentOrder",
+            "fulfillmentOrders",
+            "fulfillmentService"
+          ]
+        },
+        {
+          "prefix": "inventory",
+          "ops": [
+            "inventoryItem",
+            "inventoryItems",
+            "inventoryShipment",
+            "inventoryTransfer",
+            "inventoryTransfers"
+          ]
+        },
+        {
+          "prefix": "product",
+          "ops": [
+            "product",
+            "productSavedSearches",
+            "productVariant",
+            "productVariants",
+            "productVariantsCount"
+          ]
+        },
+        {
+          "prefix": "subscription",
+          "ops": [
+            "subscriptionBillingAttempt",
+            "subscriptionBillingCycles",
+            "subscriptionContract",
+            "subscriptionContracts",
+            "subscriptionDraft"
+          ]
+        },
+        {
+          "prefix": "company",
+          "ops": [
+            "company",
+            "companyContact",
+            "companyLocation",
+            "companyLocations"
+          ]
+        },
+        {
+          "prefix": "customer",
+          "ops": [
+            "customer",
+            "customerAccountPage",
+            "customerAccountPages",
+            "customerSavedSearches"
+          ]
+        },
+        {
+          "prefix": "gift",
+          "ops": [
+            "giftCard",
+            "giftCardConfiguration",
+            "giftCards",
+            "giftCardsCount"
+          ]
+        },
+        {
+          "prefix": "code",
+          "ops": [
+            "codeDiscountNode",
+            "codeDiscountNodeByCode",
+            "codeDiscountNodes"
+          ]
+        },
+        {
+          "prefix": "metaobject",
+          "ops": [
+            "metaobject",
+            "metaobjectDefinition",
+            "metaobjectDefinitions"
+          ]
+        },
+        {
+          "prefix": "payment",
+          "ops": [
+            "paymentCustomization",
+            "paymentCustomizations",
+            "paymentTermsTemplates"
+          ]
+        },
+        {
+          "prefix": "return",
+          "ops": [
+            "return",
+            "returnCalculate",
+            "returnReasonDefinitions"
+          ]
+        },
+        {
+          "prefix": "shopify",
+          "ops": [
+            "shopifyFunction",
+            "shopifyFunctions",
+            "shopifyPaymentsAccount"
+          ]
+        },
+        {
+          "prefix": "translatable",
+          "ops": [
+            "translatableResource",
+            "translatableResources",
+            "translatableResourcesByIds"
+          ]
+        },
+        {
+          "prefix": "abandoned",
+          "ops": [
+            "abandonedCheckouts",
+            "abandonedCheckoutsCount"
+          ]
+        },
+        {
+          "prefix": "abandonment",
+          "ops": [
+            "abandonment",
+            "abandonmentByAbandonedCheckoutId"
+          ]
+        },
+        {
+          "prefix": "automatic",
+          "ops": [
+            "automaticDiscountNode",
+            "automaticDiscountNodes"
+          ]
+        },
+        {
+          "prefix": "bulk",
+          "ops": [
+            "bulkOperation",
+            "bulkOperations"
+          ]
+        },
+        {
+          "prefix": "business",
+          "ops": [
+            "businessEntities",
+            "businessEntity"
+          ]
+        },
+        {
+          "prefix": "carrier",
+          "ops": [
+            "carrierService",
+            "carrierServices"
+          ]
+        },
+        {
+          "prefix": "cash",
+          "ops": [
+            "cashTrackingSession",
+            "cashTrackingSessions"
+          ]
+        },
+        {
+          "prefix": "collection",
+          "ops": [
+            "collection",
+            "collectionSavedSearches"
+          ]
+        },
+        {
+          "prefix": "collections",
+          "ops": [
+            "collections",
+            "collectionsCount"
+          ]
+        },
+        {
+          "prefix": "companies",
+          "ops": [
+            "companies",
+            "companiesCount"
+          ]
+        },
+        {
+          "prefix": "current",
+          "ops": [
+            "currentBulkOperation",
+            "currentStaffMember"
+          ]
+        },
+        {
+          "prefix": "customers",
+          "ops": [
+            "customers",
+            "customersCount"
+          ]
+        },
+        {
+          "prefix": "dispute",
+          "ops": [
+            "dispute",
+            "disputeEvidence"
+          ]
+        },
+        {
+          "prefix": "events",
+          "ops": [
+            "events",
+            "eventsCount"
+          ]
+        },
+        {
+          "prefix": "locations",
+          "ops": [
+            "locations",
+            "locationsCount"
+          ]
+        },
+        {
+          "prefix": "marketing",
+          "ops": [
+            "marketingActivities",
+            "marketingActivity"
+          ]
+        },
+        {
+          "prefix": "metafield",
+          "ops": [
+            "metafieldDefinition",
+            "metafieldDefinitions"
+          ]
+        },
+        {
+          "prefix": "mobile",
+          "ops": [
+            "mobilePlatformApplication",
+            "mobilePlatformApplications"
+          ]
+        },
+        {
+          "prefix": "order",
+          "ops": [
+            "order",
+            "orderSavedSearches"
+          ]
+        },
+        {
+          "prefix": "orders",
+          "ops": [
+            "orders",
+            "ordersCount"
+          ]
+        },
+        {
+          "prefix": "price",
+          "ops": [
+            "priceList",
+            "priceLists"
+          ]
+        },
+        {
+          "prefix": "products",
+          "ops": [
+            "products",
+            "productsCount"
+          ]
+        },
+        {
+          "prefix": "script",
+          "ops": [
+            "scriptTag",
+            "scriptTags"
+          ]
+        },
+        {
+          "prefix": "selling",
+          "ops": [
+            "sellingPlanGroup",
+            "sellingPlanGroups"
+          ]
+        },
+        {
+          "prefix": "shop",
+          "ops": [
+            "shop",
+            "shopLocales"
+          ]
+        },
+        {
+          "prefix": "staff",
+          "ops": [
+            "staffMember",
+            "staffMembers"
+          ]
+        },
+        {
+          "prefix": "url",
+          "ops": [
+            "urlRedirect",
+            "urlRedirects"
+          ]
+        },
+        {
+          "prefix": "webhook",
+          "ops": [
+            "webhookSubscription",
+            "webhookSubscriptions"
+          ]
+        },
+        {
+          "prefix": "app",
+          "ops": [
+            "appInstallation"
+          ]
+        },
+        {
+          "prefix": "article",
+          "ops": [
+            "article"
+          ]
+        },
+        {
+          "prefix": "articles",
+          "ops": [
+            "articles"
+          ]
+        },
+        {
+          "prefix": "available",
+          "ops": [
+            "availableCarrierServices"
+          ]
+        },
+        {
+          "prefix": "blog",
+          "ops": [
+            "blog"
+          ]
+        },
+        {
+          "prefix": "blogs",
+          "ops": [
+            "blogs"
+          ]
+        },
+        {
+          "prefix": "cart",
+          "ops": [
+            "cartTransforms"
+          ]
+        },
+        {
+          "prefix": "catalog",
+          "ops": [
+            "catalog"
+          ]
+        },
+        {
+          "prefix": "catalogs",
+          "ops": [
+            "catalogs"
+          ]
+        },
+        {
+          "prefix": "comment",
+          "ops": [
+            "comment"
+          ]
+        },
+        {
+          "prefix": "comments",
+          "ops": [
+            "comments"
+          ]
+        },
+        {
+          "prefix": "discount",
+          "ops": [
+            "discountCodesCount"
+          ]
+        },
+        {
+          "prefix": "disputes",
+          "ops": [
+            "disputes"
+          ]
+        },
+        {
+          "prefix": "event",
+          "ops": [
+            "event"
+          ]
+        },
+        {
+          "prefix": "files",
+          "ops": [
+            "files"
+          ]
+        },
+        {
+          "prefix": "location",
+          "ops": [
+            "location"
+          ]
+        },
+        {
+          "prefix": "market",
+          "ops": [
+            "market"
+          ]
+        },
+        {
+          "prefix": "markets",
+          "ops": [
+            "markets"
+          ]
+        },
+        {
+          "prefix": "menu",
+          "ops": [
+            "menu"
+          ]
+        },
+        {
+          "prefix": "menus",
+          "ops": [
+            "menus"
+          ]
+        },
+        {
+          "prefix": "metaobjects",
+          "ops": [
+            "metaobjects"
+          ]
+        },
+        {
+          "prefix": "node",
+          "ops": [
+            "node"
+          ]
+        },
+        {
+          "prefix": "page",
+          "ops": [
+            "page"
+          ]
+        },
+        {
+          "prefix": "pages",
+          "ops": [
+            "pages"
+          ]
+        },
+        {
+          "prefix": "point",
+          "ops": [
+            "pointOfSaleDevice"
+          ]
+        },
+        {
+          "prefix": "publication",
+          "ops": [
+            "publication"
+          ]
+        },
+        {
+          "prefix": "publications",
+          "ops": [
+            "publications"
+          ]
+        },
+        {
+          "prefix": "refund",
+          "ops": [
+            "refund"
+          ]
+        },
+        {
+          "prefix": "returnable",
+          "ops": [
+            "returnableFulfillments"
+          ]
+        },
+        {
+          "prefix": "segment",
+          "ops": [
+            "segment"
+          ]
+        },
+        {
+          "prefix": "segments",
+          "ops": [
+            "segments"
+          ]
+        },
+        {
+          "prefix": "server",
+          "ops": [
+            "serverPixel"
+          ]
+        },
+        {
+          "prefix": "store",
+          "ops": [
+            "storeCreditAccount"
+          ]
+        },
+        {
+          "prefix": "taxonomy",
+          "ops": [
+            "taxonomy"
+          ]
+        },
+        {
+          "prefix": "theme",
+          "ops": [
+            "theme"
+          ]
+        },
+        {
+          "prefix": "themes",
+          "ops": [
+            "themes"
+          ]
+        },
+        {
+          "prefix": "validation",
+          "ops": [
+            "validation"
+          ]
+        },
+        {
+          "prefix": "validations",
+          "ops": [
+            "validations"
+          ]
+        },
+        {
+          "prefix": "web",
+          "ops": [
+            "webPixel"
+          ]
+        }
+      ],
+      "mutations": [
+        {
+          "prefix": "fulfillment",
+          "ops": [
+            "fulfillmentCancel",
+            "fulfillmentConstraintRuleCreate",
+            "fulfillmentConstraintRuleDelete",
+            "fulfillmentConstraintRuleUpdate",
+            "fulfillmentCreateV2",
+            "fulfillmentEventCreate",
+            "fulfillmentOrderAcceptCancellationRequest",
+            "fulfillmentOrderAcceptFulfillmentRequest",
+            "fulfillmentOrderCancel",
+            "fulfillmentOrderClose",
+            "fulfillmentOrderHold",
+            "fulfillmentOrderLineItemsPreparedForPickup",
+            "fulfillmentOrderMerge",
+            "fulfillmentOrderMove",
+            "fulfillmentOrderOpen",
+            "fulfillmentOrderRejectCancellationRequest",
+            "fulfillmentOrderRejectFulfillmentRequest",
+            "fulfillmentOrderReleaseHold",
+            "fulfillmentOrderReportProgress",
+            "fulfillmentOrderReschedule",
+            "fulfillmentOrderSplit",
+            "fulfillmentOrdersReroute",
+            "fulfillmentOrdersSetFulfillmentDeadline",
+            "fulfillmentOrderSubmitCancellationRequest",
+            "fulfillmentOrderSubmitFulfillmentRequest",
+            "fulfillmentServiceDelete"
+          ]
+        },
+        {
+          "prefix": "discount",
+          "ops": [
+            "discountAutomaticActivate",
+            "discountAutomaticAppCreate",
+            "discountAutomaticAppUpdate",
+            "discountAutomaticBasicCreate",
+            "discountAutomaticBasicUpdate",
+            "discountAutomaticBxgyCreate",
+            "discountAutomaticBxgyUpdate",
+            "discountAutomaticDeactivate",
+            "discountAutomaticDelete",
+            "discountAutomaticFreeShippingCreate",
+            "discountAutomaticFreeShippingUpdate",
+            "discountCodeActivate",
+            "discountCodeAppCreate",
+            "discountCodeAppUpdate",
+            "discountCodeBasicCreate",
+            "discountCodeBasicUpdate",
+            "discountCodeBulkActivate",
+            "discountCodeBulkDeactivate",
+            "discountCodeBxgyCreate",
+            "discountCodeBxgyUpdate",
+            "discountCodeDeactivate",
+            "discountCodeDelete",
+            "discountCodeFreeShippingCreate",
+            "discountCodeFreeShippingUpdate",
+            "discountRedeemCodeBulkAdd"
+          ]
+        },
+        {
+          "prefix": "subscription",
+          "ops": [
+            "subscriptionBillingAttemptCreate",
+            "subscriptionBillingCycleBulkCharge",
+            "subscriptionBillingCycleBulkSearch",
+            "subscriptionContractActivate",
+            "subscriptionContractAtomicCreate",
+            "subscriptionContractCancel",
+            "subscriptionContractCreate",
+            "subscriptionContractExpire",
+            "subscriptionContractFail",
+            "subscriptionContractPause",
+            "subscriptionContractProductChange",
+            "subscriptionContractSetNextBillingDate",
+            "subscriptionContractUpdate",
+            "subscriptionDraftCommit",
+            "subscriptionDraftDiscountAdd",
+            "subscriptionDraftDiscountCodeApply",
+            "subscriptionDraftDiscountRemove",
+            "subscriptionDraftDiscountUpdate",
+            "subscriptionDraftFreeShippingDiscountAdd",
+            "subscriptionDraftFreeShippingDiscountUpdate",
+            "subscriptionDraftLineAdd",
+            "subscriptionDraftLineRemove",
+            "subscriptionDraftLineUpdate",
+            "subscriptionDraftUpdate"
+          ]
+        },
+        {
+          "prefix": "company",
+          "ops": [
+            "companyContactAssignRoles",
+            "companyContactDelete",
+            "companyContactRemoveFromCompany",
+            "companyContactRevokeRoles",
+            "companyContactSendWelcomeEmail",
+            "companyContactUpdate",
+            "companyCreate",
+            "companyDelete",
+            "companyLocationAssignAddress",
+            "companyLocationAssignRoles",
+            "companyLocationAssignStaffMembers",
+            "companyLocationAssignTaxExemptions",
+            "companyLocationCreateTaxRegistration",
+            "companyLocationDelete",
+            "companyLocationRemoveStaffMembers",
+            "companyLocationRevokeRoles",
+            "companyLocationRevokeTaxExemptions",
+            "companyLocationRevokeTaxRegistration",
+            "companyLocationTaxSettingsUpdate",
+            "companyLocationUpdate",
+            "companyRevokeMainContact",
+            "companyUpdate"
+          ]
+        },
+        {
+          "prefix": "inventory",
+          "ops": [
+            "inventoryAdjustQuantities",
+            "inventoryItemUpdate",
+            "inventoryMoveQuantities",
+            "inventorySetQuantities",
+            "inventoryShipmentAddItems",
+            "inventoryShipmentCreate",
+            "inventoryShipmentCreateInTransit",
+            "inventoryShipmentDelete",
+            "inventoryShipmentMarkInTransit",
+            "inventoryShipmentReceive",
+            "inventoryShipmentRemoveItems",
+            "inventoryShipmentSetTracking",
+            "inventoryShipmentUpdateItemQuantities",
+            "inventoryTransferCancel",
+            "inventoryTransferCreate",
+            "inventoryTransferCreateAsReadyToShip",
+            "inventoryTransferDelete",
+            "inventoryTransferDuplicate",
+            "inventoryTransferEdit",
+            "inventoryTransferMarkAsReadyToShip",
+            "inventoryTransferRemoveItems"
+          ]
+        },
+        {
+          "prefix": "order",
+          "ops": [
+            "orderCancel",
+            "orderClose",
+            "orderCreate",
+            "orderCreateMandatePayment",
+            "orderDelete",
+            "orderEditAddCustomItem",
+            "orderEditAddLineItemDiscount",
+            "orderEditAddShippingLine",
+            "orderEditAddVariant",
+            "orderEditBegin",
+            "orderEditCommit",
+            "orderEditRemoveDiscount",
+            "orderEditRemoveShippingLine",
+            "orderEditSetQuantity",
+            "orderEditUpdateDiscount",
+            "orderEditUpdateShippingLine",
+            "orderMarkAsPaid",
+            "orderUpdate"
+          ]
+        },
+        {
+          "prefix": "draft",
+          "ops": [
+            "draftOrderBulkAddTags",
+            "draftOrderBulkRemoveTags",
+            "draftOrderCalculate",
+            "draftOrderComplete",
+            "draftOrderCreate",
+            "draftOrderCreateFromOrder",
+            "draftOrderDelete",
+            "draftOrderDuplicate",
+            "draftOrderInvoicePreview",
+            "draftOrderInvoiceSend",
+            "draftOrderUpdate"
+          ]
+        },
+        {
+          "prefix": "marketing",
+          "ops": [
+            "marketingActivitiesDeleteAllExternal",
+            "marketingActivityCreate",
+            "marketingActivityCreateExternal",
+            "marketingActivityDeleteExternal",
+            "marketingActivityUpdate",
+            "marketingActivityUpdateExternal",
+            "marketingActivityUpsertExternal",
+            "marketingEngagementCreate",
+            "marketingEngagementsDelete"
+          ]
+        },
+        {
+          "prefix": "return",
+          "ops": [
+            "returnApproveRequest",
+            "returnCancel",
+            "returnClose",
+            "returnCreate",
+            "returnDeclineRequest",
+            "returnProcess",
+            "returnRefund",
+            "returnReopen",
+            "returnRequest"
+          ]
+        },
+        {
+          "prefix": "collection",
+          "ops": [
+            "collectionAddProductsV2",
+            "collectionCreate",
+            "collectionDelete",
+            "collectionDuplicate",
+            "collectionPublish",
+            "collectionRemoveProducts",
+            "collectionUnpublish",
+            "collectionUpdate"
+          ]
+        },
+        {
+          "prefix": "theme",
+          "ops": [
+            "themeCreate",
+            "themeDelete",
+            "themeDuplicate",
+            "themeFilesCopy",
+            "themeFilesDelete",
+            "themeFilesUpsert",
+            "themePublish",
+            "themeUpdate"
+          ]
+        },
+        {
+          "prefix": "delivery",
+          "ops": [
+            "deliveryCustomizationCreate",
+            "deliveryCustomizationDelete",
+            "deliveryCustomizationUpdate",
+            "deliveryProfileCreate",
+            "deliveryProfileRemove",
+            "deliveryProfileUpdate",
+            "deliveryPromiseParticipantsUpdate"
+          ]
+        },
+        {
+          "prefix": "product",
+          "ops": [
+            "productBundleCreate",
+            "productBundleUpdate",
+            "productCreate",
+            "productDelete",
+            "productDuplicate",
+            "productUpdate",
+            "productVariantRelationshipBulkUpdate"
+          ]
+        },
+        {
+          "prefix": "location",
+          "ops": [
+            "locationActivate",
+            "locationAdd",
+            "locationDeactivate",
+            "locationDelete",
+            "locationEdit",
+            "locationLocalPickupDisable"
+          ]
+        },
+        {
+          "prefix": "metaobject",
+          "ops": [
+            "metaobjectCreate",
+            "metaobjectDefinitionCreate",
+            "metaobjectDefinitionDelete",
+            "metaobjectDefinitionUpdate",
+            "metaobjectDelete",
+            "metaobjectUpdate"
+          ]
+        },
+        {
+          "prefix": "customer",
+          "ops": [
+            "customerCreate",
+            "customerDelete",
+            "customerMerge",
+            "customerSendAccountInviteEmail",
+            "customerUpdate"
+          ]
+        },
+        {
+          "prefix": "gift",
+          "ops": [
+            "giftCardCreate",
+            "giftCardDeactivate",
+            "giftCardSendNotificationToCustomer",
+            "giftCardSendNotificationToRecipient",
+            "giftCardUpdate"
+          ]
+        },
+        {
+          "prefix": "payment",
+          "ops": [
+            "paymentCustomizationCreate",
+            "paymentCustomizationDelete",
+            "paymentCustomizationUpdate",
+            "paymentReminderSend",
+            "paymentTermsDelete"
+          ]
+        },
+        {
+          "prefix": "shop",
+          "ops": [
+            "shopLocaleDisable",
+            "shopLocaleEnable",
+            "shopLocaleUpdate",
+            "shopPolicyUpdate"
+          ]
+        },
+        {
+          "prefix": "article",
+          "ops": [
+            "articleCreate",
+            "articleDelete",
+            "articleUpdate"
+          ]
+        },
+        {
+          "prefix": "blog",
+          "ops": [
+            "blogCreate",
+            "blogDelete",
+            "blogUpdate"
+          ]
+        },
+        {
+          "prefix": "carrier",
+          "ops": [
+            "carrierServiceCreate",
+            "carrierServiceDelete",
+            "carrierServiceUpdate"
+          ]
+        },
+        {
+          "prefix": "catalog",
+          "ops": [
+            "catalogCreate",
+            "catalogDelete",
+            "catalogUpdate"
+          ]
+        },
+        {
+          "prefix": "file",
+          "ops": [
+            "fileCreate",
+            "fileDelete",
+            "fileUpdate"
+          ]
+        },
+        {
+          "prefix": "market",
+          "ops": [
+            "marketCreate",
+            "marketDelete",
+            "marketUpdate"
+          ]
+        },
+        {
+          "prefix": "mobile",
+          "ops": [
+            "mobilePlatformApplicationCreate",
+            "mobilePlatformApplicationDelete",
+            "mobilePlatformApplicationUpdate"
+          ]
+        },
+        {
+          "prefix": "page",
+          "ops": [
+            "pageCreate",
+            "pageDelete",
+            "pageUpdate"
+          ]
+        },
+        {
+          "prefix": "price",
+          "ops": [
+            "priceListCreate",
+            "priceListDelete",
+            "priceListUpdate"
+          ]
+        },
+        {
+          "prefix": "publication",
+          "ops": [
+            "publicationCreate",
+            "publicationDelete",
+            "publicationUpdate"
+          ]
+        },
+        {
+          "prefix": "saved",
+          "ops": [
+            "savedSearchCreate",
+            "savedSearchDelete",
+            "savedSearchUpdate"
+          ]
+        },
+        {
+          "prefix": "script",
+          "ops": [
+            "scriptTagCreate",
+            "scriptTagDelete",
+            "scriptTagUpdate"
+          ]
+        },
+        {
+          "prefix": "selling",
+          "ops": [
+            "sellingPlanGroupCreate",
+            "sellingPlanGroupDelete",
+            "sellingPlanGroupUpdate"
+          ]
+        },
+        {
+          "prefix": "shipping",
+          "ops": [
+            "shippingPackageDelete",
+            "shippingPackageMakeDefault",
+            "shippingPackageUpdate"
+          ]
+        },
+        {
+          "prefix": "url",
+          "ops": [
+            "urlRedirectCreate",
+            "urlRedirectDelete",
+            "urlRedirectUpdate"
+          ]
+        },
+        {
+          "prefix": "validation",
+          "ops": [
+            "validationCreate",
+            "validationDelete",
+            "validationUpdate"
+          ]
+        },
+        {
+          "prefix": "web",
+          "ops": [
+            "webPixelCreate",
+            "webPixelDelete",
+            "webPixelUpdate"
+          ]
+        },
+        {
+          "prefix": "webhook",
+          "ops": [
+            "webhookSubscriptionCreate",
+            "webhookSubscriptionDelete",
+            "webhookSubscriptionUpdate"
+          ]
+        },
+        {
+          "prefix": "abandonment",
+          "ops": [
+            "abandonmentEmailStateUpdate",
+            "abandonmentUpdateActivitiesDeliveryStatuses"
+          ]
+        },
+        {
+          "prefix": "app",
+          "ops": [
+            "appSubscriptionCancel",
+            "appSubscriptionLineItemUpdate"
+          ]
+        },
+        {
+          "prefix": "bulk",
+          "ops": [
+            "bulkOperationRunMutation",
+            "bulkOperationRunQuery"
+          ]
+        },
+        {
+          "prefix": "cart",
+          "ops": [
+            "cartTransformCreate",
+            "cartTransformDelete"
+          ]
+        },
+        {
+          "prefix": "delegate",
+          "ops": [
+            "delegateAccessTokenCreate",
+            "delegateAccessTokenDestroy"
+          ]
+        },
+        {
+          "prefix": "flow",
+          "ops": [
+            "flowGenerateSignature",
+            "flowTriggerReceive"
+          ]
+        },
+        {
+          "prefix": "metafield",
+          "ops": [
+            "metafieldDefinitionCreate",
+            "metafieldDefinitionDelete"
+          ]
+        },
+        {
+          "prefix": "publishable",
+          "ops": [
+            "publishablePublish",
+            "publishableUnpublish"
+          ]
+        },
+        {
+          "prefix": "server",
+          "ops": [
+            "serverPixelCreate",
+            "serverPixelDelete"
+          ]
+        },
+        {
+          "prefix": "store",
+          "ops": [
+            "storeCreditAccountCredit",
+            "storeCreditAccountDebit"
+          ]
+        },
+        {
+          "prefix": "tags",
+          "ops": [
+            "tagsAdd",
+            "tagsRemove"
+          ]
+        },
+        {
+          "prefix": "translations",
+          "ops": [
+            "translationsRegister",
+            "translationsRemove"
+          ]
+        },
+        {
+          "prefix": "comment",
+          "ops": [
+            "commentDelete"
+          ]
+        },
+        {
+          "prefix": "dispute",
+          "ops": [
+            "disputeEvidenceUpdate"
+          ]
+        },
+        {
+          "prefix": "event",
+          "ops": [
+            "eventBridgeServerPixelUpdate"
+          ]
+        },
+        {
+          "prefix": "menu",
+          "ops": [
+            "menuDelete"
+          ]
+        },
+        {
+          "prefix": "metafields",
+          "ops": [
+            "metafieldsSet"
+          ]
+        },
+        {
+          "prefix": "quantity",
+          "ops": [
+            "quantityPricingByVariantUpdate"
+          ]
+        },
+        {
+          "prefix": "refund",
+          "ops": [
+            "refundCreate"
+          ]
+        },
+        {
+          "prefix": "remove",
+          "ops": [
+            "removeFromReturn"
+          ]
+        },
+        {
+          "prefix": "segment",
+          "ops": [
+            "segmentDelete"
+          ]
+        },
+        {
+          "prefix": "staged",
+          "ops": [
+            "stagedUploadsCreate"
+          ]
+        },
+        {
+          "prefix": "storefront",
+          "ops": [
+            "storefrontAccessTokenDelete"
+          ]
+        },
+        {
+          "prefix": "tax",
+          "ops": [
+            "taxSummaryCreate"
+          ]
+        },
+        {
+          "prefix": "transaction",
+          "ops": [
+            "transactionVoid"
+          ]
+        }
+      ]
+    }
+  },
+  "errors": []
+}
