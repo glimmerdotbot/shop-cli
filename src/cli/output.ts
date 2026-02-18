@@ -89,6 +89,30 @@ const toTableCell = (value: unknown): string => {
   return JSON.stringify(value)
 }
 
+const formatPublicationsForTable = (value: unknown): string | undefined => {
+  if (!Array.isArray(value)) return undefined
+  const parts: string[] = []
+  for (const p of value) {
+    if (!p || typeof p !== 'object') continue
+    const title = typeof (p as any).title === 'string' ? (p as any).title : undefined
+    if (!title) continue
+    const isPublished = (p as any).isPublished === true
+    const publishDate = typeof (p as any).publishDate === 'string' ? (p as any).publishDate : undefined
+    const suffix = publishDate ? ` ${isPublished ? 'published' : 'staged'} ${publishDate}` : ` ${isPublished ? 'published' : 'staged'}`
+    parts.push(`${title}${suffix}`)
+  }
+  return parts.join('; ')
+}
+
+const coerceComputedFieldsForTable = (node: Record<string, unknown>): Record<string, unknown> => {
+  const computed = node['[publications]']
+  if (computed !== undefined) {
+    const formatted = formatPublicationsForTable(computed)
+    if (formatted !== undefined) return { ...node, ['[publications]']: formatted }
+  }
+  return node
+}
+
 const escapeMarkdownTableCell = (value: string): string => {
   return value.replace(/\|/g, '\\|').replace(/\n/g, ' ')
 }
@@ -176,7 +200,19 @@ const printMarkdownNode = (node: Record<string, unknown>, headingLevel = 2) => {
       // Recurse into nested objects with deeper heading level
       printMarkdownNode(value, headingLevel + 1)
     } else if (Array.isArray(value)) {
-      process.stdout.write(JSON.stringify(value, null, 2) + '\n\n')
+      if (key === '[publications]') {
+        for (const p of value) {
+          if (!p || typeof p !== 'object') continue
+          const title = typeof (p as any).title === 'string' ? (p as any).title : undefined
+          if (!title) continue
+          process.stdout.write(`${'#'.repeat(headingLevel + 1)} ${title}\n`)
+          process.stdout.write(`- isPublished: ${(p as any).isPublished === true}\n`)
+          const publishDate = typeof (p as any).publishDate === 'string' ? (p as any).publishDate : ''
+          process.stdout.write(`- publishDate: ${publishDate}\n\n`)
+        }
+      } else {
+        process.stdout.write(JSON.stringify(value, null, 2) + '\n\n')
+      }
     } else {
       process.stdout.write(String(value) + '\n\n')
     }
@@ -203,7 +239,8 @@ export const printNode = ({
       printMarkdownTable([{ value: node }])
       return
     }
-    const flattened = flattenSingleKeyPaths(node as Record<string, unknown>)
+    const coerced = coerceComputedFieldsForTable(node as Record<string, unknown>)
+    const flattened = flattenSingleKeyPaths(coerced)
     printMarkdownTable([flattened])
     return
   }
@@ -264,7 +301,8 @@ export const printConnection = ({
   if (format === 'table') {
     const rows = nodes.map((n) => {
       if (typeof n !== 'object' || n === null) return { value: n }
-      return flattenSingleKeyPaths(n as Record<string, unknown>)
+      const coerced = coerceComputedFieldsForTable(n as Record<string, unknown>)
+      return flattenSingleKeyPaths(coerced)
     })
     printMarkdownTable(rows)
     if (nextPageCommand) process.stderr.write(`\nNext page: ${nextPageCommand}\n`)

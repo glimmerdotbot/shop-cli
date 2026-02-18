@@ -81,12 +81,14 @@ export async function runCommandDryRun({
   resource,
   verb,
   argv,
+  view = 'summary',
 }: {
   resource: string
   verb: string
   argv: string[]
+  view?: 'summary' | 'ids' | 'full' | 'raw' | 'all'
 }): Promise<DryRunPrinted[]> {
-  const { printed, error } = await tryRunCommandDryRun({ resource, verb, argv })
+  const { printed, error } = await tryRunCommandDryRun({ resource, verb, argv, view })
   if (error) throw error
   return printed
 }
@@ -95,10 +97,12 @@ export async function tryRunCommandDryRun({
   resource,
   verb,
   argv,
+  view = 'summary',
 }: {
   resource: string
   verb: string
   argv: string[]
+  view?: 'summary' | 'ids' | 'full' | 'raw' | 'all'
 }): Promise<{ printed: DryRunPrinted[]; error?: unknown }> {
   let rawOutput = ''
 
@@ -125,7 +129,7 @@ export async function tryRunCommandDryRun({
       argv,
       format: 'json',
       quiet: false,
-      view: 'summary',
+      view,
       dryRun: true,
       failOnUserErrors: true,
       warnMissingAccessToken: false,
