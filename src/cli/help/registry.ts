@@ -15,9 +15,11 @@ const flagQuery = flag('--query <string>', 'Search query')
 const flagLimit = flag('--limit <n>', 'Upper bound on count value (default: 10000)')
 const flagSort = flag('--sort <key>', 'Sort key')
 const flagReverse = flag('--reverse', 'Reverse sort order')
+const flagFormat = flag('--format json|table|raw|markdown', 'Select output format')
 const flagView = flag('--view summary|ids|full|raw', 'Select a built-in view')
 const flagSelect = flag('--select <path>', 'Add fields to the selection (repeatable)')
 const flagSelection = flag('--selection <graphql>', 'Override selection (can be @file.gql)')
+const flagQuiet = flag('--quiet', 'IDs only when possible')
 const flagTags = flag('--tags <csv>', 'Comma-separated tags')
 const flagStatus = flag('--status <value>', 'Status value')
 const flagNewTitle = flag('--new-title <string>', 'Title for the duplicate')
@@ -3563,6 +3565,6 @@ export const commandRegistry: ResourceSpec[] = baseCommandRegistry.map((spec) =>
   return { ...spec, verbs: [...spec.verbs, fieldsVerb] }
 })
 
-export const commonOutputFlags = [flagView, flagSelect, flagSelection]
+export const commonOutputFlags = [flagFormat, flagView, flagSelect, flagSelection, flagQuiet]
 export const paginationFlags = [flagFirst, flagAfter, flagQuery, flagSort, flagReverse]
 export const standardInputFlags = inputFlags
