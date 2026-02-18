@@ -35,6 +35,48 @@ const escapeMarkdownTableCell = (value: string): string => {
   return value.replace(/\|/g, '\\|').replace(/\n/g, ' ')
 }
 
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const isPrimitive = (value: unknown): boolean =>
+  value === null || value === undefined || typeof value !== 'object'
+
+/**
+ * Flattens nested single-key objects into dot-path keys with primitive leaf values.
+ * e.g. { seo: { title: "Orchids" } } -> { "seo.title": "Orchids" }
+ * Only flattens when there's a single key leading to a primitive value.
+ * Arrays and multi-key objects are kept as-is.
+ */
+const flattenSingleKeyPaths = (obj: Record<string, unknown>): Record<string, unknown> => {
+  const result: Record<string, unknown> = {}
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (isPlainObject(value)) {
+      const keys = Object.keys(value)
+      if (keys.length === 1) {
+        // Recursively flatten and check if we get a single primitive entry
+        const flattened = flattenSingleKeyPaths(value)
+        const flattenedKeys = Object.keys(flattened)
+        if (flattenedKeys.length === 1) {
+          const childKey = flattenedKeys[0]!
+          const childValue = flattened[childKey]
+          // Only flatten if the leaf is a primitive
+          if (isPrimitive(childValue)) {
+            result[`${key}.${childKey}`] = childValue
+            continue
+          }
+        }
+      }
+      // Multi-key object, couldn't flatten, or non-primitive leaf - keep as-is
+      result[key] = value
+    } else {
+      result[key] = value
+    }
+  }
+
+  return result
+}
+
 const printMarkdownTable = (rows: Array<Record<string, unknown>>) => {
   if (rows.length === 0) return
 
@@ -95,9 +137,8 @@ export const printNode = ({
       printMarkdownTable([{ value: node }])
       return
     }
-    const row: Record<string, unknown> = {}
-    for (const [k, v] of Object.entries(node)) row[k] = v
-    printMarkdownTable([row])
+    const flattened = flattenSingleKeyPaths(node as Record<string, unknown>)
+    printMarkdownTable([flattened])
     return
   }
 
@@ -106,7 +147,8 @@ export const printNode = ({
       process.stdout.write(`${node}\n`)
       return
     }
-    printMarkdownNode(node as Record<string, unknown>)
+    const flattened = flattenSingleKeyPaths(node as Record<string, unknown>)
+    printMarkdownNode(flattened)
     return
   }
 
@@ -142,9 +184,7 @@ export const printConnection = ({
   if (format === 'table') {
     const rows = nodes.map((n) => {
       if (typeof n !== 'object' || n === null) return { value: n }
-      const row: Record<string, unknown> = {}
-      for (const [k, v] of Object.entries(n)) row[k] = v
-      return row
+      return flattenSingleKeyPaths(n as Record<string, unknown>)
     })
     printMarkdownTable(rows)
     if (connection.pageInfo) printJson({ pageInfo: connection.pageInfo })
@@ -159,7 +199,8 @@ export const printConnection = ({
       } else {
         const title = (n as any).title ?? (n as any).name ?? (n as any).id ?? `Item ${i + 1}`
         process.stdout.write(`# ${title}\n\n`)
-        printMarkdownNode(n as Record<string, unknown>, 2)
+        const flattened = flattenSingleKeyPaths(n as Record<string, unknown>)
+        printMarkdownNode(flattened, 2)
       }
     }
     if (connection.pageInfo) {
