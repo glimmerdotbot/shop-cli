@@ -40,7 +40,7 @@ const resolveGraphqlEndpoint = ({
 }: {
   graphqlEndpoint?: string
   shopDomain?: string
-  apiVersion: ShopifyAdminApiVersion
+  apiVersion?: ShopifyAdminApiVersion
 }) => {
   if (graphqlEndpoint) return graphqlEndpoint
   if (!shopDomain) {
@@ -49,14 +49,17 @@ const resolveGraphqlEndpoint = ({
     )
   }
   const normalizedShopDomain = normalizeShopDomain(shopDomain)
-  return `https://${normalizedShopDomain}/admin/api/${apiVersion}/graphql.json`
+  if (apiVersion) {
+    return `https://${normalizedShopDomain}/admin/api/${apiVersion}/graphql.json`
+  }
+  return `https://${normalizedShopDomain}/admin/api/graphql.json`
 }
 
 export const createShopifyAdminClient = ({
   shopDomain,
   graphqlEndpoint,
   accessToken,
-  apiVersion = '2026-04',
+  apiVersion,
   fetch: _fetch,
   headers,
   verbose,
@@ -113,7 +116,7 @@ export const createRawGraphQLClient = ({
   shopDomain,
   graphqlEndpoint,
   accessToken,
-  apiVersion = '2026-04',
+  apiVersion,
   fetch: _fetch,
   headers,
   verbose,

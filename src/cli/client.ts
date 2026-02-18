@@ -20,6 +20,7 @@ export const createCliClientFromEnv = ({
   const resolvedGraphqlEndpoint = graphqlEndpoint ?? process.env.GRAPHQL_ENDPOINT
   const resolvedShopDomain = shopDomain ?? process.env.SHOPIFY_SHOP
   const resolvedAccessToken = accessToken ?? process.env.SHOPIFY_ACCESS_TOKEN
+  const resolvedApiVersion = apiVersion ?? process.env.SHOPIFY_API_VERSION
 
   if (!resolvedGraphqlEndpoint && !resolvedShopDomain) {
     throw new Error(
@@ -31,7 +32,7 @@ export const createCliClientFromEnv = ({
     shopDomain: resolvedShopDomain,
     graphqlEndpoint: resolvedGraphqlEndpoint,
     accessToken: resolvedAccessToken,
-    apiVersion: apiVersion ?? '2026-04',
+    apiVersion: resolvedApiVersion,
     headers,
     verbose,
   })

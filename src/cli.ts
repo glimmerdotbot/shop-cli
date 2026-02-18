@@ -189,13 +189,15 @@ const main = async () => {
 
   const verbose = parsed.verbose ?? false
 
+  const resolvedApiVersion = apiVersion ?? process.env.SHOPIFY_API_VERSION
+
   const client = dryRun
     ? createShopifyAdminClient({
         shopDomain:
           shopDomain ?? process.env.SHOPIFY_SHOP ?? 'example.myshopify.com',
         graphqlEndpoint: graphqlEndpoint ?? process.env.GRAPHQL_ENDPOINT,
         accessToken: resolvedAccessToken ?? 'DUMMY',
-        apiVersion: apiVersion ?? '2026-04',
+        apiVersion: resolvedApiVersion,
         headers,
         verbose,
       })
@@ -223,7 +225,7 @@ const main = async () => {
     shopDomain: shopDomain ?? process.env.SHOPIFY_SHOP,
     graphqlEndpoint: graphqlEndpoint ?? process.env.GRAPHQL_ENDPOINT,
     accessToken: resolvedAccessToken,
-    apiVersion: apiVersion ?? '2026-04',
+    apiVersion: resolvedApiVersion,
     headers,
   })
 }
