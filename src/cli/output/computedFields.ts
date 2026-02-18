@@ -45,7 +45,12 @@ const getPublicationTitle = (publication: any): string | undefined => {
       if (titles.length === 1) return titles[0]
       if (titles.length > 1) return titles.join(', ')
     }
+  }
 
+  const name = (publication as any).name
+  if (typeof name === 'string' && name.trim().length > 0) return name
+
+  if (catalog && typeof catalog === 'object') {
     const catalogTitle = (catalog as any).title
     if (typeof catalogTitle === 'string' && catalogTitle.trim().length > 0) return catalogTitle
   }

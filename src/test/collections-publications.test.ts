@@ -18,6 +18,7 @@ describe('collections publications computed field', () => {
     const match = query.match(/onlyPublished:\$(v\d+)/)
     expect(match?.[1]).toBeTruthy()
     expect((op.variables as any)?.[match![1]!]).toBe(false)
+    expect(query).toContain('name')
     expect(query).toContain('isPublished')
     expect(query).toContain('publishDate')
   })

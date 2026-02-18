@@ -83,6 +83,18 @@ export const runCollections = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Collection')
 
+    const selectValues = Array.isArray(args.select)
+      ? args.select
+      : args.select
+        ? [args.select]
+        : []
+    const selectionOverride =
+      typeof (args as any).selection === 'string' && (args as any).selection.length > 0
+    const select =
+      !selectionOverride && ctx.view !== 'raw' && ctx.view !== 'ids'
+        ? Array.from(new Set([...selectValues, 'resourcePublicationsV2.nodes.publication.name']))
+        : args.select
+
     const includeValues = Array.isArray(args.include)
       ? args.include
       : args.include
@@ -97,7 +109,7 @@ export const runCollections = async ({
       resource: 'collections',
       view: ctx.view,
       baseSelection: getCollectionSelectionForGet(ctx.view) as any,
-      select: args.select,
+      select,
       selection: (args as any).selection,
       include,
       ensureId: ctx.quiet,

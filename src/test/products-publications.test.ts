@@ -33,6 +33,29 @@ describe('products publications computed field', () => {
     ])
   })
 
+  it('uses publication.name when catalog is null', () => {
+    const node = {
+      id: 'gid://shopify/Product/1',
+      title: 'Test',
+      resourcePublicationsV2: {
+        nodes: [
+          {
+            isPublished: true,
+            publishDate: '2026-02-18T15:33:22Z',
+            publication: {
+              id: 'gid://shopify/Publication/1',
+              name: 'Online Store',
+              catalog: null,
+            },
+          },
+        ],
+      },
+    }
+
+    const out = applyComputedFieldsToNode(node, { view: 'summary' }) as any
+    expect(out['[publications]'][0]!.title).toBe('Online Store')
+  })
+
   it('keeps resourcePublicationsV2 for all view', () => {
     const node = {
       id: 'gid://shopify/Product/1',
@@ -121,6 +144,7 @@ describe('products publications computed field', () => {
     const match = query.match(/onlyPublished:\$(v\d+)/)
     expect(match?.[1]).toBeTruthy()
     expect((op.variables as any)?.[match![1]!]).toBe(false)
+    expect(query).toContain('name')
     expect(query).toContain('isPublished')
     expect(query).toContain('publishDate')
   })
