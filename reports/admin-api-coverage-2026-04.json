@@ -3,10 +3,10 @@
   "totals": {
     "queryFields": 269,
     "mutationFields": 496,
-    "usedQueryFields": 157,
-    "usedMutationFields": 317,
-    "missingQueryFields": 112,
-    "missingMutationFields": 179
+    "usedQueryFields": 173,
+    "usedMutationFields": 359,
+    "missingQueryFields": 96,
+    "missingMutationFields": 137
   },
   "missing": {
     "queries": [
@@ -38,17 +38,7 @@
       "collectionByHandle",
       "collectionByIdentifier",
       "collectionRulesConditions",
-      "companyContactRole",
-      "consentPolicy",
-      "consentPolicyRegions",
       "currentAppInstallation",
-      "customerByIdentifier",
-      "customerMergeJobStatus",
-      "customerMergePreview",
-      "customerPaymentMethod",
-      "customerSegmentMembers",
-      "customerSegmentMembership",
-      "customerSegmentMembersQuery",
       "deletionEvents",
       "deliveryPromiseProvider",
       "discountNode",
@@ -85,7 +75,6 @@
       "pagesCount",
       "pendingOrdersCount",
       "primaryMarket",
-      "privacySettings",
       "productByHandle",
       "productByIdentifier",
       "productDuplicateJob",
@@ -103,11 +92,6 @@
       "returnableFulfillment",
       "reverseDelivery",
       "reverseFulfillmentOrder",
-      "segmentFilters",
-      "segmentFilterSuggestions",
-      "segmentMigrations",
-      "segmentsCount",
-      "segmentValueSuggestions",
       "shopBillingPreferences",
       "shopifyqlQuery",
       "shopPayPaymentRequestReceipt",
@@ -141,50 +125,11 @@
       "commentApprove",
       "commentNotSpam",
       "commentSpam",
-      "companiesDelete",
-      "companyAddressDelete",
-      "companyAssignCustomerAsContact",
-      "companyAssignMainContact",
-      "companyContactAssignRole",
-      "companyContactCreate",
-      "companyContactRevokeRole",
-      "companyContactsDelete",
-      "companyLocationCreate",
-      "companyLocationsDelete",
-      "consentPolicyUpdate",
-      "customerAddressCreate",
-      "customerAddressDelete",
-      "customerAddressUpdate",
-      "customerAddTaxExemptions",
-      "customerCancelDataErasure",
-      "customerEmailMarketingConsentUpdate",
-      "customerGenerateAccountActivationUrl",
-      "customerPaymentMethodCreateFromDuplicationData",
-      "customerPaymentMethodCreditCardCreate",
-      "customerPaymentMethodCreditCardUpdate",
-      "customerPaymentMethodGetDuplicationData",
-      "customerPaymentMethodGetUpdateUrl",
-      "customerPaymentMethodPaypalBillingAgreementCreate",
-      "customerPaymentMethodPaypalBillingAgreementUpdate",
-      "customerPaymentMethodRemoteCreate",
-      "customerPaymentMethodRevoke",
-      "customerPaymentMethodSendUpdateEmail",
-      "customerRemoveTaxExemptions",
-      "customerReplaceTaxExemptions",
-      "customerRequestDataErasure",
-      "customerSegmentMembersQueryCreate",
-      "customerSet",
-      "customerSmsMarketingConsentUpdate",
-      "customerUpdateDefaultAddress",
-      "dataSaleOptOut",
       "deliveryCustomizationActivation",
       "deliveryPromiseProviderUpsert",
       "deliverySettingUpdate",
       "deliveryShippingOriginAssign",
-      "discountAutomaticBulkDelete",
-      "discountCodeBulkDelete",
       "discountCodeRedeemCodeBulkDelete",
-      "draftOrderBulkDelete",
       "eventBridgeWebhookSubscriptionCreate",
       "eventBridgeWebhookSubscriptionUpdate",
       "fileAcknowledgeUpdateFailed",
@@ -234,7 +179,6 @@
       "priceListFixedPricesByProductUpdate",
       "priceListFixedPricesDelete",
       "priceListFixedPricesUpdate",
-      "privacyFeaturesDisable",
       "productChangeStatus",
       "productCreateMedia",
       "productDeleteMedia",
@@ -271,8 +215,6 @@
       "reverseDeliveryCreateWithShipping",
       "reverseDeliveryShippingUpdate",
       "reverseFulfillmentOrderDispose",
-      "segmentCreate",
-      "segmentUpdate",
       "sellingPlanGroupAddProducts",
       "sellingPlanGroupAddProductVariants",
       "sellingPlanGroupRemoveProducts",
@@ -335,18 +277,6 @@
           ]
         },
         {
-          "prefix": "customer",
-          "ops": [
-            "customerByIdentifier",
-            "customerMergeJobStatus",
-            "customerMergePreview",
-            "customerPaymentMethod",
-            "customerSegmentMembers",
-            "customerSegmentMembership",
-            "customerSegmentMembersQuery"
-          ]
-        },
-        {
           "prefix": "discount",
           "ops": [
             "discountNode",
@@ -363,15 +293,6 @@
             "marketLocalizableResource",
             "marketLocalizableResources",
             "marketLocalizableResourcesByIds"
-          ]
-        },
-        {
-          "prefix": "segment",
-          "ops": [
-            "segmentFilters",
-            "segmentFilterSuggestions",
-            "segmentMigrations",
-            "segmentValueSuggestions"
           ]
         },
         {
@@ -442,13 +363,6 @@
           "ops": [
             "availableBackupRegions",
             "availableLocales"
-          ]
-        },
-        {
-          "prefix": "consent",
-          "ops": [
-            "consentPolicy",
-            "consentPolicyRegions"
           ]
         },
         {
@@ -542,12 +456,6 @@
           ]
         },
         {
-          "prefix": "company",
-          "ops": [
-            "companyContactRole"
-          ]
-        },
-        {
           "prefix": "current",
           "ops": [
             "currentAppInstallation"
@@ -638,12 +546,6 @@
           ]
         },
         {
-          "prefix": "privacy",
-          "ops": [
-            "privacySettings"
-          ]
-        },
-        {
           "prefix": "public",
           "ops": [
             "publicApiVersions"
@@ -665,12 +567,6 @@
           "prefix": "returnable",
           "ops": [
             "returnableFulfillment"
-          ]
-        },
-        {
-          "prefix": "segments",
-          "ops": [
-            "segmentsCount"
           ]
         },
         {
@@ -733,49 +629,6 @@
             "productVariantsBulkDelete",
             "productVariantsBulkReorder",
             "productVariantsBulkUpdate"
-          ]
-        },
-        {
-          "prefix": "customer",
-          "ops": [
-            "customerAddressCreate",
-            "customerAddressDelete",
-            "customerAddressUpdate",
-            "customerAddTaxExemptions",
-            "customerCancelDataErasure",
-            "customerEmailMarketingConsentUpdate",
-            "customerGenerateAccountActivationUrl",
-            "customerPaymentMethodCreateFromDuplicationData",
-            "customerPaymentMethodCreditCardCreate",
-            "customerPaymentMethodCreditCardUpdate",
-            "customerPaymentMethodGetDuplicationData",
-            "customerPaymentMethodGetUpdateUrl",
-            "customerPaymentMethodPaypalBillingAgreementCreate",
-            "customerPaymentMethodPaypalBillingAgreementUpdate",
-            "customerPaymentMethodRemoteCreate",
-            "customerPaymentMethodRevoke",
-            "customerPaymentMethodSendUpdateEmail",
-            "customerRemoveTaxExemptions",
-            "customerReplaceTaxExemptions",
-            "customerRequestDataErasure",
-            "customerSegmentMembersQueryCreate",
-            "customerSet",
-            "customerSmsMarketingConsentUpdate",
-            "customerUpdateDefaultAddress"
-          ]
-        },
-        {
-          "prefix": "company",
-          "ops": [
-            "companyAddressDelete",
-            "companyAssignCustomerAsContact",
-            "companyAssignMainContact",
-            "companyContactAssignRole",
-            "companyContactCreate",
-            "companyContactRevokeRole",
-            "companyContactsDelete",
-            "companyLocationCreate",
-            "companyLocationsDelete"
           ]
         },
         {
@@ -898,14 +751,6 @@
           ]
         },
         {
-          "prefix": "discount",
-          "ops": [
-            "discountAutomaticBulkDelete",
-            "discountCodeBulkDelete",
-            "discountCodeRedeemCodeBulkDelete"
-          ]
-        },
-        {
           "prefix": "metafield",
           "ops": [
             "metafieldDefinitionPin",
@@ -1002,13 +847,6 @@
           ]
         },
         {
-          "prefix": "segment",
-          "ops": [
-            "segmentCreate",
-            "segmentUpdate"
-          ]
-        },
-        {
           "prefix": "staged",
           "ops": [
             "stagedUploadTargetGenerate",
@@ -1047,27 +885,9 @@
           ]
         },
         {
-          "prefix": "companies",
+          "prefix": "discount",
           "ops": [
-            "companiesDelete"
-          ]
-        },
-        {
-          "prefix": "consent",
-          "ops": [
-            "consentPolicyUpdate"
-          ]
-        },
-        {
-          "prefix": "data",
-          "ops": [
-            "dataSaleOptOut"
-          ]
-        },
-        {
-          "prefix": "draft",
-          "ops": [
-            "draftOrderBulkDelete"
+            "discountCodeRedeemCodeBulkDelete"
           ]
         },
         {
@@ -1086,12 +906,6 @@
           "prefix": "metafields",
           "ops": [
             "metafieldsDelete"
-          ]
-        },
-        {
-          "prefix": "privacy",
-          "ops": [
-            "privacyFeaturesDisable"
           ]
         },
         {
@@ -1131,6 +945,22 @@
     "grouped": {
       "queries": [
         {
+          "prefix": "customer",
+          "ops": [
+            "customer",
+            "customerAccountPage",
+            "customerAccountPages",
+            "customerByIdentifier",
+            "customerMergeJobStatus",
+            "customerMergePreview",
+            "customerPaymentMethod",
+            "customerSavedSearches",
+            "customerSegmentMembers",
+            "customerSegmentMembership",
+            "customerSegmentMembersQuery"
+          ]
+        },
+        {
           "prefix": "delivery",
           "ops": [
             "deliveryCustomization",
@@ -1150,6 +980,16 @@
             "draftOrderSavedSearches",
             "draftOrdersCount",
             "draftOrderTag"
+          ]
+        },
+        {
+          "prefix": "company",
+          "ops": [
+            "company",
+            "companyContact",
+            "companyContactRole",
+            "companyLocation",
+            "companyLocations"
           ]
         },
         {
@@ -1183,6 +1023,16 @@
           ]
         },
         {
+          "prefix": "segment",
+          "ops": [
+            "segment",
+            "segmentFilters",
+            "segmentFilterSuggestions",
+            "segmentMigrations",
+            "segmentValueSuggestions"
+          ]
+        },
+        {
           "prefix": "subscription",
           "ops": [
             "subscriptionBillingAttempt",
@@ -1190,24 +1040,6 @@
             "subscriptionContract",
             "subscriptionContracts",
             "subscriptionDraft"
-          ]
-        },
-        {
-          "prefix": "company",
-          "ops": [
-            "company",
-            "companyContact",
-            "companyLocation",
-            "companyLocations"
-          ]
-        },
-        {
-          "prefix": "customer",
-          "ops": [
-            "customer",
-            "customerAccountPage",
-            "customerAccountPages",
-            "customerSavedSearches"
           ]
         },
         {
@@ -1338,6 +1170,13 @@
           ]
         },
         {
+          "prefix": "consent",
+          "ops": [
+            "consentPolicy",
+            "consentPolicyRegions"
+          ]
+        },
+        {
           "prefix": "current",
           "ops": [
             "currentBulkOperation",
@@ -1426,6 +1265,13 @@
           "ops": [
             "scriptTag",
             "scriptTags"
+          ]
+        },
+        {
+          "prefix": "segments",
+          "ops": [
+            "segments",
+            "segmentsCount"
           ]
         },
         {
@@ -1614,6 +1460,12 @@
           ]
         },
         {
+          "prefix": "privacy",
+          "ops": [
+            "privacySettings"
+          ]
+        },
+        {
           "prefix": "publication",
           "ops": [
             "publication"
@@ -1635,18 +1487,6 @@
           "prefix": "returnable",
           "ops": [
             "returnableFulfillments"
-          ]
-        },
-        {
-          "prefix": "segment",
-          "ops": [
-            "segment"
-          ]
-        },
-        {
-          "prefix": "segments",
-          "ops": [
-            "segments"
           ]
         },
         {
@@ -1700,6 +1540,108 @@
       ],
       "mutations": [
         {
+          "prefix": "company",
+          "ops": [
+            "companyAddressDelete",
+            "companyAssignCustomerAsContact",
+            "companyAssignMainContact",
+            "companyContactAssignRole",
+            "companyContactAssignRoles",
+            "companyContactCreate",
+            "companyContactDelete",
+            "companyContactRemoveFromCompany",
+            "companyContactRevokeRole",
+            "companyContactRevokeRoles",
+            "companyContactsDelete",
+            "companyContactSendWelcomeEmail",
+            "companyContactUpdate",
+            "companyCreate",
+            "companyDelete",
+            "companyLocationAssignAddress",
+            "companyLocationAssignRoles",
+            "companyLocationAssignStaffMembers",
+            "companyLocationAssignTaxExemptions",
+            "companyLocationCreate",
+            "companyLocationCreateTaxRegistration",
+            "companyLocationDelete",
+            "companyLocationRemoveStaffMembers",
+            "companyLocationRevokeRoles",
+            "companyLocationRevokeTaxExemptions",
+            "companyLocationRevokeTaxRegistration",
+            "companyLocationsDelete",
+            "companyLocationTaxSettingsUpdate",
+            "companyLocationUpdate",
+            "companyRevokeMainContact",
+            "companyUpdate"
+          ]
+        },
+        {
+          "prefix": "customer",
+          "ops": [
+            "customerAddressCreate",
+            "customerAddressDelete",
+            "customerAddressUpdate",
+            "customerAddTaxExemptions",
+            "customerCancelDataErasure",
+            "customerCreate",
+            "customerDelete",
+            "customerEmailMarketingConsentUpdate",
+            "customerGenerateAccountActivationUrl",
+            "customerMerge",
+            "customerPaymentMethodCreateFromDuplicationData",
+            "customerPaymentMethodCreditCardCreate",
+            "customerPaymentMethodCreditCardUpdate",
+            "customerPaymentMethodGetDuplicationData",
+            "customerPaymentMethodGetUpdateUrl",
+            "customerPaymentMethodPaypalBillingAgreementCreate",
+            "customerPaymentMethodPaypalBillingAgreementUpdate",
+            "customerPaymentMethodRemoteCreate",
+            "customerPaymentMethodRevoke",
+            "customerPaymentMethodSendUpdateEmail",
+            "customerRemoveTaxExemptions",
+            "customerReplaceTaxExemptions",
+            "customerRequestDataErasure",
+            "customerSegmentMembersQueryCreate",
+            "customerSendAccountInviteEmail",
+            "customerSet",
+            "customerSmsMarketingConsentUpdate",
+            "customerUpdate",
+            "customerUpdateDefaultAddress"
+          ]
+        },
+        {
+          "prefix": "discount",
+          "ops": [
+            "discountAutomaticActivate",
+            "discountAutomaticAppCreate",
+            "discountAutomaticAppUpdate",
+            "discountAutomaticBasicCreate",
+            "discountAutomaticBasicUpdate",
+            "discountAutomaticBulkDelete",
+            "discountAutomaticBxgyCreate",
+            "discountAutomaticBxgyUpdate",
+            "discountAutomaticDeactivate",
+            "discountAutomaticDelete",
+            "discountAutomaticFreeShippingCreate",
+            "discountAutomaticFreeShippingUpdate",
+            "discountCodeActivate",
+            "discountCodeAppCreate",
+            "discountCodeAppUpdate",
+            "discountCodeBasicCreate",
+            "discountCodeBasicUpdate",
+            "discountCodeBulkActivate",
+            "discountCodeBulkDeactivate",
+            "discountCodeBulkDelete",
+            "discountCodeBxgyCreate",
+            "discountCodeBxgyUpdate",
+            "discountCodeDeactivate",
+            "discountCodeDelete",
+            "discountCodeFreeShippingCreate",
+            "discountCodeFreeShippingUpdate",
+            "discountRedeemCodeBulkAdd"
+          ]
+        },
+        {
           "prefix": "fulfillment",
           "ops": [
             "fulfillmentCancel",
@@ -1731,36 +1673,6 @@
           ]
         },
         {
-          "prefix": "discount",
-          "ops": [
-            "discountAutomaticActivate",
-            "discountAutomaticAppCreate",
-            "discountAutomaticAppUpdate",
-            "discountAutomaticBasicCreate",
-            "discountAutomaticBasicUpdate",
-            "discountAutomaticBxgyCreate",
-            "discountAutomaticBxgyUpdate",
-            "discountAutomaticDeactivate",
-            "discountAutomaticDelete",
-            "discountAutomaticFreeShippingCreate",
-            "discountAutomaticFreeShippingUpdate",
-            "discountCodeActivate",
-            "discountCodeAppCreate",
-            "discountCodeAppUpdate",
-            "discountCodeBasicCreate",
-            "discountCodeBasicUpdate",
-            "discountCodeBulkActivate",
-            "discountCodeBulkDeactivate",
-            "discountCodeBxgyCreate",
-            "discountCodeBxgyUpdate",
-            "discountCodeDeactivate",
-            "discountCodeDelete",
-            "discountCodeFreeShippingCreate",
-            "discountCodeFreeShippingUpdate",
-            "discountRedeemCodeBulkAdd"
-          ]
-        },
-        {
           "prefix": "subscription",
           "ops": [
             "subscriptionBillingAttemptCreate",
@@ -1787,33 +1699,6 @@
             "subscriptionDraftLineRemove",
             "subscriptionDraftLineUpdate",
             "subscriptionDraftUpdate"
-          ]
-        },
-        {
-          "prefix": "company",
-          "ops": [
-            "companyContactAssignRoles",
-            "companyContactDelete",
-            "companyContactRemoveFromCompany",
-            "companyContactRevokeRoles",
-            "companyContactSendWelcomeEmail",
-            "companyContactUpdate",
-            "companyCreate",
-            "companyDelete",
-            "companyLocationAssignAddress",
-            "companyLocationAssignRoles",
-            "companyLocationAssignStaffMembers",
-            "companyLocationAssignTaxExemptions",
-            "companyLocationCreateTaxRegistration",
-            "companyLocationDelete",
-            "companyLocationRemoveStaffMembers",
-            "companyLocationRevokeRoles",
-            "companyLocationRevokeTaxExemptions",
-            "companyLocationRevokeTaxRegistration",
-            "companyLocationTaxSettingsUpdate",
-            "companyLocationUpdate",
-            "companyRevokeMainContact",
-            "companyUpdate"
           ]
         },
         {
@@ -1869,6 +1754,7 @@
           "prefix": "draft",
           "ops": [
             "draftOrderBulkAddTags",
+            "draftOrderBulkDelete",
             "draftOrderBulkRemoveTags",
             "draftOrderCalculate",
             "draftOrderComplete",
@@ -1979,16 +1865,6 @@
             "metaobjectDefinitionUpdate",
             "metaobjectDelete",
             "metaobjectUpdate"
-          ]
-        },
-        {
-          "prefix": "customer",
-          "ops": [
-            "customerCreate",
-            "customerDelete",
-            "customerMerge",
-            "customerSendAccountInviteEmail",
-            "customerUpdate"
           ]
         },
         {
@@ -2114,6 +1990,14 @@
             "scriptTagCreate",
             "scriptTagDelete",
             "scriptTagUpdate"
+          ]
+        },
+        {
+          "prefix": "segment",
+          "ops": [
+            "segmentCreate",
+            "segmentDelete",
+            "segmentUpdate"
           ]
         },
         {
@@ -2255,6 +2139,24 @@
           ]
         },
         {
+          "prefix": "companies",
+          "ops": [
+            "companiesDelete"
+          ]
+        },
+        {
+          "prefix": "consent",
+          "ops": [
+            "consentPolicyUpdate"
+          ]
+        },
+        {
+          "prefix": "data",
+          "ops": [
+            "dataSaleOptOut"
+          ]
+        },
+        {
           "prefix": "dispute",
           "ops": [
             "disputeEvidenceUpdate"
@@ -2279,6 +2181,12 @@
           ]
         },
         {
+          "prefix": "privacy",
+          "ops": [
+            "privacyFeaturesDisable"
+          ]
+        },
+        {
           "prefix": "quantity",
           "ops": [
             "quantityPricingByVariantUpdate"
@@ -2294,12 +2202,6 @@
           "prefix": "remove",
           "ops": [
             "removeFromReturn"
-          ]
-        },
-        {
-          "prefix": "segment",
-          "ops": [
-            "segmentDelete"
           ]
         },
         {

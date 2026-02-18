@@ -14,6 +14,9 @@ export const resourceToType: Record<string, string> = {
   companies: 'Company',
   'company-contacts': 'CompanyContact',
   'company-locations': 'CompanyLocation',
+  'customer-payment-methods': 'CustomerPaymentMethod',
+  'customer-privacy': 'PrivacySettings',
+  'customer-segments': 'CustomerSegmentMember',
   'customer-account-pages': 'CustomerAccountPage',
   customers: 'Customer',
   'delivery-customizations': 'DeliveryCustomization',
@@ -70,4 +73,3 @@ export const resourceToType: Record<string, string> = {
   // Resource name differs from file name:
   config: 'Shop',
 } as const
-

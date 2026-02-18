@@ -5,7 +5,35 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { buildListNextPageArgs, parseCsv, parseFirst, parseJsonArg, requireId } from './_shared'
+import {
+  buildListNextPageArgs,
+  parseCsv,
+  parseFirst,
+  parseJsonArg,
+  requireGidFlag,
+  requireId,
+  requireStringFlag,
+} from './_shared'
+
+const parseBool = (
+  value: unknown,
+  flag: string,
+  { allowEmpty = false }: { allowEmpty?: boolean } = {},
+): boolean | undefined => {
+  if (value === undefined || value === null || value === '') {
+    if (allowEmpty) return undefined
+    throw new CliError(`Missing ${flag}`, 2)
+  }
+  if (typeof value !== 'string') throw new CliError(`${flag} must be a string`, 2)
+  const raw = value.trim().toLowerCase()
+  if (!raw) {
+    if (allowEmpty) return undefined
+    throw new CliError(`Missing ${flag}`, 2)
+  }
+  if (raw === 'true' || raw === '1' || raw === 'yes') return true
+  if (raw === 'false' || raw === '0' || raw === 'no') return false
+  throw new CliError(`${flag} must be a boolean (true/false)`, 2)
+}
 
 const customerSummarySelection = {
   id: true,
@@ -46,7 +74,14 @@ export const runCustomers = async ({
         '',
         'Verbs:',
         '  create|get|list|count|update|delete',
-        '  add-tags|remove-tags|merge|send-invite',
+        '  add-tags|remove-tags|merge|merge-preview|merge-job-status',
+        '  by-identifier|set',
+        '  address-create|address-update|address-delete|update-default-address',
+        '  email-marketing-consent-update|sms-marketing-consent-update',
+        '  add-tax-exemptions|remove-tax-exemptions|replace-tax-exemptions',
+        '  generate-account-activation-url',
+        '  request-data-erasure|cancel-data-erasure',
+        '  send-invite',
         '  metafields upsert',
         '',
         'Common output flags:',
@@ -55,6 +90,330 @@ export const runCustomers = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'by-identifier') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'email-address': { type: 'string' },
+        'phone-number': { type: 'string' },
+        'identifier-id': { type: 'string' },
+        'custom-id': { type: 'string' },
+      },
+    })
+
+    const emailAddress = (args as any)['email-address'] as any
+    const phoneNumber = (args as any)['phone-number'] as any
+    const identifierId = (args as any)['identifier-id'] as any
+    const customIdRaw = (args as any)['custom-id'] as any
+
+    const present = [
+      emailAddress ? 'emailAddress' : undefined,
+      phoneNumber ? 'phoneNumber' : undefined,
+      identifierId ? 'id' : undefined,
+      customIdRaw ? 'customId' : undefined,
+    ].filter(Boolean) as string[]
+
+    if (present.length === 0) throw new CliError('Missing --email-address', 2)
+    if (present.length > 1) {
+      throw new CliError(`Pass exactly one identifier (--email-address, --phone-number, --identifier-id, --custom-id). Got: ${present.join(', ')}`, 2)
+    }
+
+    const identifier: any = {}
+    if (emailAddress) identifier.emailAddress = String(emailAddress)
+    if (phoneNumber) identifier.phoneNumber = String(phoneNumber)
+    if (identifierId) identifier.id = requireGidFlag(identifierId, '--identifier-id', 'Customer')
+    if (customIdRaw) identifier.customId = parseJsonArg(customIdRaw, '--custom-id')
+
+    const selection = resolveSelection({
+      resource: 'customers',
+      view: ctx.view,
+      baseSelection: getCustomerSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
+    const result = await runQuery(ctx, { customerByIdentifier: { __args: { identifier }, ...selection } })
+    if (result === undefined) return
+    printNode({ node: result.customerByIdentifier, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'merge-preview') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'other-id': { type: 'string' },
+        'override-fields': { type: 'string' },
+      },
+    })
+    const customerOneId = requireId(args.id as any, 'Customer')
+    const other = (args as any)['other-id'] as string | undefined
+    if (!other) throw new CliError('Missing --other-id', 2)
+    const customerTwoId = requireId(other, 'Customer')
+    const overrideFieldsRaw = (args as any)['override-fields'] as any
+    const overrideFields =
+      overrideFieldsRaw !== undefined ? parseJsonArg(overrideFieldsRaw, '--override-fields', { allowEmpty: true }) : undefined
+
+    const result = await runQuery(ctx, {
+      customerMergePreview: {
+        __args: {
+          customerOneId,
+          customerTwoId,
+          ...(overrideFields ? { overrideFields } : {}),
+        },
+        resultingCustomerId: true,
+        customerMergeErrors: { message: true, errorFields: true },
+        blockingFields: { __typename: true },
+        defaultFields: { __typename: true },
+        alternateFields: { __typename: true },
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.customerMergePreview?.resultingCustomerId ?? '')
+    printJson(result.customerMergePreview, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'merge-job-status') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'job-id': { type: 'string' } } })
+    const jobId = requireStringFlag((args as any)['job-id'], '--job-id')
+
+    const result = await runQuery(ctx, {
+      customerMergeJobStatus: {
+        __args: { jobId },
+        jobId: true,
+        status: true,
+        resultingCustomerId: true,
+        customerMergeErrors: { message: true, errorFields: true },
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.customerMergeJobStatus?.jobId ?? '')
+    printJson(result.customerMergeJobStatus, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'set') {
+    const args = parseStandardArgs({ argv, extraOptions: { identifier: { type: 'string' } } })
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
+
+    const identifierRaw = (args as any).identifier as any
+    const identifier = identifierRaw ? parseJsonArg(identifierRaw, '--identifier', { allowEmpty: true }) : undefined
+
+    const result = await runMutation(ctx, {
+      customerSet: {
+        __args: { input: built.input, ...(identifier ? { identifier } : {}) },
+        customer: customerSummarySelection,
+        userErrors: { code: true, field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.customerSet, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.customerSet?.customer?.id ?? '')
+    printJson(result.customerSet, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'address-create') {
+    const args = parseStandardArgs({ argv, extraOptions: { address: { type: 'string' }, 'set-as-default': { type: 'string' } } })
+    const customerId = requireId(args.id as any, 'Customer')
+    const address = parseJsonArg((args as any).address, '--address')
+    const setAsDefault = parseBool((args as any)['set-as-default'], '--set-as-default', { allowEmpty: true })
+
+    const result = await runMutation(ctx, {
+      customerAddressCreate: {
+        __args: { customerId, address, ...(setAsDefault !== undefined ? { setAsDefault } : {}) },
+        address: { id: true, address1: true, city: true, provinceCode: true, countryCode: true, zip: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.customerAddressCreate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.customerAddressCreate?.address?.id ?? '')
+    printJson(result.customerAddressCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'address-update') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { 'address-id': { type: 'string' }, address: { type: 'string' }, 'set-as-default': { type: 'string' } },
+    })
+    const customerId = requireId(args.id as any, 'Customer')
+    const addressId = requireGidFlag((args as any)['address-id'], '--address-id', 'MailingAddress')
+    const address = parseJsonArg((args as any).address, '--address')
+    const setAsDefault = parseBool((args as any)['set-as-default'], '--set-as-default', { allowEmpty: true })
+
+    const result = await runMutation(ctx, {
+      customerAddressUpdate: {
+        __args: { customerId, addressId, address, ...(setAsDefault !== undefined ? { setAsDefault } : {}) },
+        address: { id: true, address1: true, city: true, provinceCode: true, countryCode: true, zip: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.customerAddressUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.customerAddressUpdate?.address?.id ?? '')
+    printJson(result.customerAddressUpdate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'address-delete') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'address-id': { type: 'string' } } })
+    const customerId = requireId(args.id as any, 'Customer')
+    const addressId = requireGidFlag((args as any)['address-id'], '--address-id', 'MailingAddress')
+
+    const result = await runMutation(ctx, {
+      customerAddressDelete: {
+        __args: { customerId, addressId },
+        deletedAddressId: true,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.customerAddressDelete, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.customerAddressDelete?.deletedAddressId ?? '')
+    printJson(result.customerAddressDelete, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'update-default-address') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'address-id': { type: 'string' } } })
+    const customerId = requireId(args.id as any, 'Customer')
+    const addressId = requireGidFlag((args as any)['address-id'], '--address-id', 'MailingAddress')
+
+    const result = await runMutation(ctx, {
+      customerUpdateDefaultAddress: {
+        __args: { customerId, addressId },
+        customer: customerSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.customerUpdateDefaultAddress, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.customerUpdateDefaultAddress?.customer?.id ?? '')
+    printJson(result.customerUpdateDefaultAddress, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'email-marketing-consent-update') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'email-marketing-consent': { type: 'string' } } })
+    const customerId = requireId(args.id as any, 'Customer')
+    const emailMarketingConsent = parseJsonArg((args as any)['email-marketing-consent'], '--email-marketing-consent')
+
+    const result = await runMutation(ctx, {
+      customerEmailMarketingConsentUpdate: {
+        __args: { input: { customerId, emailMarketingConsent } },
+        customer: customerSummarySelection,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.customerEmailMarketingConsentUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.customerEmailMarketingConsentUpdate?.customer?.id ?? '')
+    printJson(result.customerEmailMarketingConsentUpdate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'sms-marketing-consent-update') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'sms-marketing-consent': { type: 'string' } } })
+    const customerId = requireId(args.id as any, 'Customer')
+    const smsMarketingConsent = parseJsonArg((args as any)['sms-marketing-consent'], '--sms-marketing-consent')
+
+    const result = await runMutation(ctx, {
+      customerSmsMarketingConsentUpdate: {
+        __args: { input: { customerId, smsMarketingConsent } },
+        customer: customerSummarySelection,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.customerSmsMarketingConsentUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.customerSmsMarketingConsentUpdate?.customer?.id ?? '')
+    printJson(result.customerSmsMarketingConsentUpdate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'add-tax-exemptions' || verb === 'remove-tax-exemptions' || verb === 'replace-tax-exemptions') {
+    const args = parseStandardArgs({ argv, extraOptions: { exemptions: { type: 'string' } } })
+    const customerId = requireId(args.id as any, 'Customer')
+    const taxExemptions = parseCsv((args as any).exemptions, '--exemptions')
+
+    const op =
+      verb === 'add-tax-exemptions'
+        ? 'customerAddTaxExemptions'
+        : verb === 'remove-tax-exemptions'
+          ? 'customerRemoveTaxExemptions'
+          : 'customerReplaceTaxExemptions'
+
+    const request: any = {
+      [op]: {
+        __args: { customerId, taxExemptions: taxExemptions as any },
+        customer: customerSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    }
+
+    const result = await runMutation(ctx, request)
+    if (result === undefined) return
+    const payload = result[op]
+    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(payload?.customer?.id ?? '')
+    printJson(payload, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'generate-account-activation-url') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const customerId = requireId(args.id as any, 'Customer')
+
+    const result = await runMutation(ctx, {
+      customerGenerateAccountActivationUrl: {
+        __args: { customerId },
+        accountActivationUrl: true,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.customerGenerateAccountActivationUrl,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    const url = result.customerGenerateAccountActivationUrl?.accountActivationUrl ?? ''
+    if (ctx.quiet) return console.log(url)
+    printJson(result.customerGenerateAccountActivationUrl, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'request-data-erasure' || verb === 'cancel-data-erasure') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const customerId = requireId(args.id as any, 'Customer')
+    const op = verb === 'request-data-erasure' ? 'customerRequestDataErasure' : 'customerCancelDataErasure'
+
+    const request: any = {
+      [op]: {
+        __args: { customerId },
+        customerId: true,
+        userErrors: { field: true, message: true, code: true },
+      },
+    }
+
+    const result = await runMutation(ctx, request)
+    if (result === undefined) return
+    const payload = result[op]
+    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(payload?.customerId ?? '')
+    printJson(payload, ctx.format !== 'raw')
     return
   }
 

@@ -30,6 +30,12 @@ const getCompanyContactSelection = (view: CommandContext['view']) => {
   return companyContactSummarySelection
 }
 
+const companyContactRoleSelection = {
+  id: true,
+  name: true,
+  note: true,
+} as const
+
 export const runCompanyContacts = async ({
   ctx,
   verb,
@@ -47,6 +53,7 @@ export const runCompanyContacts = async ({
         '',
         'Verbs:',
         '  create|get|update|delete|bulk-delete',
+        '  role-get',
         '  assign-role|assign-roles|revoke-role|revoke-roles',
         '  remove-from-company|send-welcome-email',
         '',
@@ -56,6 +63,15 @@ export const runCompanyContacts = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'role-get') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id, 'CompanyContactRole')
+    const result = await runQuery(ctx, { companyContactRole: { __args: { id }, ...companyContactRoleSelection } })
+    if (result === undefined) return
+    printNode({ node: result.companyContactRole, format: ctx.format, quiet: ctx.quiet })
     return
   }
 

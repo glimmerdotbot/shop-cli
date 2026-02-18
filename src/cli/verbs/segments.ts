@@ -7,6 +7,25 @@ import { maybeFailOnUserErrors } from '../userErrors'
 
 import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
 
+const segmentFilterSelection = {
+  __typename: true,
+  queryName: true,
+  localizedName: true,
+  multiValue: true,
+} as const
+
+const segmentValueSelection = {
+  __typename: true,
+  queryName: true,
+  localizedValue: true,
+} as const
+
+const segmentMigrationSelection = {
+  id: true,
+  savedSearchId: true,
+  segmentId: true,
+} as const
+
 const segmentSummarySelection = {
   id: true,
   name: true,
@@ -50,7 +69,8 @@ export const runSegments = async ({
         '  shop segments <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete',
+        '  create|get|list|count|update|delete',
+        '  filters|filter-suggestions|value-suggestions|migrations',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -58,6 +78,153 @@ export const runSegments = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'count') {
+    const args = parseStandardArgs({ argv, extraOptions: { limit: { type: 'string' } } })
+    const limitRaw = (args as any).limit as any
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const result = await runQuery(ctx, {
+      segmentsCount: {
+        __args: { ...(limit !== undefined ? { limit: Math.floor(limit) } : {}) },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.segmentsCount?.count ?? '')
+    printJson(result.segmentsCount, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'filters') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+
+    const result = await runQuery(ctx, {
+      segmentFilters: {
+        __args: { first, after },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: segmentFilterSelection,
+      },
+    })
+    if (result === undefined) return
+    printConnection({
+      connection: result.segmentFilters,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: { base: 'shop segments filters', first },
+    })
+    return
+  }
+
+  if (verb === 'filter-suggestions') {
+    const args = parseStandardArgs({ argv, extraOptions: { search: { type: 'string' } } })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const search = args.search as any
+    if (!search) throw new CliError('Missing --search', 2)
+
+    const result = await runQuery(ctx, {
+      segmentFilterSuggestions: {
+        __args: { first, after, search },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: segmentFilterSelection,
+      },
+    })
+    if (result === undefined) return
+    printConnection({
+      connection: result.segmentFilterSuggestions,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop segments filter-suggestions',
+        first,
+        extraFlags: [{ flag: '--search', value: search }],
+      },
+    })
+    return
+  }
+
+  if (verb === 'value-suggestions') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        search: { type: 'string' },
+        'filter-query-name': { type: 'string' },
+        'function-parameter-query-name': { type: 'string' },
+      },
+    })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const search = args.search as any
+    if (!search) throw new CliError('Missing --search', 2)
+
+    const filterQueryName = (args as any)['filter-query-name'] as any
+    const functionParameterQueryName = (args as any)['function-parameter-query-name'] as any
+
+    const result = await runQuery(ctx, {
+      segmentValueSuggestions: {
+        __args: {
+          first,
+          after,
+          search,
+          ...(filterQueryName ? { filterQueryName } : {}),
+          ...(functionParameterQueryName ? { functionParameterQueryName } : {}),
+        },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: segmentValueSelection,
+      },
+    })
+    if (result === undefined) return
+
+    const extraFlags: Array<{ flag: string; value?: string | number | boolean }> = [{ flag: '--search', value: search }]
+    if (filterQueryName) extraFlags.push({ flag: '--filter-query-name', value: filterQueryName })
+    if (functionParameterQueryName) extraFlags.push({ flag: '--function-parameter-query-name', value: functionParameterQueryName })
+
+    printConnection({
+      connection: result.segmentValueSuggestions,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: { base: 'shop segments value-suggestions', first, extraFlags },
+    })
+    return
+  }
+
+  if (verb === 'migrations') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'saved-search-id': { type: 'string' } } })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const savedSearchId = (args as any)['saved-search-id'] as any
+
+    const result = await runQuery(ctx, {
+      segmentMigrations: {
+        __args: { first, after, ...(savedSearchId ? { savedSearchId } : {}) },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: segmentMigrationSelection,
+      },
+    })
+    if (result === undefined) return
+
+    const extraFlags: Array<{ flag: string; value?: string | number | boolean }> = []
+    if (savedSearchId) extraFlags.push({ flag: '--saved-search-id', value: savedSearchId })
+
+    printConnection({
+      connection: result.segmentMigrations,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: { base: 'shop segments migrations', first, extraFlags },
+    })
     return
   }
 

@@ -6,10 +6,10 @@ Root field coverage (Query + Mutation) based on CLI --dry-run GraphQL payloads.
 
 - Query fields: 269
 - Mutation fields: 496
-- Used Query fields: 157
-- Used Mutation fields: 317
-- Missing Query fields: 112
-- Missing Mutation fields: 179
+- Used Query fields: 173
+- Used Mutation fields: 359
+- Missing Query fields: 96
+- Missing Mutation fields: 137
 
 ## Missing (grouped by prefix)
 
@@ -17,10 +17,8 @@ Root field coverage (Query + Mutation) based on CLI --dry-run GraphQL payloads.
 
 - `product` (11)
 - `app` (7)
-- `customer` (7)
 - `discount` (5)
 - `market` (4)
-- `segment` (4)
 - `automatic` (3)
 - `checkout` (3)
 - `collection` (3)
@@ -30,7 +28,6 @@ Root field coverage (Query + Mutation) based on CLI --dry-run GraphQL payloads.
 - `url` (3)
 - `article` (2)
 - `available` (2)
-- `consent` (2)
 - `finance` (2)
 - `inventory` (2)
 - `locations` (2)
@@ -45,7 +42,6 @@ Root field coverage (Query + Mutation) based on CLI --dry-run GraphQL payloads.
 - `channel` (1)
 - `channels` (1)
 - `code` (1)
-- `company` (1)
 - `current` (1)
 - `deletion` (1)
 - `delivery` (1)
@@ -61,12 +57,10 @@ Root field coverage (Query + Mutation) based on CLI --dry-run GraphQL payloads.
 - `pages` (1)
 - `pending` (1)
 - `primary` (1)
-- `privacy` (1)
 - `public` (1)
 - `publications` (1)
 - `published` (1)
 - `returnable` (1)
-- `segments` (1)
 - `shopifyql` (1)
 - `standard` (1)
 - `tender` (1)
@@ -76,8 +70,6 @@ Root field coverage (Query + Mutation) based on CLI --dry-run GraphQL payloads.
 ### Mutations
 
 - `product` (25)
-- `customer` (24)
-- `company` (9)
 - `market` (9)
 - `subscription` (9)
 - `order` (8)
@@ -89,7 +81,6 @@ Root field coverage (Query + Mutation) based on CLI --dry-run GraphQL payloads.
 - `price` (4)
 - `selling` (4)
 - `comment` (3)
-- `discount` (3)
 - `metafield` (3)
 - `payment` (3)
 - `pub` (3)
@@ -103,21 +94,16 @@ Root field coverage (Query + Mutation) based on CLI --dry-run GraphQL payloads.
 - `metaobject` (2)
 - `publishable` (2)
 - `quantity` (2)
-- `segment` (2)
 - `staged` (2)
 - `standard` (2)
 - `backup` (1)
 - `catalog` (1)
 - `checkout` (1)
 - `combined` (1)
-- `companies` (1)
-- `consent` (1)
-- `data` (1)
-- `draft` (1)
+- `discount` (1)
 - `file` (1)
 - `location` (1)
 - `metafields` (1)
-- `privacy` (1)
 - `return` (1)
 - `shop` (1)
 - `shopify` (1)

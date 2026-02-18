@@ -75,6 +75,43 @@ const guessBaseArgs = ({ resource, verb }: { resource: string; verb: string }): 
     return ['mutation { metafieldsSet(metafields: []) { userErrors { message } } }']
   }
 
+  if (resource === 'segments' && verb === 'create') {
+    return ['--input', JSON.stringify({ name: 'Test segment', query: "email_subscription_status = 'SUBSCRIBED'" })]
+  }
+  if (resource === 'segments' && verb === 'update') {
+    return ['--id', '1', '--input', JSON.stringify({ name: 'Updated segment' })]
+  }
+
+  if (resource === 'companies' && verb === 'bulk-delete') {
+    return ['--ids', '1,2', '--yes']
+  }
+  if (resource === 'companies' && verb === 'assign-main-contact') {
+    return ['--id', '1', '--contact-id', '1']
+  }
+  if (resource === 'companies' && verb === 'assign-customer') {
+    return ['--id', '1', '--customer-id', '1']
+  }
+
+  if (resource === 'company-contacts' && verb === 'create') {
+    return ['--company-id', '1', '--input', '{}']
+  }
+  if (resource === 'company-contacts' && verb === 'assign-role') {
+    return ['--id', '1', '--role-id', '1', '--location-id', '1']
+  }
+  if (resource === 'company-contacts' && verb === 'revoke-role') {
+    return ['--id', '1', '--role-assignment-id', '1']
+  }
+  if (resource === 'company-contacts' && verb === 'bulk-delete') {
+    return ['--ids', '1,2', '--yes']
+  }
+
+  if (resource === 'company-locations' && verb === 'create') {
+    return ['--company-id', '1', '--input', '{}']
+  }
+  if (resource === 'company-locations' && verb === 'bulk-delete') {
+    return ['--ids', '1,2', '--yes']
+  }
+
   if (resource === 'files' && verb === 'upload') {
     return ['--file', 'src/test/fixtures/sample.txt']
   }
@@ -112,6 +149,11 @@ const applyErrorFixes = ({
   const msg = err.message
 
   if (msg.includes('Refusing to delete without --yes')) {
+    addBoolFlag(argv, '--yes')
+    return { updated: true }
+  }
+
+  if (msg.includes('Refusing to bulk-delete without --yes')) {
     addBoolFlag(argv, '--yes')
     return { updated: true }
   }

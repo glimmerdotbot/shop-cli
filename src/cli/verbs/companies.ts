@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { buildListNextPageArgs, parseFirst, parseIds, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseIds, requireGidFlag, requireId } from './_shared'
 
 const companySummarySelection = {
   id: true,
@@ -69,6 +69,7 @@ export const runCompanies = async ({
         '',
         'Verbs:',
         '  create|get|list|count|update|delete|bulk-delete',
+        '  address-delete',
         '  assign-main-contact|revoke-main-contact|assign-customer',
         '',
         'Common output flags:',
@@ -77,6 +78,25 @@ export const runCompanies = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'address-delete') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'address-id': { type: 'string' } } })
+    const addressId = requireGidFlag((args as any)['address-id'], '--address-id', 'CompanyAddress')
+    if (!args.yes) throw new CliError('Refusing to delete without --yes', 2)
+
+    const result = await runMutation(ctx, {
+      companyAddressDelete: {
+        __args: { addressId },
+        deletedAddressId: true,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.companyAddressDelete, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.companyAddressDelete?.deletedAddressId ?? '')
+    printJson(result.companyAddressDelete, ctx.format !== 'raw')
     return
   }
 

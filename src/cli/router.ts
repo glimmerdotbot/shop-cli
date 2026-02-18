@@ -21,6 +21,9 @@ import { runComments } from './verbs/comments'
 import { runCompanies } from './verbs/companies'
 import { runCompanyContacts } from './verbs/company-contacts'
 import { runCompanyLocations } from './verbs/company-locations'
+import { runCustomerPaymentMethods } from './verbs/customer-payment-methods'
+import { runCustomerPrivacy } from './verbs/customer-privacy'
+import { runCustomerSegments } from './verbs/customer-segments'
 import { runCustomers } from './verbs/customers'
 import { runDelegateTokens } from './verbs/delegate-tokens'
 import { runDeliveryCustomizations } from './verbs/delivery-customizations'
@@ -234,6 +237,9 @@ export const runCommand = async ({
   if (resource === 'companies') return runCompanies({ ctx, verb, argv })
   if (resource === 'company-contacts') return runCompanyContacts({ ctx, verb, argv })
   if (resource === 'company-locations') return runCompanyLocations({ ctx, verb, argv })
+  if (resource === 'customer-privacy') return runCustomerPrivacy({ ctx, verb, argv })
+  if (resource === 'customer-payment-methods') return runCustomerPaymentMethods({ ctx, verb, argv })
+  if (resource === 'customer-segments') return runCustomerSegments({ ctx, verb, argv })
   if (resource === 'store-credit') return runStoreCredit({ ctx, verb, argv })
   if (resource === 'delegate-tokens') return runDelegateTokens({ ctx, verb, argv })
   if (resource === 'themes') return runThemes({ ctx, verb, argv })

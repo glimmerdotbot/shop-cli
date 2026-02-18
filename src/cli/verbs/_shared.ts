@@ -26,6 +26,16 @@ export const requireId = (id: unknown, type: ShopifyGidType) => {
   return coerceGid(id, type)
 }
 
+export const requireGidFlag = (value: unknown, flag: string, type: ShopifyGidType) => {
+  if (typeof value !== 'string' || !value) throw new CliError(`Missing ${flag}`, 2)
+  return coerceGid(value, type)
+}
+
+export const requireStringFlag = (value: unknown, flag: string) => {
+  if (typeof value !== 'string' || !value) throw new CliError(`Missing ${flag}`, 2)
+  return value
+}
+
 export const requireLocationId = (value: unknown, flag = '--location-id') => {
   if (typeof value !== 'string' || !value) throw new CliError(`Missing ${flag}`, 2)
   return coerceGid(value, 'Location')

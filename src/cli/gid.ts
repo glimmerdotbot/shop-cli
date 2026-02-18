@@ -8,6 +8,8 @@ export type ShopifyGidType =
   | 'ProductVariant'
   | 'Collection'
   | 'Customer'
+  | 'CustomerPaymentMethod'
+  | 'CustomerSegmentMembersQuery'
   | 'StaffMember'
   | 'Order'
   | 'OrderTransaction'
@@ -57,6 +59,7 @@ export type ShopifyGidType =
   | 'Market'
   | 'BusinessEntity'
   | 'Company'
+  | 'CompanyAddress'
   | 'CompanyContact'
   | 'CompanyContactRole'
   | 'CompanyContactRoleAssignment'
@@ -82,6 +85,7 @@ export type ShopifyGidType =
   | 'MetafieldDefinition'
   | 'Metaobject'
   | 'MetaobjectDefinition'
+  | 'Shop'
   | 'SellingPlanGroup'
   | 'ShippingPackage'
   | 'ShopifyPaymentsDispute'
@@ -96,6 +100,7 @@ export type ShopifyGidType =
   | 'PointOfSaleDevice'
   | 'CustomerAccountPage'
   | 'FlowActionDefinition'
+  | 'MailingAddress'
 
 export const isGid = (value: string) => value.startsWith('gid://')
 

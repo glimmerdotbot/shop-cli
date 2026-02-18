@@ -31,6 +31,39 @@ const flagCustomerId = flag('--customer-id <gid>', 'Customer ID')
 const flagCompanyId = flag('--company-id <gid>', 'Company ID')
 const flagContactId = flag('--contact-id <gid>', 'Company contact ID')
 const flagLocationId = flag('--location-id <gid>', 'Location ID')
+const flagAddressId = flag('--address-id <gid>', 'Address ID')
+const flagJobId = flag('--job-id <id>', 'Job ID')
+const flagEmailAddress = flag('--email-address <string>', 'Email address')
+const flagPhoneNumber = flag('--phone-number <string>', 'Phone number')
+const flagIdentifierId = flag('--identifier-id <gid>', 'Customer ID identifier')
+const flagCustomId = flag('--custom-id <json>', 'Customer custom ID (UniqueMetafieldValueInput JSON)')
+const flagIdentifier = flag('--identifier <json>', 'Customer set identifier (CustomerSetIdentifiers JSON)')
+const flagSetAsDefault = flag('--set-as-default <bool>', 'Set as default')
+const flagEmailMarketingConsent = flag('--email-marketing-consent <json>', 'Email marketing consent JSON')
+const flagSmsMarketingConsent = flag('--sms-marketing-consent <json>', 'SMS marketing consent JSON')
+const flagSearch = flag('--search <string>', 'Search term')
+const flagFilterQueryName = flag('--filter-query-name <string>', 'Filter query name')
+const flagFunctionParameterQueryName = flag('--function-parameter-query-name <string>', 'Function parameter query name')
+const flagSegmentId = flag('--segment-id <gid>', 'Segment ID')
+const flagSegmentIds = flag('--segment-ids <gid>', 'Segment IDs (repeatable or comma-separated)')
+const flagQueryId = flag('--query-id <gid>', 'Segment members query ID')
+const flagTimezone = flag('--timezone <string>', 'Timezone (IANA, e.g. America/New_York)')
+
+const flagShowRevoked = flag('--show-revoked', 'Include revoked payment methods')
+const flagBillingAddress = flag('--billing-address <json>', 'Billing address JSON')
+const flagSessionId = flag('--session-id <string>', 'Card session ID')
+const flagRemoteReference = flag('--remote-reference <json>', 'Remote reference JSON')
+const flagBillingAgreementId = flag('--billing-agreement-id <string>', 'PayPal billing agreement ID (B-...)')
+const flagInactive = flag('--inactive <bool>', 'Inactive flag')
+const flagTargetCustomerId = flag('--target-customer-id <gid>', 'Target customer ID')
+const flagTargetShopId = flag('--target-shop-id <gid>', 'Target shop ID')
+const flagEncryptedDuplicationData = flag('--encrypted-duplication-data <string>', 'Encrypted duplication data')
+
+const flagFeatures = flag('--features <csv>', 'Privacy features (comma-separated)')
+const flagCountryCode = flag('--country-code <code>', 'Country code (ISO 3166)')
+const flagRegionCode = flag('--region-code <code>', 'Region code')
+const flagConsentRequired = flag('--consent-required <bool>', 'Consent required')
+const flagDataSaleOptOutRequired = flag('--data-sale-opt-out-required <bool>', 'Data sale opt-out required')
 const flagFromLocationId = flag('--from-location-id <gid>', 'From location ID')
 const flagToLocationId = flag('--to-location-id <gid>', 'To location ID')
 const flagInventoryItemId = flag('--inventory-item-id <gid>', 'Inventory item ID')
@@ -663,14 +696,104 @@ const baseCommandRegistry: ResourceSpec[] = [
     verbs: [
       createVerb({ operation: 'customerCreate', description: 'Create a customer.' }),
       getVerb({ operation: 'customer', description: 'Fetch a customer by ID.' }),
+      {
+        verb: 'by-identifier',
+        description: 'Fetch a customer by identifier.',
+        operation: { type: 'query', name: 'customerByIdentifier' },
+        flags: [flagEmailAddress, flagPhoneNumber, flagIdentifierId, flagCustomId],
+        notes: ['Pass exactly one of --email-address, --phone-number, --identifier-id, --custom-id.'],
+        output: { view: true, selection: true },
+      },
       listVerb({ operation: 'customers', description: 'List customers.' }),
       countVerb({
         operation: 'customersCount',
         description: 'Count customers.',
         flags: [flagQuery, flagLimit],
       }),
+      {
+        verb: 'set',
+        description: 'Create or update a customer (upsert).',
+        operation: { type: 'mutation', name: 'customerSet' },
+        requiredFlags: [],
+        flags: [...inputFlags, flagIdentifier],
+        notes: ['Input is CustomerSetInput JSON. Optionally pass --identifier (CustomerSetIdentifiers JSON).'],
+      },
       updateVerb({ operation: 'customerUpdate', description: 'Update a customer.' }),
       deleteVerb({ operation: 'customerDelete', description: 'Delete a customer.' }),
+      {
+        verb: 'address-create',
+        description: 'Create a customer address.',
+        operation: { type: 'mutation', name: 'customerAddressCreate' },
+        requiredFlags: [flagId, flagAddress],
+        flags: [flagSetAsDefault],
+      },
+      {
+        verb: 'address-update',
+        description: 'Update a customer address.',
+        operation: { type: 'mutation', name: 'customerAddressUpdate' },
+        requiredFlags: [flagId, flagAddressId, flagAddress],
+        flags: [flagSetAsDefault],
+      },
+      {
+        verb: 'address-delete',
+        description: 'Delete a customer address.',
+        operation: { type: 'mutation', name: 'customerAddressDelete' },
+        requiredFlags: [flagId, flagAddressId],
+      },
+      {
+        verb: 'update-default-address',
+        description: 'Update a customer’s default address.',
+        operation: { type: 'mutation', name: 'customerUpdateDefaultAddress' },
+        requiredFlags: [flagId, flagAddressId],
+      },
+      {
+        verb: 'email-marketing-consent-update',
+        description: 'Update a customer’s email marketing consent.',
+        operation: { type: 'mutation', name: 'customerEmailMarketingConsentUpdate' },
+        requiredFlags: [flagId, flagEmailMarketingConsent],
+      },
+      {
+        verb: 'sms-marketing-consent-update',
+        description: 'Update a customer’s SMS marketing consent.',
+        operation: { type: 'mutation', name: 'customerSmsMarketingConsentUpdate' },
+        requiredFlags: [flagId, flagSmsMarketingConsent],
+      },
+      {
+        verb: 'add-tax-exemptions',
+        description: 'Add tax exemptions to a customer.',
+        operation: { type: 'mutation', name: 'customerAddTaxExemptions' },
+        requiredFlags: [flagId, flagExemptions],
+      },
+      {
+        verb: 'remove-tax-exemptions',
+        description: 'Remove tax exemptions from a customer.',
+        operation: { type: 'mutation', name: 'customerRemoveTaxExemptions' },
+        requiredFlags: [flagId, flagExemptions],
+      },
+      {
+        verb: 'replace-tax-exemptions',
+        description: 'Replace tax exemptions on a customer.',
+        operation: { type: 'mutation', name: 'customerReplaceTaxExemptions' },
+        requiredFlags: [flagId, flagExemptions],
+      },
+      {
+        verb: 'generate-account-activation-url',
+        description: 'Generate a one-time account activation URL (legacy accounts).',
+        operation: { type: 'mutation', name: 'customerGenerateAccountActivationUrl' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'request-data-erasure',
+        description: 'Request erasure of a customer’s data.',
+        operation: { type: 'mutation', name: 'customerRequestDataErasure' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'cancel-data-erasure',
+        description: 'Cancel a pending customer data erasure request.',
+        operation: { type: 'mutation', name: 'customerCancelDataErasure' },
+        requiredFlags: [flagId],
+      },
       {
         verb: 'metafields upsert',
         description: 'Upsert customer metafields.',
@@ -699,11 +822,171 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flag('--override-fields <json>', 'Override fields JSON (optional)')],
       },
       {
+        verb: 'merge-preview',
+        description: 'Preview a customer merge request.',
+        operation: { type: 'query', name: 'customerMergePreview' },
+        requiredFlags: [flagId, flag('--other-id <gid>', 'Other customer ID to merge into --id')],
+        flags: [flag('--override-fields <json>', 'Override fields JSON (optional)')],
+      },
+      {
+        verb: 'merge-job-status',
+        description: 'Fetch customer merge job status.',
+        operation: { type: 'query', name: 'customerMergeJobStatus' },
+        requiredFlags: [flagJobId],
+      },
+      {
         verb: 'send-invite',
         description: 'Send a customer account invite email.',
         operation: { type: 'mutation', name: 'customerSendAccountInviteEmail' },
         requiredFlags: [flagId],
         flags: [flag('--email <json>', 'Email input JSON (optional)')],
+      },
+    ],
+  },
+  {
+    resource: 'customer-privacy',
+    description: 'Manage customer privacy and consent policies.',
+    verbs: [
+      {
+        verb: 'privacy-settings',
+        description: 'Fetch shop privacy settings.',
+        operation: { type: 'query', name: 'privacySettings' },
+      },
+      {
+        verb: 'privacy-features-disable',
+        description: 'Disable shop privacy features.',
+        operation: { type: 'mutation', name: 'privacyFeaturesDisable' },
+        requiredFlags: [flagFeatures],
+      },
+      {
+        verb: 'consent-policy',
+        description: 'Fetch customer consent policies.',
+        operation: { type: 'query', name: 'consentPolicy' },
+        flags: [flagId, flagCountryCode, flagRegionCode, flagConsentRequired, flagDataSaleOptOutRequired],
+      },
+      {
+        verb: 'consent-policy-regions',
+        description: 'List available consent policy regions.',
+        operation: { type: 'query', name: 'consentPolicyRegions' },
+      },
+      {
+        verb: 'consent-policy-update',
+        description: 'Update or create consent policies in bulk.',
+        operation: { type: 'mutation', name: 'consentPolicyUpdate' },
+        flags: [...inputFlags],
+      },
+      {
+        verb: 'data-sale-opt-out',
+        description: 'Opt out a customer from data sale.',
+        operation: { type: 'mutation', name: 'dataSaleOptOut' },
+        requiredFlags: [flagEmailAddress],
+      },
+    ],
+  },
+  {
+    resource: 'customer-payment-methods',
+    description: 'Manage vaulted customer payment methods.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Fetch a customer payment method by ID.',
+        operation: { type: 'query', name: 'customerPaymentMethod' },
+        requiredFlags: [flagId],
+        flags: [flagShowRevoked],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'credit-card-create',
+        description: 'Create a credit card payment method for a customer.',
+        operation: { type: 'mutation', name: 'customerPaymentMethodCreditCardCreate' },
+        requiredFlags: [flagCustomerId, flagBillingAddress, flagSessionId],
+      },
+      {
+        verb: 'credit-card-update',
+        description: 'Update a credit card payment method.',
+        operation: { type: 'mutation', name: 'customerPaymentMethodCreditCardUpdate' },
+        requiredFlags: [flagId, flagBillingAddress, flagSessionId],
+      },
+      {
+        verb: 'paypal-billing-agreement-create',
+        description: 'Create a PayPal billing agreement payment method.',
+        operation: { type: 'mutation', name: 'customerPaymentMethodPaypalBillingAgreementCreate' },
+        requiredFlags: [flagCustomerId, flagBillingAgreementId],
+        flags: [flagBillingAddress, flagInactive],
+      },
+      {
+        verb: 'paypal-billing-agreement-update',
+        description: 'Update a PayPal billing agreement payment method.',
+        operation: { type: 'mutation', name: 'customerPaymentMethodPaypalBillingAgreementUpdate' },
+        requiredFlags: [flagId, flagBillingAddress],
+      },
+      {
+        verb: 'remote-create',
+        description: 'Import a remote payment method (Stripe, Authorize.Net, etc.).',
+        operation: { type: 'mutation', name: 'customerPaymentMethodRemoteCreate' },
+        requiredFlags: [flagCustomerId, flagRemoteReference],
+      },
+      {
+        verb: 'revoke',
+        description: 'Revoke a customer payment method.',
+        operation: { type: 'mutation', name: 'customerPaymentMethodRevoke' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'send-update-email',
+        description: 'Send an update email link for a payment method.',
+        operation: { type: 'mutation', name: 'customerPaymentMethodSendUpdateEmail' },
+        requiredFlags: [flagId],
+        flags: [flag('--email <json>', 'Email input JSON (optional; only from/bcc are accepted)')],
+      },
+      {
+        verb: 'duplication-data-get',
+        description: 'Get encrypted duplication data for a payment method.',
+        operation: { type: 'mutation', name: 'customerPaymentMethodGetDuplicationData' },
+        requiredFlags: [flagId, flagTargetCustomerId, flagTargetShopId],
+      },
+      {
+        verb: 'duplication-create',
+        description: 'Create a payment method from duplication data.',
+        operation: { type: 'mutation', name: 'customerPaymentMethodCreateFromDuplicationData' },
+        requiredFlags: [flagCustomerId, flagBillingAddress, flagEncryptedDuplicationData],
+      },
+      {
+        verb: 'update-url-get',
+        description: 'Get a customer-facing URL to update a payment method.',
+        operation: { type: 'mutation', name: 'customerPaymentMethodGetUpdateUrl' },
+        requiredFlags: [flagId],
+      },
+    ],
+  },
+  {
+    resource: 'customer-segments',
+    description: 'Query customer segment members and membership.',
+    verbs: [
+      {
+        verb: 'members',
+        description: 'List members of a segment or segment query.',
+        operation: { type: 'query', name: 'customerSegmentMembers' },
+        flags: [flagSegmentId, flagQueryId, flagTimezone],
+        output: { view: true, selection: true, pagination: true },
+      },
+      {
+        verb: 'members-query',
+        description: 'Fetch a customer segment members query by ID.',
+        operation: { type: 'query', name: 'customerSegmentMembersQuery' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'membership',
+        description: 'Check whether a customer is a member of segments.',
+        operation: { type: 'query', name: 'customerSegmentMembership' },
+        requiredFlags: [flagCustomerId, flagSegmentIds],
+      },
+      {
+        verb: 'members-query-create',
+        description: 'Create a customer segment members query.',
+        operation: { type: 'mutation', name: 'customerSegmentMembersQueryCreate' },
+        flags: [...inputFlags],
       },
     ],
   },
@@ -1569,6 +1852,35 @@ const baseCommandRegistry: ResourceSpec[] = [
       createVerb({ operation: 'segmentCreate', description: 'Create a segment.' }),
       getVerb({ operation: 'segment', description: 'Fetch a segment by ID.' }),
       listVerb({ operation: 'segments', description: 'List segments.' }),
+      countVerb({ operation: 'segmentsCount', description: 'Count segments.', flags: [flagLimit] }),
+      {
+        verb: 'filters',
+        description: 'List available segment filters.',
+        operation: { type: 'query', name: 'segmentFilters' },
+        output: { pagination: true },
+      },
+      {
+        verb: 'filter-suggestions',
+        description: 'List segment filter suggestions for a search term.',
+        operation: { type: 'query', name: 'segmentFilterSuggestions' },
+        requiredFlags: [flagSearch],
+        output: { pagination: true },
+      },
+      {
+        verb: 'value-suggestions',
+        description: 'List segment value suggestions for a search term.',
+        operation: { type: 'query', name: 'segmentValueSuggestions' },
+        requiredFlags: [flagSearch],
+        flags: [flagFilterQueryName, flagFunctionParameterQueryName],
+        output: { pagination: true },
+      },
+      {
+        verb: 'migrations',
+        description: 'List segment migrations.',
+        operation: { type: 'query', name: 'segmentMigrations' },
+        flags: [flagSavedSearchId],
+        output: { pagination: true },
+      },
       updateVerb({ operation: 'segmentUpdate', description: 'Update a segment.' }),
       deleteVerb({ operation: 'segmentDelete', description: 'Delete a segment.' }),
     ],
@@ -2013,6 +2325,12 @@ const baseCommandRegistry: ResourceSpec[] = [
       updateVerb({ operation: 'companyUpdate', description: 'Update a company.' }),
       deleteVerb({ operation: 'companyDelete', description: 'Delete a company.' }),
       {
+        verb: 'address-delete',
+        description: 'Delete a company address.',
+        operation: { type: 'mutation', name: 'companyAddressDelete' },
+        requiredFlags: [flagAddressId, flagYes],
+      },
+      {
         verb: 'bulk-delete',
         description: 'Bulk delete companies.',
         operation: { type: 'mutation', name: 'companiesDelete' },
@@ -2043,6 +2361,12 @@ const baseCommandRegistry: ResourceSpec[] = [
     description: 'Manage company contacts.',
     verbs: [
       getVerb({ operation: 'companyContact', description: 'Fetch a company contact by ID.' }),
+      {
+        verb: 'role-get',
+        description: 'Fetch a company contact role by ID.',
+        operation: { type: 'query', name: 'companyContactRole' },
+        requiredFlags: [flagId],
+      },
       inputVerb({
         verb: 'create',
         description: 'Create a company contact.',

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-18T10:45:26.592Z",
+  "generatedAt": "2026-02-18T18:51:46.558Z",
   "schemaVersion": "2026-04",
   "entries": [
     {
@@ -572,30 +572,43 @@
     },
     {
       "resource": "companies",
+      "verb": "address-delete",
+      "argv": [
+        "--id",
+        "1",
+        "--address-id",
+        "1",
+        "--yes"
+      ]
+    },
+    {
+      "resource": "companies",
       "verb": "assign-customer",
       "argv": [
         "--id",
+        "1",
+        "--customer-id",
         "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+      ]
     },
     {
       "resource": "companies",
       "verb": "assign-main-contact",
       "argv": [
         "--id",
+        "1",
+        "--contact-id",
         "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+      ]
     },
     {
       "resource": "companies",
       "verb": "bulk-delete",
       "argv": [
-        "--id",
-        "1"
-      ],
-      "skipReason": "Refusing to bulk-delete without --yes"
+        "--ids",
+        "1,2",
+        "--yes"
+      ]
     },
     {
       "resource": "companies",
@@ -655,9 +668,12 @@
       "verb": "assign-role",
       "argv": [
         "--id",
+        "1",
+        "--role-id",
+        "1",
+        "--location-id",
         "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+      ]
     },
     {
       "resource": "company-contacts",
@@ -673,21 +689,20 @@
       "resource": "company-contacts",
       "verb": "bulk-delete",
       "argv": [
-        "--id",
-        "1"
-      ],
-      "skipReason": "Refusing to bulk-delete without --yes"
+        "--ids",
+        "1,2",
+        "--yes"
+      ]
     },
     {
       "resource": "company-contacts",
       "verb": "create",
       "argv": [
+        "--company-id",
+        "1",
         "--input",
-        "{}",
-        "--id",
-        "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+        "{}"
+      ]
     },
     {
       "resource": "company-contacts",
@@ -719,9 +734,10 @@
       "verb": "revoke-role",
       "argv": [
         "--id",
+        "1",
+        "--role-assignment-id",
         "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+      ]
     },
     {
       "resource": "company-contacts",
@@ -731,6 +747,14 @@
         "1",
         "--role-assignment-ids",
         "1,2"
+      ]
+    },
+    {
+      "resource": "company-contacts",
+      "verb": "role-get",
+      "argv": [
+        "--id",
+        "1"
       ]
     },
     {
@@ -797,21 +821,20 @@
       "resource": "company-locations",
       "verb": "bulk-delete",
       "argv": [
-        "--id",
-        "1"
-      ],
-      "skipReason": "Refusing to bulk-delete without --yes"
+        "--ids",
+        "1,2",
+        "--yes"
+      ]
     },
     {
       "resource": "company-locations",
       "verb": "create",
       "argv": [
+        "--company-id",
+        "1",
         "--input",
-        "{}",
-        "--id",
-        "1"
-      ],
-      "skipReason": "exceeded retry budget while auto-generating args"
+        "{}"
+      ]
     },
     {
       "resource": "company-locations",
@@ -975,6 +998,216 @@
       "argv": []
     },
     {
+      "resource": "customer-payment-methods",
+      "verb": "credit-card-create",
+      "argv": [
+        "--id",
+        "1",
+        "--customer-id",
+        "1",
+        "--billing-address",
+        "{}",
+        "--session-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-payment-methods",
+      "verb": "credit-card-update",
+      "argv": [
+        "--id",
+        "1",
+        "--billing-address",
+        "{}",
+        "--session-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-payment-methods",
+      "verb": "duplication-create",
+      "argv": [
+        "--id",
+        "1",
+        "--customer-id",
+        "1",
+        "--billing-address",
+        "{}",
+        "--encrypted-duplication-data",
+        "test"
+      ]
+    },
+    {
+      "resource": "customer-payment-methods",
+      "verb": "duplication-data-get",
+      "argv": [
+        "--id",
+        "1",
+        "--target-customer-id",
+        "1",
+        "--target-shop-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-payment-methods",
+      "verb": "get",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-payment-methods",
+      "verb": "paypal-billing-agreement-create",
+      "argv": [
+        "--id",
+        "1",
+        "--customer-id",
+        "1",
+        "--billing-agreement-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-payment-methods",
+      "verb": "paypal-billing-agreement-update",
+      "argv": [
+        "--id",
+        "1",
+        "--billing-address",
+        "{}"
+      ]
+    },
+    {
+      "resource": "customer-payment-methods",
+      "verb": "remote-create",
+      "argv": [
+        "--id",
+        "1",
+        "--customer-id",
+        "1",
+        "--remote-reference",
+        "{}"
+      ]
+    },
+    {
+      "resource": "customer-payment-methods",
+      "verb": "revoke",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-payment-methods",
+      "verb": "send-update-email",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-payment-methods",
+      "verb": "update-url-get",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-privacy",
+      "verb": "consent-policy",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-privacy",
+      "verb": "consent-policy-regions",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-privacy",
+      "verb": "consent-policy-update",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}"
+      ]
+    },
+    {
+      "resource": "customer-privacy",
+      "verb": "data-sale-opt-out",
+      "argv": [
+        "--id",
+        "1",
+        "--email-address",
+        "test"
+      ]
+    },
+    {
+      "resource": "customer-privacy",
+      "verb": "privacy-features-disable",
+      "argv": [
+        "--id",
+        "1",
+        "--features",
+        "test"
+      ]
+    },
+    {
+      "resource": "customer-privacy",
+      "verb": "privacy-settings",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-segments",
+      "verb": "members",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-segments",
+      "verb": "members-query",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customer-segments",
+      "verb": "members-query-create",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}"
+      ]
+    },
+    {
+      "resource": "customer-segments",
+      "verb": "membership",
+      "argv": [
+        "--id",
+        "1",
+        "--customer-id",
+        "1",
+        "--segment-ids",
+        "1,2"
+      ]
+    },
+    {
       "resource": "customers",
       "verb": "add-tags",
       "argv": [
@@ -982,6 +1215,66 @@
         "1",
         "--tags",
         "tag1,tag2"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "add-tax-exemptions",
+      "argv": [
+        "--id",
+        "1",
+        "--exemptions",
+        "test"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "address-create",
+      "argv": [
+        "--id",
+        "1",
+        "--address",
+        "{}"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "address-delete",
+      "argv": [
+        "--id",
+        "1",
+        "--address-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "address-update",
+      "argv": [
+        "--id",
+        "1",
+        "--address-id",
+        "1",
+        "--address",
+        "{}"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "by-identifier",
+      "argv": [
+        "--id",
+        "1",
+        "--email-address",
+        "test"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "cancel-data-erasure",
+      "argv": [
+        "--id",
+        "1"
       ]
     },
     {
@@ -1008,6 +1301,24 @@
     },
     {
       "resource": "customers",
+      "verb": "email-marketing-consent-update",
+      "argv": [
+        "--id",
+        "1",
+        "--email-marketing-consent",
+        "{}"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "generate-account-activation-url",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customers",
       "verb": "get",
       "argv": [
         "--id",
@@ -1022,6 +1333,26 @@
     {
       "resource": "customers",
       "verb": "merge",
+      "argv": [
+        "--id",
+        "1",
+        "--other-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "merge-job-status",
+      "argv": [
+        "--id",
+        "1",
+        "--job-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "merge-preview",
       "argv": [
         "--id",
         "1",
@@ -1052,10 +1383,58 @@
     },
     {
       "resource": "customers",
+      "verb": "remove-tax-exemptions",
+      "argv": [
+        "--id",
+        "1",
+        "--exemptions",
+        "test"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "replace-tax-exemptions",
+      "argv": [
+        "--id",
+        "1",
+        "--exemptions",
+        "test"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "request-data-erasure",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "customers",
       "verb": "send-invite",
       "argv": [
         "--id",
         "1"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "set",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "sms-marketing-consent-update",
+      "argv": [
+        "--id",
+        "1",
+        "--sms-marketing-consent",
+        "{}"
       ]
     },
     {
@@ -1066,6 +1445,16 @@
         "1",
         "--input",
         "{}"
+      ]
+    },
+    {
+      "resource": "customers",
+      "verb": "update-default-address",
+      "argv": [
+        "--id",
+        "1",
+        "--address-id",
+        "1"
       ]
     },
     {
@@ -1240,9 +1629,11 @@
       "verb": "bulk-delete",
       "argv": [
         "--id",
-        "1"
-      ],
-      "skipReason": "Refusing to bulk-delete without --yes"
+        "1",
+        "--yes",
+        "--ids",
+        "1,2"
+      ]
     },
     {
       "resource": "discounts-automatic",
@@ -1397,9 +1788,11 @@
       "verb": "bulk-delete",
       "argv": [
         "--id",
-        "1"
-      ],
-      "skipReason": "Refusing to bulk-delete without --yes"
+        "1",
+        "--yes",
+        "--ids",
+        "1,2"
+      ]
     },
     {
       "resource": "discounts-code",
@@ -1583,9 +1976,11 @@
       "verb": "bulk-delete",
       "argv": [
         "--id",
-        "1"
-      ],
-      "skipReason": "Refusing to bulk-delete without --yes"
+        "1",
+        "--yes",
+        "--ids",
+        "1,2"
+      ]
     },
     {
       "resource": "draft-orders",
@@ -4110,12 +4505,16 @@
     },
     {
       "resource": "segments",
+      "verb": "count",
+      "argv": []
+    },
+    {
+      "resource": "segments",
       "verb": "create",
       "argv": [
         "--input",
-        "{}"
-      ],
-      "skipReason": "Missing name in --input/--set"
+        "{\"name\":\"Test segment\",\"query\":\"email_subscription_status = 'SUBSCRIBED'\"}"
+      ]
     },
     {
       "resource": "segments",
@@ -4124,6 +4523,24 @@
         "--id",
         "1",
         "--yes"
+      ]
+    },
+    {
+      "resource": "segments",
+      "verb": "filter-suggestions",
+      "argv": [
+        "--id",
+        "1",
+        "--search",
+        "test"
+      ]
+    },
+    {
+      "resource": "segments",
+      "verb": "filters",
+      "argv": [
+        "--id",
+        "1"
       ]
     },
     {
@@ -4141,14 +4558,31 @@
     },
     {
       "resource": "segments",
+      "verb": "migrations",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "segments",
       "verb": "update",
       "argv": [
         "--id",
         "1",
         "--input",
-        "{}"
-      ],
-      "skipReason": "Nothing to update (expected name and/or query)"
+        "{\"name\":\"Updated segment\"}"
+      ]
+    },
+    {
+      "resource": "segments",
+      "verb": "value-suggestions",
+      "argv": [
+        "--id",
+        "1",
+        "--search",
+        "test"
+      ]
     },
     {
       "resource": "selling-plan-groups",
