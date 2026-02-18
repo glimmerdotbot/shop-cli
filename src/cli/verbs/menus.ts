@@ -1,0 +1,154 @@
+import { CliError } from '../errors'
+import { coerceGid } from '../gid'
+import { buildInput } from '../input'
+import { printConnection, printJson } from '../output'
+import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { maybeFailOnUserErrors } from '../userErrors'
+
+import { applySelect, parseFirst, requireId } from './_shared'
+
+const menuSummarySelection = {
+  id: true,
+  title: true,
+  handle: true,
+  isDefault: true,
+} as const
+
+const menuFullSelection = {
+  ...menuSummarySelection,
+} as const
+
+const getMenuSelection = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'full') return menuFullSelection
+  return menuSummarySelection
+}
+
+const requireMenuArgs = (value: any, required: Array<'title' | 'handle' | 'items'>) => {
+  if (value === null || typeof value !== 'object') throw new CliError('Menu input must be an object', 2)
+  for (const key of required) {
+    if (value[key] === undefined) throw new CliError(`Missing ${key} in --input/--set`, 2)
+  }
+  return value
+}
+
+export const runMenus = async ({
+  ctx,
+  verb,
+  argv,
+}: {
+  ctx: CommandContext
+  verb: string
+  argv: string[]
+}) => {
+  if (verb === 'get') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id, 'Menu')
+    const selection = applySelect(getMenuSelection(ctx.view), args.select)
+
+    const result = await runQuery(ctx, { menu: { __args: { id }, ...selection } })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.menu?.id ?? '')
+    printJson(result.menu)
+    return
+  }
+
+  if (verb === 'list') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const query = args.query as any
+    const reverse = args.reverse as any
+    const sortKey = args.sort as any
+
+    const nodeSelection = applySelect(getMenuSelection(ctx.view), args.select)
+    const result = await runQuery(ctx, {
+      menus: {
+        __args: { first, after, query, reverse, sortKey },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: nodeSelection,
+      },
+    })
+    if (result === undefined) return
+    printConnection({ connection: result.menus, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'create') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
+    const input = requireMenuArgs(built.input, ['title', 'handle', 'items'])
+
+    const result = await runMutation(ctx, {
+      menuCreate: {
+        __args: { title: input.title, handle: input.handle, items: input.items },
+        menu: menuSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.menuCreate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.menuCreate?.menu?.id ?? '')
+    printJson(result.menuCreate)
+    return
+  }
+
+  if (verb === 'update') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id, 'Menu')
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
+    const input = requireMenuArgs(built.input, ['title', 'items'])
+
+    const mutationArgs = {
+      id: coerceGid(id, 'Menu'),
+      title: input.title,
+      items: input.items,
+      ...(input.handle === undefined ? {} : { handle: input.handle }),
+    }
+
+    const result = await runMutation(ctx, {
+      menuUpdate: {
+        __args: mutationArgs,
+        menu: menuSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.menuUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.menuUpdate?.menu?.id ?? '')
+    printJson(result.menuUpdate)
+    return
+  }
+
+  if (verb === 'delete') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id, 'Menu')
+    if (!args.yes) throw new CliError('Refusing to delete without --yes', 2)
+
+    const result = await runMutation(ctx, {
+      menuDelete: {
+        __args: { id },
+        deletedMenuId: true,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.menuDelete, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.menuDelete?.deletedMenuId ?? '')
+    printJson(result.menuDelete)
+    return
+  }
+
+  throw new CliError(`Unknown verb for menus: ${verb}`, 2)
+}
+

@@ -1,7 +1,41 @@
 import { CliError } from '../errors'
-import { printJson } from '../output'
-import { parseStandardArgs, type CommandContext } from '../router'
+import { coerceGid } from '../gid'
+import { buildInput } from '../input'
+import { printConnection, printJson, printNode } from '../output'
+import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
+import { resolveSelection } from '../selection/select'
+import { maybeFailOnUserErrors } from '../userErrors'
 import { listPublications, resolvePublicationIdFromList } from '../workflows/publications/resolvePublicationId'
+
+const publicationSummarySelection = {
+  id: true,
+  name: true,
+  autoPublish: true,
+  catalog: { title: true },
+} as const
+
+const publicationFullSelection = {
+  ...publicationSummarySelection,
+} as const
+
+const getPublicationSelection = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'full') return publicationFullSelection
+  if (view === 'raw') return {} as const
+  return publicationSummarySelection
+}
+
+const requireId = (id: string | undefined) => {
+  if (!id) throw new CliError('Missing --id', 2)
+  return coerceGid(id, 'Publication')
+}
+
+const parseFirst = (value: unknown) => {
+  if (value === undefined) return 50
+  const n = Number(value)
+  if (!Number.isFinite(n) || n <= 0) throw new CliError('--first must be a positive integer', 2)
+  return Math.floor(n)
+}
 
 export const runPublications = async ({
   ctx,
@@ -12,6 +46,24 @@ export const runPublications = async ({
   verb: string
   argv: string[]
 }) => {
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(
+      [
+        'Usage:',
+        '  shop publications <verb> [flags]',
+        '',
+        'Verbs:',
+        '  resolve|create|get|list|update|delete',
+        '',
+        'Common output flags:',
+        '  --view summary|ids|full|raw',
+        '  --select <path>        (repeatable; dot paths; adds to base view selection)',
+        '  --selection <graphql>  (selection override; can be @file.gql)',
+      ].join('\n'),
+    )
+    return
+  }
+
   if (verb === 'resolve') {
     const args = parseStandardArgs({
       argv,
@@ -46,5 +98,118 @@ export const runPublications = async ({
     return
   }
 
+  if (verb === 'get') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id as any)
+    const selection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getPublicationSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
+
+    const result = await runQuery(ctx, { publication: { __args: { id }, ...selection } })
+    if (result === undefined) return
+    printNode({ node: result.publication, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'list') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const reverse = args.reverse as any
+
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getPublicationSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: ctx.quiet,
+    })
+
+    const result = await runQuery(ctx, {
+      publications: {
+        __args: { first, after, reverse },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: nodeSelection,
+      },
+    })
+    if (result === undefined) return
+    printConnection({ connection: result.publications, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'create') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
+
+    const result = await runMutation(ctx, {
+      publicationCreate: {
+        __args: { input: built.input },
+        publication: publicationSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.publicationCreate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.publicationCreate?.publication?.id ?? '')
+    if (ctx.format === 'raw') printJson(result.publicationCreate, false)
+    else printJson(result.publicationCreate)
+    return
+  }
+
+  if (verb === 'update') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id as any)
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
+
+    const result = await runMutation(ctx, {
+      publicationUpdate: {
+        __args: { id, input: built.input },
+        publication: publicationSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.publicationUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.publicationUpdate?.publication?.id ?? '')
+    if (ctx.format === 'raw') printJson(result.publicationUpdate, false)
+    else printJson(result.publicationUpdate)
+    return
+  }
+
+  if (verb === 'delete') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id as any)
+    if (!args.yes) throw new CliError('Refusing to delete without --yes', 2)
+
+    const result = await runMutation(ctx, {
+      publicationDelete: {
+        __args: { id },
+        deletedId: true,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.publicationDelete, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.publicationDelete?.deletedId ?? '')
+    if (ctx.format === 'raw') printJson(result.publicationDelete, false)
+    else printJson(result.publicationDelete)
+    return
+  }
+
   throw new CliError(`Unknown verb for publications: ${verb}`, 2)
 }
+

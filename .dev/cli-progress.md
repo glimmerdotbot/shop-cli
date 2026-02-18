@@ -69,6 +69,55 @@ Known gaps vs notes (next to implement):
 
 ## Next tranche proposal
 
-High-leverage workflows from `.dev/workflows.md` (Score 5/4):
+Focus next on the remaining operations/resources from `.dev/operations.md` that still aren’t implemented (e.g. carrier-services, cart-transforms, customer-addresses, delivery-profiles, gift-cards, payment-terms, price-lists, web-pixels, web-presences, subscriptions).
 
-1. Expand Tier 2/3 CRUD resources from `.dev/operations.md`
+### Tranche 4 implemented (2026-02-18)
+
+Content:
+
+- `shop articles create|get|list|update|delete`
+- `shop blogs create|get|list|update|delete`
+- `shop pages create|get|list|update|delete`
+- `shop comments get|list|delete`
+
+Merch/structure:
+
+- `shop menus create|get|list|update|delete`
+- `shop publications create|get|list|update|delete`
+- `shop catalogs create|get|list|update|delete`
+- `shop markets create|get|list|update|delete`
+
+Draft orders:
+
+- `shop draft-orders create|get|list|update|delete|duplicate|count`
+- `shop draft-orders calculate|complete`
+- `shop draft-orders create-from-order --order-id <gid|num>`
+- `shop draft-orders preview-invoice|send-invoice --id <gid|num> [--input <EmailInput>]`
+- `shop draft-orders bulk-add-tags|bulk-remove-tags --ids <gid|num,...> --tags a,b`
+- `shop draft-orders bulk-delete --ids <gid|num,...> --yes`
+- `shop draft-orders saved-searches`
+- `shop draft-orders tags --id <gid>` (DraftOrderTag ID)
+- `shop draft-orders delivery-options --input <DraftOrderAvailableDeliveryOptionsInput>`
+
+Redirects + segments:
+
+- `shop url-redirects create|get|list|update|delete`
+- `shop segments create|get|list|update|delete`
+
+Webhooks:
+
+- `shop webhooks create --topic <WebhookSubscriptionTopic> --input <WebhookSubscriptionInput>`
+- `shop webhooks get|list|update|delete`
+
+Meta:
+
+- `shop metafield-definitions create|get|list|update|delete`
+  - Note: `list` requires `--owner-type` (e.g. `PRODUCT`).
+  - Note: `update` is identifier-based (key/namespace/ownerType); `--id` works by resolving identifier first.
+- `shop metaobjects create|get|list|update|delete` (list requires `--type`)
+- `shop metaobject-definitions create|get|list|update|delete`
+
+Selling plans:
+
+- `shop selling-plan-groups create|get|list|update|delete`
+- `shop selling-plan-groups add-variants|remove-variants --id <gid|num> --variant-ids <gid|num,...>`
