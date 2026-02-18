@@ -86,6 +86,13 @@ import { runShopPolicies } from './verbs/shop-policies'
 import { runCashTracking } from './verbs/cash-tracking'
 import { runPointOfSale } from './verbs/point-of-sale'
 import { runCustomerAccountPages } from './verbs/customer-account-pages'
+import { runDeliveryPromises } from './verbs/delivery-promises'
+import { runDisputes } from './verbs/disputes'
+import { runFlow } from './verbs/flow'
+import { runMobilePlatformApplications } from './verbs/mobile-platform-applications'
+import { runShippingPackages } from './verbs/shipping-packages'
+import { runTags } from './verbs/tags'
+import { runTax } from './verbs/tax'
 
 export type CliView = 'summary' | 'ids' | 'full' | 'raw' | 'all'
 
@@ -235,6 +242,13 @@ export const runCommand = async ({
   if (resource === 'checkout-branding') return runCheckoutBranding({ ctx, verb, argv })
   if (resource === 'delivery-profiles') return runDeliveryProfiles({ ctx, verb, argv })
   if (resource === 'delivery-customizations') return runDeliveryCustomizations({ ctx, verb, argv })
+  if (resource === 'delivery-promises') return runDeliveryPromises({ ctx, verb, argv })
+  if (resource === 'shipping-packages') return runShippingPackages({ ctx, verb, argv })
+  if (resource === 'mobile-platform-applications') return runMobilePlatformApplications({ ctx, verb, argv })
+  if (resource === 'tax') return runTax({ ctx, verb, argv })
+  if (resource === 'tags') return runTags({ ctx, verb, argv })
+  if (resource === 'flow') return runFlow({ ctx, verb, argv })
+  if (resource === 'disputes') return runDisputes({ ctx, verb, argv })
   if (resource === 'web-pixels') return runWebPixels({ ctx, verb, argv })
   if (resource === 'server-pixels') return runServerPixels({ ctx, verb, argv })
   if (resource === 'marketing-activities') return runMarketingActivities({ ctx, verb, argv })

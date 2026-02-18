@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-18T09:36:43.031Z",
+  "generatedAt": "2026-02-18T10:45:26.592Z",
   "schemaVersion": "2026-04",
   "entries": [
     {
@@ -1178,6 +1178,56 @@
       ]
     },
     {
+      "resource": "delivery-promises",
+      "verb": "get-participants",
+      "argv": [
+        "--id",
+        "1",
+        "--branded-promise-handle",
+        "test"
+      ]
+    },
+    {
+      "resource": "delivery-promises",
+      "verb": "get-provider",
+      "argv": [
+        "--id",
+        "1",
+        "--location-id",
+        "1"
+      ],
+      "skipReason": "unhandled error: Unknown option '--location-id'"
+    },
+    {
+      "resource": "delivery-promises",
+      "verb": "get-settings",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "delivery-promises",
+      "verb": "update-participants",
+      "argv": [
+        "--id",
+        "1",
+        "--branded-promise-handle",
+        "test"
+      ]
+    },
+    {
+      "resource": "delivery-promises",
+      "verb": "upsert-provider",
+      "argv": [
+        "--id",
+        "1",
+        "--location-id",
+        "1"
+      ],
+      "skipReason": "unhandled error: Unknown option '--location-id'"
+    },
+    {
       "resource": "discounts-automatic",
       "verb": "activate",
       "argv": [
@@ -1486,6 +1536,37 @@
       ]
     },
     {
+      "resource": "disputes",
+      "verb": "evidence get",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "disputes",
+      "verb": "evidence update",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}"
+      ]
+    },
+    {
+      "resource": "disputes",
+      "verb": "get",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "disputes",
+      "verb": "list",
+      "argv": []
+    },
+    {
       "resource": "draft-orders",
       "verb": "bulk-add-tags",
       "argv": [
@@ -1701,6 +1782,28 @@
       "argv": [
         "--file",
         "src/test/fixtures/sample.txt"
+      ]
+    },
+    {
+      "resource": "flow",
+      "verb": "generate-signature",
+      "argv": [
+        "--id",
+        "1",
+        "--payload",
+        "test"
+      ]
+    },
+    {
+      "resource": "flow",
+      "verb": "trigger-receive",
+      "argv": [
+        "--id",
+        "1",
+        "--handle",
+        "test",
+        "--payload",
+        "{}"
       ]
     },
     {
@@ -2774,6 +2877,46 @@
       ]
     },
     {
+      "resource": "mobile-platform-applications",
+      "verb": "create",
+      "argv": [
+        "--input",
+        "{}"
+      ]
+    },
+    {
+      "resource": "mobile-platform-applications",
+      "verb": "delete",
+      "argv": [
+        "--id",
+        "1",
+        "--yes"
+      ]
+    },
+    {
+      "resource": "mobile-platform-applications",
+      "verb": "get",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "mobile-platform-applications",
+      "verb": "list",
+      "argv": []
+    },
+    {
+      "resource": "mobile-platform-applications",
+      "verb": "update",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}"
+      ]
+    },
+    {
       "resource": "order-edit",
       "verb": "add-custom-item",
       "argv": [
@@ -2954,6 +3097,18 @@
     },
     {
       "resource": "orders",
+      "verb": "create-mandate-payment",
+      "argv": [
+        "--id",
+        "1",
+        "--mandate-id",
+        "1",
+        "--idempotency-key",
+        "test"
+      ]
+    },
+    {
+      "resource": "orders",
       "verb": "delete",
       "argv": [
         "--id",
@@ -2998,6 +3153,16 @@
         "1",
         "--tags",
         "tag1,tag2"
+      ]
+    },
+    {
+      "resource": "orders",
+      "verb": "transaction-void",
+      "argv": [
+        "--id",
+        "1",
+        "--parent-transaction-id",
+        "1"
       ]
     },
     {
@@ -4094,6 +4259,33 @@
       "skipReason": "exceeded retry budget while auto-generating args"
     },
     {
+      "resource": "shipping-packages",
+      "verb": "delete",
+      "argv": [
+        "--id",
+        "1",
+        "--yes"
+      ]
+    },
+    {
+      "resource": "shipping-packages",
+      "verb": "make-default",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "shipping-packages",
+      "verb": "update",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}"
+      ]
+    },
+    {
       "resource": "shop-policies",
       "verb": "list",
       "argv": []
@@ -4190,6 +4382,14 @@
         "--id",
         "1",
         "--yes"
+      ]
+    },
+    {
+      "resource": "storefront-access-tokens",
+      "verb": "get",
+      "argv": [
+        "--id",
+        "1"
       ]
     },
     {
@@ -4567,6 +4767,45 @@
         "1",
         "--input",
         "{}"
+      ]
+    },
+    {
+      "resource": "tags",
+      "verb": "add",
+      "argv": [
+        "--id",
+        "1",
+        "--tags",
+        "tag1,tag2"
+      ]
+    },
+    {
+      "resource": "tags",
+      "verb": "remove",
+      "argv": [
+        "--id",
+        "1",
+        "--tags",
+        "tag1,tag2"
+      ]
+    },
+    {
+      "resource": "tax",
+      "verb": "configure-app",
+      "argv": [
+        "--id",
+        "1",
+        "--ready",
+        "test"
+      ],
+      "skipReason": "--ready must be true|false"
+    },
+    {
+      "resource": "tax",
+      "verb": "create-summary",
+      "argv": [
+        "--id",
+        "1"
       ]
     },
     {

@@ -1,4 +1,5 @@
 import { CliError } from '../errors'
+import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
@@ -168,6 +169,71 @@ export const runOrders = async ({
     maybeFailOnUserErrors({ payload: result.orderCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.orderCreate?.order?.id ?? '')
     printJson(result.orderCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'create-mandate-payment') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'mandate-id': { type: 'string' },
+        'payment-schedule-id': { type: 'string' },
+        'idempotency-key': { type: 'string' },
+        amount: { type: 'string' },
+        'auto-capture': { type: 'string' },
+      },
+    })
+
+    const id = requireId(args.id, 'Order')
+    const mandateIdRaw = (args as any)['mandate-id'] as string | undefined
+    if (!mandateIdRaw) throw new CliError('Missing --mandate-id', 2)
+    const mandateId = coerceGid(mandateIdRaw, 'PaymentMandate')
+
+    const idempotencyKey = (args as any)['idempotency-key'] as string | undefined
+    if (!idempotencyKey) throw new CliError('Missing --idempotency-key', 2)
+
+    const paymentScheduleIdRaw = (args as any)['payment-schedule-id'] as string | undefined
+    const paymentScheduleId = paymentScheduleIdRaw
+      ? coerceGid(paymentScheduleIdRaw, 'PaymentSchedule')
+      : undefined
+
+    const amount = (args as any).amount !== undefined ? parseJsonArg((args as any).amount, '--amount') : undefined
+
+    const autoCaptureRaw = (args as any)['auto-capture'] as string | undefined
+    const autoCapture =
+      autoCaptureRaw === undefined
+        ? undefined
+        : (() => {
+            const v = autoCaptureRaw.trim().toLowerCase()
+            if (v === 'true' || v === '1' || v === 'yes') return true
+            if (v === 'false' || v === '0' || v === 'no') return false
+            throw new CliError('--auto-capture must be true|false', 2)
+          })()
+
+    const result = await runMutation(ctx, {
+      orderCreateMandatePayment: {
+        __args: {
+          id,
+          ...(paymentScheduleId ? { paymentScheduleId } : {}),
+          idempotencyKey,
+          mandateId,
+          ...(amount ? { amount } : {}),
+          ...(autoCapture === undefined ? {} : { autoCapture }),
+        },
+        job: { id: true, done: true },
+        paymentReferenceId: true,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.orderCreateMandatePayment,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) {
+      return console.log(result.orderCreateMandatePayment?.paymentReferenceId ?? result.orderCreateMandatePayment?.job?.id ?? '')
+    }
+    printJson(result.orderCreateMandatePayment, ctx.format !== 'raw')
     return
   }
 
@@ -455,6 +521,26 @@ export const runOrders = async ({
     maybeFailOnUserErrors({ payload: result.orderDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.orderDelete?.deletedId ?? '')
     printJson(result.orderDelete, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'transaction-void') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'parent-transaction-id': { type: 'string' } } })
+    const parentTransactionIdRaw = (args as any)['parent-transaction-id'] as string | undefined
+    if (!parentTransactionIdRaw) throw new CliError('Missing --parent-transaction-id', 2)
+    const parentTransactionId = coerceGid(parentTransactionIdRaw, 'OrderTransaction')
+
+    const result = await runMutation(ctx, {
+      transactionVoid: {
+        __args: { parentTransactionId },
+        transaction: { id: true, kind: true, status: true, createdAt: true },
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.transactionVoid, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.transactionVoid?.transaction?.id ?? '')
+    printJson(result.transactionVoid, ctx.format !== 'raw')
     return
   }
 

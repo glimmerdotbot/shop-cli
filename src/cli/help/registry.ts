@@ -57,6 +57,7 @@ const flagTopic = flag('--topic <topic>', 'Webhook topic')
 const flagResourceType = flag('--resource-type <type>', 'Resource type')
 const flagResourceId = flag('--resource-id <gid>', 'Resource ID')
 const flagResourceIds = flag('--resource-ids <gid>', 'Resource IDs (repeatable)')
+const flagPlatform = flag('--platform <apple|android>', 'Platform (used only when coercing numeric IDs)')
 const flagLocale = flag('--locale <string>', 'Locale')
 const flagLocales = flag('--locales <csv>', 'Locales (repeatable or comma-separated)')
 const flagTranslationKeys = flag('--translation-keys <csv>', 'Translation keys (repeatable)')
@@ -117,8 +118,24 @@ const flagExemptions = flag('--exemptions <csv>', 'Tax exemptions (repeatable)')
 const flagRemoveExemptions = flag('--remove-exemptions <csv>', 'Tax exemptions to remove (repeatable)')
 const flagTaxId = flag('--tax-id <string>', 'Tax ID')
 const flagTaxExempt = flag('--tax-exempt <bool>', 'Tax exempt flag')
-const flagOwnerId = flag('--owner-id <gid>', 'Owner ID')
+const flagOwnerId = flag('--owner-id <gid>', 'Owner ID (repeatable)')
 const flagAmount = flag('--amount <number>', 'Amount')
+
+const flagBrandedPromiseHandle = flag('--branded-promise-handle <string>', 'Branded promise handle')
+const flagOwnersToAdd = flag('--owners-to-add <gid>', 'Owner IDs to add (repeatable)')
+const flagOwnersToRemove = flag('--owners-to-remove <gid>', 'Owner IDs to remove (repeatable)')
+const flagActive = flag('--active <bool>', 'Active flag')
+const flagFulfillmentDelay = flag('--fulfillment-delay <int>', 'Fulfillment delay in seconds')
+const flagTimeZone = flag('--time-zone <string>', 'Time zone (for schedules/cutoffs)')
+const flagReady = flag('--ready <bool>', 'Tax app readiness')
+const flagStartTime = flag('--start-time <iso>', 'Start time (ISO 8601)')
+const flagEndTime = flag('--end-time <iso>', 'End time (ISO 8601)')
+const flagFlowHandle = flag('--handle <string>', 'Flow trigger handle')
+const flagFlowPayload = flag('--payload <json|@file>', 'Payload JSON (inline or @file.json)')
+const flagMandateId = flag('--mandate-id <gid>', 'Payment mandate ID')
+const flagPaymentScheduleId = flag('--payment-schedule-id <gid>', 'Payment schedule ID')
+const flagAutoCapture = flag('--auto-capture <bool>', 'Whether to capture immediately (default: true)')
+const flagParentTransactionId = flag('--parent-transaction-id <gid>', 'Parent transaction ID')
 const flagCurrency = flag('--currency <code>', 'Currency code')
 const flagExpiresAt = flag('--expires-at <iso>', 'Expiration timestamp')
 const flagNotify = flag('--notify', 'Notify')
@@ -157,7 +174,7 @@ const flagLineItemIdsCsv = flag('--line-item-ids <gid>', 'Line item IDs (repeata
 const flagRedeemCodes = flag('--codes <csv>', 'Codes (repeatable)')
 const flagSubscriptionLineItemId = flag('--subscription-line-item-id <gid>', 'Subscription line item ID')
 const flagDescription = flag('--description <string>', 'Description')
-const flagIdempotencyKey = flag('--idempotency-key <string>', 'Idempotency key')
+const flagIdempotencyKey = flag('--idempotency-key <string>', 'Unique key to identify a request')
 const flagProrate = flag('--prorate', 'Prorate the cancellation')
 const flagDays = flag('--days <n>', 'Number of days')
 
@@ -761,6 +778,41 @@ const baseCommandRegistry: ResourceSpec[] = [
           flagTrackingUrl,
           flagNotifyCustomer,
         ],
+      },
+      {
+        verb: 'create-mandate-payment',
+        description: 'Create a payment using a stored payment mandate.',
+        operation: { type: 'mutation', name: 'orderCreateMandatePayment' },
+        requiredFlags: [flagId, flagMandateId, flagIdempotencyKey],
+        flags: [
+          flagPaymentScheduleId,
+          flag('--amount <json>', 'MoneyInput JSON (optional)'),
+          flagAutoCapture,
+        ],
+      },
+      {
+        verb: 'transaction-void',
+        description: 'Void an uncaptured authorization transaction.',
+        operation: { type: 'mutation', name: 'transactionVoid' },
+        requiredFlags: [flagParentTransactionId],
+      },
+    ],
+  },
+  {
+    resource: 'tags',
+    description: 'Add or remove tags on supported resources.',
+    verbs: [
+      {
+        verb: 'add',
+        description: 'Add tags to a resource by ID.',
+        operation: { type: 'mutation', name: 'tagsAdd' },
+        requiredFlags: [flagId, flagTags],
+      },
+      {
+        verb: 'remove',
+        description: 'Remove tags from a resource by ID.',
+        operation: { type: 'mutation', name: 'tagsRemove' },
+        requiredFlags: [flagId, flagTags],
       },
     ],
   },
@@ -2334,6 +2386,71 @@ const baseCommandRegistry: ResourceSpec[] = [
     ],
   },
   {
+    resource: 'delivery-promises',
+    description: 'Manage delivery promise settings, participants, and providers.',
+    verbs: [
+      {
+        verb: 'get-settings',
+        description: 'Get delivery promise settings for the shop.',
+        operation: { type: 'query', name: 'deliveryPromiseSettings' },
+      },
+      {
+        verb: 'get-participants',
+        description: 'List delivery promise participants.',
+        operation: { type: 'query', name: 'deliveryPromiseParticipants' },
+        requiredFlags: [flagBrandedPromiseHandle],
+        flags: [flagOwnerId],
+        output: { view: true, selection: true, pagination: true },
+      },
+      {
+        verb: 'get-provider',
+        description: 'Get delivery promise provider by location.',
+        operation: { type: 'query', name: 'deliveryPromiseProvider' },
+        requiredFlags: [flagLocationId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'update-participants',
+        description: 'Update delivery promise participants.',
+        operation: { type: 'mutation', name: 'deliveryPromiseParticipantsUpdate' },
+        requiredFlags: [flagBrandedPromiseHandle],
+        flags: [flagOwnersToAdd, flagOwnersToRemove],
+      },
+      {
+        verb: 'upsert-provider',
+        description: 'Create or update a delivery promise provider.',
+        operation: { type: 'mutation', name: 'deliveryPromiseProviderUpsert' },
+        requiredFlags: [flagLocationId],
+        flags: [flagActive, flagFulfillmentDelay, flagTimeZone],
+      },
+    ],
+  },
+  {
+    resource: 'shipping-packages',
+    description: 'Manage shipping packages.',
+    verbs: [
+      inputVerb({
+        verb: 'update',
+        description: 'Update a shipping package.',
+        operation: 'shippingPackageUpdate',
+        inputArg: 'shippingPackage',
+        requiredFlags: [flagId],
+      }),
+      {
+        verb: 'make-default',
+        description: 'Set a shipping package as the default.',
+        operation: { type: 'mutation', name: 'shippingPackageMakeDefault' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'delete',
+        description: 'Delete a shipping package.',
+        operation: { type: 'mutation', name: 'shippingPackageDelete' },
+        requiredFlags: [flagId, flagYes],
+      },
+    ],
+  },
+  {
     resource: 'web-pixels',
     description: 'Manage web pixels.',
     verbs: [
@@ -3203,6 +3320,13 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'shop' },
         output: { view: true, selection: true, pagination: true },
       },
+      {
+        verb: 'get',
+        description: 'Fetch a storefront access token by ID (by listing and filtering locally).',
+        operation: { type: 'query', name: 'shop' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
       inputVerb({
         verb: 'create',
         description: 'Create a storefront access token.',
@@ -3267,6 +3391,39 @@ const baseCommandRegistry: ResourceSpec[] = [
     ],
   },
   {
+    resource: 'disputes',
+    description: 'Query disputes and manage dispute evidence.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Fetch a dispute by ID.',
+        operation: { type: 'query', name: 'dispute' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'list',
+        description: 'List disputes.',
+        operation: { type: 'query', name: 'disputes' },
+        output: { view: true, selection: true, pagination: true },
+      },
+      {
+        verb: 'evidence get',
+        description: 'Fetch dispute evidence by ID.',
+        operation: { type: 'query', name: 'disputeEvidence' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'evidence update',
+        description: 'Update dispute evidence.',
+        operation: { type: 'mutation', name: 'disputeEvidenceUpdate', inputArg: 'input' },
+        input: { mode: 'set', arg: 'input', required: true },
+        requiredFlags: [flagId],
+      },
+    ],
+  },
+  {
     resource: 'business-entities',
     description: 'Query business entities (multiple legal entities).',
     verbs: [
@@ -3324,6 +3481,46 @@ const baseCommandRegistry: ResourceSpec[] = [
     verbs: [
       getVerb({ operation: 'customerAccountPage', description: 'Fetch a customer account page by ID.' }),
       listVerb({ operation: 'customerAccountPages', description: 'List customer account pages.' }),
+    ],
+  },
+  {
+    resource: 'mobile-platform-applications',
+    description: 'Manage mobile platform applications.',
+    verbs: [
+      {
+        verb: 'list',
+        description: 'List mobile platform applications.',
+        operation: { type: 'query', name: 'mobilePlatformApplications' },
+        output: { view: true, selection: true, pagination: true },
+      },
+      {
+        verb: 'get',
+        description: 'Fetch a mobile platform application by ID.',
+        operation: { type: 'query', name: 'mobilePlatformApplication' },
+        requiredFlags: [flagId],
+        flags: [flagPlatform],
+        output: { view: true, selection: true },
+      },
+      inputVerb({
+        verb: 'create',
+        description: 'Create a mobile platform application.',
+        operation: 'mobilePlatformApplicationCreate',
+      }),
+      {
+        verb: 'update',
+        description: 'Update a mobile platform application.',
+        operation: { type: 'mutation', name: 'mobilePlatformApplicationUpdate', inputArg: 'input' },
+        input: { mode: 'set', arg: 'input', required: true },
+        requiredFlags: [flagId],
+        flags: [flagPlatform],
+      },
+      {
+        verb: 'delete',
+        description: 'Delete a mobile platform application.',
+        operation: { type: 'mutation', name: 'mobilePlatformApplicationDelete' },
+        requiredFlags: [flagId, flagYes],
+        flags: [flagPlatform],
+      },
     ],
   },
   {
@@ -3424,6 +3621,43 @@ const baseCommandRegistry: ResourceSpec[] = [
         verb: 'get-locales',
         description: 'List shop locales.',
         operation: { type: 'query', name: 'shopLocales' },
+      },
+    ],
+  },
+  {
+    resource: 'tax',
+    description: 'Tax partner configuration and tax summaries.',
+    verbs: [
+      {
+        verb: 'configure-app',
+        description: 'Configure tax app readiness.',
+        operation: { type: 'mutation', name: 'taxAppConfigure' },
+        requiredFlags: [flagReady],
+      },
+      {
+        verb: 'create-summary',
+        description: 'Create a tax summary for an order or time range.',
+        operation: { type: 'mutation', name: 'taxSummaryCreate' },
+        flags: [flagOrderId, flagStartTime, flagEndTime],
+        notes: ['Pass either --order-id (or --id) or both --start-time and --end-time.'],
+      },
+    ],
+  },
+  {
+    resource: 'flow',
+    description: 'Shopify Flow integration utilities.',
+    verbs: [
+      {
+        verb: 'generate-signature',
+        description: 'Generate a signature for a Flow action payload.',
+        operation: { type: 'mutation', name: 'flowGenerateSignature' },
+        requiredFlags: [flagId, flag('--payload <string|@file>', 'Payload string (inline or @file)')],
+      },
+      {
+        verb: 'trigger-receive',
+        description: 'Trigger a Flow trigger by handle and payload.',
+        operation: { type: 'mutation', name: 'flowTriggerReceive' },
+        requiredFlags: [flagFlowHandle, flagFlowPayload],
       },
     ],
   },

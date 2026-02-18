@@ -1,6 +1,6 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
-import { printConnection, printJson } from '../output'
+import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
@@ -70,6 +70,35 @@ export const runStorefrontAccessTokens = async ({
       quiet: ctx.quiet,
       nextPageArgs: buildListNextPageArgs('storefront-access-tokens', { first, reverse }),
     })
+    return
+  }
+
+  if (verb === 'get') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id, 'StorefrontAccessToken')
+
+    const nodeSelection = resolveSelection({
+      view: ctx.view,
+      baseSelection: getTokenSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      ensureId: true,
+    })
+
+    // Storefront access tokens are exposed via the shop connection; fetch a page and filter locally.
+    const result = await runQuery(ctx, {
+      shop: {
+        storefrontAccessTokens: {
+          __args: { first: 250, reverse: false },
+          nodes: nodeSelection,
+        },
+      },
+    })
+    if (result === undefined) return
+    const nodes = result.shop?.storefrontAccessTokens?.nodes ?? []
+    const found = nodes.find((n: any) => n?.id === id)
+    if (!found) throw new CliError('Storefront access token not found in first 250 tokens', 2)
+    printNode({ node: found, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
