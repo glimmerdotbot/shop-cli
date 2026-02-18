@@ -129,7 +129,7 @@ export async function runCommandDryRun(args: string[]): Promise<DryRunResult> {
         ...process.env,
         // Provide dummy credentials to avoid auth errors
         SHOPIFY_ACCESS_TOKEN: 'test-token',
-        SHOP_DOMAIN: 'test-shop.myshopify.com',
+        SHOPIFY_SHOP: 'test-shop.myshopify.com',
       },
     })
 

@@ -16,13 +16,12 @@ export const createCliClientFromEnv = ({
   headers,
 }: CliClientOptions) => {
   const resolvedGraphqlEndpoint = graphqlEndpoint ?? process.env.GRAPHQL_ENDPOINT
-  const resolvedShopDomain =
-    shopDomain ?? process.env.SHOP_DOMAIN ?? process.env.SHOPIFY_SHOP
+  const resolvedShopDomain = shopDomain ?? process.env.SHOPIFY_SHOP
   const resolvedAccessToken = accessToken ?? process.env.SHOPIFY_ACCESS_TOKEN
 
   if (!resolvedGraphqlEndpoint && !resolvedShopDomain) {
     throw new Error(
-      'Missing shop domain: pass --shop-domain, set SHOP_DOMAIN (or SHOPIFY_SHOP), or set GRAPHQL_ENDPOINT',
+      'Missing shop domain: pass --shop, set SHOPIFY_SHOP, or set GRAPHQL_ENDPOINT',
     )
   }
 

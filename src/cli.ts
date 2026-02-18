@@ -39,7 +39,7 @@ const parseGlobalFlags = (args: string[]): GlobalParsed => {
 
     const [flag, inlineValue] = token.split('=', 2)
 
-    if (flag === '--shop-domain') {
+    if (flag === '--shop') {
       parsed.shopDomain = inlineValue ?? takeValue(i, flag)
       if (!inlineValue) i++
       continue
@@ -184,7 +184,7 @@ const main = async () => {
   const client = dryRun
     ? createShopifyAdminClient({
         shopDomain:
-          shopDomain ?? process.env.SHOP_DOMAIN ?? process.env.SHOPIFY_SHOP ?? 'example.myshopify.com',
+          shopDomain ?? process.env.SHOPIFY_SHOP ?? 'example.myshopify.com',
         graphqlEndpoint: graphqlEndpoint ?? process.env.GRAPHQL_ENDPOINT,
         accessToken: resolvedAccessToken ?? 'DUMMY',
         apiVersion: apiVersion ?? '2026-04',
@@ -210,7 +210,7 @@ const main = async () => {
     failOnUserErrors: !(parsed.noFailOnUserErrors ?? false),
     warnMissingAccessToken,
     // Raw GraphQL client options (for graphql command)
-    shopDomain: shopDomain ?? process.env.SHOP_DOMAIN ?? process.env.SHOPIFY_SHOP,
+    shopDomain: shopDomain ?? process.env.SHOPIFY_SHOP,
     graphqlEndpoint: graphqlEndpoint ?? process.env.GRAPHQL_ENDPOINT,
     accessToken: resolvedAccessToken,
     apiVersion: apiVersion ?? '2026-04',

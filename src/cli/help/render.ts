@@ -88,7 +88,7 @@ export const renderTopLevelHelp = () => {
     ...resourceLines,
     '',
     'Auth (flags override env):',
-    '  --shop-domain <your-shop.myshopify.com> (or env SHOP_DOMAIN / SHOPIFY_SHOP)',
+    '  --shop <your-shop.myshopify.com>      (or env SHOPIFY_SHOP)',
     '  --graphql-endpoint <url>          (or env GRAPHQL_ENDPOINT; overrides shop domain)',
     '  --access-token <token>              (or env SHOPIFY_ACCESS_TOKEN)',
     '  --header "Name: value"              (repeatable; adds request headers)',

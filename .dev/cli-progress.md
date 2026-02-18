@@ -10,12 +10,12 @@ This repo is building a CLI that follows the conventions in `.dev/operations.md`
 
 Auth defaults to env vars:
 
-- `SHOP_DOMAIN` (or `SHOPIFY_SHOP`)
+- `SHOPIFY_SHOP`
 - `SHOPIFY_ACCESS_TOKEN`
 
 Overrides:
 
-- `--shop-domain`
+- `--shop`
 - `--access-token`
 - `--api-version` (default: `2026-04`)
 

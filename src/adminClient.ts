@@ -40,7 +40,7 @@ const resolveGraphqlEndpoint = ({
   if (graphqlEndpoint) return graphqlEndpoint
   if (!shopDomain) {
     throw new Error(
-      'Missing shop domain: pass --shop-domain, set SHOP_DOMAIN (or SHOPIFY_SHOP), or set GRAPHQL_ENDPOINT',
+      'Missing shop domain: pass --shop, set SHOPIFY_SHOP, or set GRAPHQL_ENDPOINT',
     )
   }
   const normalizedShopDomain = normalizeShopDomain(shopDomain)
