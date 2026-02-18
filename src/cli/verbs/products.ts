@@ -2,7 +2,7 @@ import { CliError } from '../errors'
 import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
-import { applyComputedFieldsToNode } from '../output/computedFields'
+import { applyComputedFieldsToNode, computedPublicationsSelection } from '../output/computedFields'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
@@ -42,28 +42,9 @@ const productSummarySelection = {
   updatedAt: true,
 } as const
 
-const productComputedPublicationsSelection = {
-  resourcePublicationsV2: {
-    __args: { first: 50, onlyPublished: false },
-    nodes: {
-      isPublished: true,
-      publishDate: true,
-      publication: {
-        id: true,
-        catalog: {
-          title: true,
-          on_AppCatalog: {
-            apps: { __args: { first: 10 }, nodes: { title: true } },
-          },
-        },
-      },
-    },
-  },
-} as const
-
 const productSummarySelectionForGet = {
   ...productSummarySelection,
-  ...productComputedPublicationsSelection,
+  ...computedPublicationsSelection,
 } as const
 
 const productFullSelection = {
@@ -74,7 +55,7 @@ const productFullSelection = {
 
 const productFullSelectionForGet = {
   ...productFullSelection,
-  ...productComputedPublicationsSelection,
+  ...computedPublicationsSelection,
 } as const
 
 const getProductSelection = (view: CommandContext['view']) => {

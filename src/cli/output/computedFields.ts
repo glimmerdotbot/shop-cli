@@ -9,6 +9,25 @@ export type ComputedPublication = {
   publishDate: string | null
 }
 
+export const computedPublicationsSelection = {
+  resourcePublicationsV2: {
+    __args: { first: 50, onlyPublished: false },
+    nodes: {
+      isPublished: true,
+      publishDate: true,
+      publication: {
+        id: true,
+        catalog: {
+          title: true,
+          on_AppCatalog: {
+            apps: { __args: { first: 10 }, nodes: { title: true } },
+          },
+        },
+      },
+    },
+  },
+} as const
+
 const getPublicationTitle = (publication: any): string | undefined => {
   if (!publication || typeof publication !== 'object') return undefined
 

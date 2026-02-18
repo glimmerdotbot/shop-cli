@@ -2,6 +2,7 @@ import { CliError } from '../errors'
 import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
+import { applyComputedFieldsToNode, computedPublicationsSelection } from '../output/computedFields'
 import { runMutation, runQuery, parseStandardArgs, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
@@ -23,11 +24,28 @@ const collectionFullSelection = {
   templateSuffix: true,
 } as const
 
+const collectionSummarySelectionForGet = {
+  ...collectionSummarySelection,
+  ...computedPublicationsSelection,
+} as const
+
+const collectionFullSelectionForGet = {
+  ...collectionFullSelection,
+  ...computedPublicationsSelection,
+} as const
+
 const getCollectionSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
   if (view === 'full') return collectionFullSelection
   if (view === 'raw') return {} as const
   return collectionSummarySelection
+}
+
+const getCollectionSelectionForGet = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'full') return collectionFullSelectionForGet
+  if (view === 'raw') return {} as const
+  return collectionSummarySelectionForGet
 }
 
 const getListNodeSelection = (view: CommandContext['view']) => getCollectionSelection(view)
@@ -64,21 +82,44 @@ export const runCollections = async ({
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Collection')
+
+    const includeValues = Array.isArray(args.include)
+      ? args.include
+      : args.include
+        ? [args.include]
+        : []
+    const include =
+      ctx.view === 'all'
+        ? Array.from(new Set([...includeValues, 'resourcePublicationsV2']))
+        : args.include
+
     const selection = resolveSelection({
       resource: 'collections',
       view: ctx.view,
-      baseSelection: getCollectionSelection(ctx.view) as any,
+      baseSelection: getCollectionSelectionForGet(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
-      include: args.include,
+      include,
       ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
     })
 
     const result = await runQuery(ctx, {
       collection: { __args: { id }, ...selection },
     })
     if (result === undefined) return
-    printNode({ node: result.collection, format: ctx.format, quiet: ctx.quiet })
+    const wantsResourcePublicationsV2 =
+      Array.isArray(args.select) &&
+      args.select.some((p: unknown) => typeof p === 'string' && p.startsWith('resourcePublicationsV2'))
+    const wantsResourcePublicationsV2ViaSelection =
+      typeof (args as any).selection === 'string' && (args as any).selection.includes('resourcePublicationsV2')
+    const stripResourcePublicationsV2 = !(wantsResourcePublicationsV2 || wantsResourcePublicationsV2ViaSelection)
+
+    const withComputed = applyComputedFieldsToNode(result.collection, {
+      view: ctx.view,
+      stripResourcePublicationsV2,
+    })
+    printNode({ node: withComputed, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
