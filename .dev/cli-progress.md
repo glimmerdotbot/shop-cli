@@ -38,6 +38,12 @@ Tier 1 workflows (partial):
 - `shop inventory set --inventory-item-id <gid|num> --location-id <gid|num> --available <int>`
 - `shop inventory adjust --inventory-item-id <gid|num> --location-id <gid|num> --delta <int>`
 - `shop files upload --file <path>` (repeatable `--file`)
+- `shop publications resolve --publication <name|gid|num>`
+- `shop products publish --id <gid|num> --publication-id <gid|num> [--publication <name>] [--at <iso>|--now]`
+- `shop products unpublish --id <gid|num> --publication-id <gid|num> [--publication <name>]`
+- `shop products publish-all --id <gid|num> [--at <iso>|--now]`
+- `shop products metafields upsert --id <gid|num> --input <json|@file>` (or `--set/--set-json`)
+- `shop product-variants upsert --product-id <gid|num> --input <json|@file>` (or `--set/--set-json`)
 
 Common flags (implemented subset):
 
@@ -58,15 +64,11 @@ Common flags (implemented subset):
 
 Known gaps vs notes (next to implement):
 
-- More workflows: publish/unpublish, publications resolve, metafields upsert, etc.
+- Remaining workflows from `.dev/workflows.md` (beyond product/inventory/media/files)
 - Remaining operations/resources from `.dev/operations.md`
 
 ## Next tranche proposal
 
 High-leverage workflows from `.dev/workflows.md` (Score 5/4):
 
-1. `shop publications resolve`
-2. `shop products publish` / `unpublish` / `publish-all`
-3. `shop inventory set` / `adjust`
-4. `shop products metafields upsert`
-5. `shop products media add` (URL)
+1. Expand Tier 2/3 CRUD resources from `.dev/operations.md`

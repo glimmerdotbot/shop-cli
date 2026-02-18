@@ -10,6 +10,14 @@ import {
   stagedUploadLocalFiles,
   type StagedUploadResource,
 } from '../workflows/files/stagedUploads'
+import { metafieldsUpsert } from '../workflows/products/metafieldsUpsert'
+import {
+  parsePublishDate,
+  publishProduct,
+  resolvePublicationIds,
+  unpublishProduct,
+} from '../workflows/products/publishablePublish'
+import { listPublications } from '../workflows/publications/resolvePublicationId'
 
 type MediaContentType = 'IMAGE' | 'VIDEO' | 'MODEL_3D' | 'EXTERNAL_VIDEO'
 
@@ -94,6 +102,8 @@ export const runProducts = async ({
         '',
         'Verbs:',
         '  create|get|list|update|delete|duplicate|set-status|add-tags|remove-tags',
+        '  publish|unpublish|publish-all',
+        '  metafields upsert',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -101,6 +111,105 @@ export const runProducts = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'publish' || verb === 'unpublish') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'publication-id': { type: 'string', multiple: true },
+        publication: { type: 'string', multiple: true },
+        at: { type: 'string' },
+        now: { type: 'boolean' },
+      },
+    })
+
+    const publicationIds = ((args['publication-id'] as any) ?? []) as string[]
+    const publicationNames = ((args.publication as any) ?? []) as string[]
+
+    const resolvedPublicationIds = await resolvePublicationIds({
+      ctx,
+      publicationIds,
+      publicationNames,
+    })
+
+    if (verb === 'publish') {
+      const publishDate = parsePublishDate({ at: args.at as any, now: args.now as any })
+      const payload = await publishProduct({
+        ctx,
+        id: args.id as any,
+        publicationIds: resolvedPublicationIds,
+        publishDate,
+      })
+      if (payload === undefined) return
+      if (ctx.quiet) return console.log(payload?.publishable?.id ?? '')
+      printJson(payload)
+      return
+    }
+
+    const payload = await unpublishProduct({
+      ctx,
+      id: args.id as any,
+      publicationIds: resolvedPublicationIds,
+    })
+    if (payload === undefined) return
+    if (ctx.quiet) return console.log(payload?.publishable?.id ?? '')
+    printJson(payload)
+    return
+  }
+
+  if (verb === 'publish-all') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        at: { type: 'string' },
+        now: { type: 'boolean' },
+      },
+    })
+
+    if (ctx.dryRun) {
+      throw new CliError(
+        'In --dry-run mode, publish-all cannot resolve publications without executing a query. Use `shop products publish` with explicit --publication-id instead.',
+        2,
+      )
+    }
+
+    const publishDate = parsePublishDate({ at: args.at as any, now: args.now as any })
+    const publications = await listPublications(ctx)
+    const publicationIds = publications.map((p) => p.id).filter(Boolean)
+    if (publicationIds.length === 0) throw new CliError('No publications found to publish to', 2)
+
+    const payload = await publishProduct({
+      ctx,
+      id: args.id as any,
+      publicationIds,
+      publishDate,
+    })
+    if (payload === undefined) return
+    if (ctx.quiet) return console.log(payload?.publishable?.id ?? '')
+    printJson(payload)
+    return
+  }
+
+  if (verb === 'metafields') {
+    const [subverb, ...rest] = argv
+    if (subverb !== 'upsert') {
+      throw new CliError(`Unknown products metafields verb: ${subverb ?? '(missing)'}`, 2)
+    }
+
+    const args = parseStandardArgs({ argv: rest, extraOptions: {} })
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
+
+    const result = await metafieldsUpsert({ ctx, id: args.id as any, input: built.input })
+    if (result === undefined) return
+
+    printJson(result)
     return
   }
 

@@ -11,7 +11,9 @@ import { runCustomers } from './verbs/customers'
 import { runFiles } from './verbs/files'
 import { runInventory } from './verbs/inventory'
 import { runOrders } from './verbs/orders'
+import { runProductVariants } from './verbs/product-variants'
 import { runProducts } from './verbs/products'
+import { runPublications } from './verbs/publications'
 
 export type CliView = 'summary' | 'ids' | 'full' | 'raw'
 
@@ -44,11 +46,13 @@ export const runCommand = async ({
   const ctx: CommandContext = { client, format, quiet, view, dryRun, failOnUserErrors }
 
   if (resource === 'products') return runProducts({ ctx, verb, argv })
+  if (resource === 'product-variants') return runProductVariants({ ctx, verb, argv })
   if (resource === 'collections') return runCollections({ ctx, verb, argv })
   if (resource === 'customers') return runCustomers({ ctx, verb, argv })
   if (resource === 'orders') return runOrders({ ctx, verb, argv })
   if (resource === 'inventory') return runInventory({ ctx, verb, argv })
   if (resource === 'files') return runFiles({ ctx, verb, argv })
+  if (resource === 'publications') return runPublications({ ctx, verb, argv })
 
   throw new CliError(`Unknown resource: ${resource}`, 2)
 }

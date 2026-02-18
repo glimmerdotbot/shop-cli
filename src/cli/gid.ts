@@ -9,6 +9,7 @@ export type ShopifyGidType =
   | 'InventoryItem'
   | 'Location'
   | 'File'
+  | 'Publication'
 
 export const isGid = (value: string) => value.startsWith('gid://')
 
