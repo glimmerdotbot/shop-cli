@@ -1,7 +1,7 @@
 {
   "name": "shop-cli",
   "version": "1.0.0",
-  "description": "",
+  "description": "A command-line interface for Shopify development",
   "main": "index.js",
   "bin": {
     "shop-cli": "bin/shop.js",
@@ -22,8 +22,8 @@
     "test:graphql": "vitest run",
     "test:watch": "vitest"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Botanica Studios",
+  "license": "MIT",
   "dependencies": {
     "@apollo/rover": "^0.37.0",
     "@genql/runtime": "^2.10.0",
