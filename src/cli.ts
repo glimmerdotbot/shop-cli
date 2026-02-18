@@ -195,7 +195,7 @@ const main = async () => {
 
   const verbose = parsed.verbose ?? false
 
-  const resolvedApiVersion = apiVersion ?? process.env.SHOPIFY_API_VERSION
+  const resolvedApiVersion = apiVersion ?? process.env.SHOPIFY_API_VERSION ?? '2026-04'
 
   const client = dryRun || isOfflineCommand
     ? createShopifyAdminClient({
