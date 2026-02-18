@@ -2,8 +2,8 @@ import { parseArgs } from 'node:util'
 import { readFileSync } from 'node:fs'
 
 import { CliError } from '../errors'
-import { printJson, printJsonError } from '../output'
-import type { CommandContext } from '../router'
+import { printIds, printJson, printJsonError } from '../output'
+import { parseStandardArgs, runQuery, type CommandContext } from '../router'
 import {
   createRawGraphQLClient,
   type RawGraphQLRequest,
@@ -26,6 +26,8 @@ const printHelp = () => {
       '  shop graphql query <graphql> [flags]',
       '  shop graphql mutation <graphql> [flags]',
       '  shop graphql <graphql> [flags]',
+      '  shop graphql nodes --ids <gid,gid,...> [flags]',
+      '  shop graphql shopifyql --query <string> [flags]',
       '',
       'Execute raw GraphQL queries and mutations against the Shopify Admin API.',
       '',
@@ -65,6 +67,12 @@ const printHelp = () => {
       '',
       '  # Auto-detect query vs mutation',
       '  shop graphql \'{ shop { name } }\'',
+      '',
+      '  # Fetch nodes by ID',
+      '  shop graphql nodes --ids gid://shopify/Product/1,gid://shopify/Order/2',
+      '',
+      '  # Run a ShopifyQL query',
+      '  shop graphql shopifyql --query \"FROM products SHOW title\"',
       '',
       '  # With JSON variables from file',
       '  shop graphql @query.graphql --variables @vars.json',
@@ -155,6 +163,54 @@ export const runGraphQL = async ({
   // Check for help first
   if (argv.includes('--help') || argv.includes('-h') || verb === 'help') {
     printHelp()
+    return
+  }
+
+  if (verb === 'nodes') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const raw = args.ids as unknown
+    const values = Array.isArray(raw) ? raw : raw === undefined ? [] : [raw]
+    const ids: string[] = []
+    for (const v of values) {
+      if (typeof v !== 'string') throw new CliError('--ids must be a string', 2)
+      ids.push(...v.split(',').map((s) => s.trim()).filter(Boolean))
+    }
+    if (ids.length === 0) throw new CliError('Missing --ids', 2)
+
+    const result = await runQuery(ctx, {
+      nodes: {
+        __args: { ids },
+        __typename: true,
+        id: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) {
+      printIds((result.nodes ?? []).map((n: any) => n?.id))
+      return
+    }
+    printJson(result.nodes, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'shopifyql') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const query = args.query as string | undefined
+    if (!query) throw new CliError('Missing --query', 2)
+
+    const result = await runQuery(ctx, {
+      shopifyqlQuery: {
+        __args: { query },
+        parseErrors: true,
+        tableData: {
+          columns: { name: true, displayName: true, dataType: true, subType: true },
+          rows: true,
+        },
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return
+    printJson(result.shopifyqlQuery, ctx.format !== 'raw')
     return
   }
 

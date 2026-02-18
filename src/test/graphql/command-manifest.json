@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-18T18:51:46.558Z",
+  "generatedAt": "2026-02-18T19:36:28.888Z",
   "schemaVersion": "2026-04",
   "entries": [
     {
@@ -117,11 +117,160 @@
     },
     {
       "resource": "app-billing",
+      "verb": "purchase-one-time-create",
+      "argv": [
+        "--id",
+        "1",
+        "--name",
+        "test",
+        "--return-url",
+        "https://example.com",
+        "--amount",
+        "1",
+        "--currency",
+        "USD"
+      ]
+    },
+    {
+      "resource": "app-billing",
+      "verb": "revoke-access-scopes",
+      "argv": [
+        "--id",
+        "1",
+        "--scopes",
+        "test"
+      ]
+    },
+    {
+      "resource": "app-billing",
+      "verb": "subscription-create",
+      "argv": [
+        "--id",
+        "1",
+        "--name",
+        "test",
+        "--return-url",
+        "https://example.com"
+      ]
+    },
+    {
+      "resource": "app-billing",
+      "verb": "subscription-trial-extend",
+      "argv": [
+        "--id",
+        "1"
+      ],
+      "skipReason": "--days must be a positive integer"
+    },
+    {
+      "resource": "app-billing",
+      "verb": "uninstall",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "app-billing",
       "verb": "update-line-item",
       "argv": [
         "--id",
         "1",
         "--amount",
+        "1"
+      ]
+    },
+    {
+      "resource": "app-billing",
+      "verb": "usage-record-create",
+      "argv": [
+        "--id",
+        "1",
+        "--subscription-line-item-id",
+        "1",
+        "--description",
+        "test",
+        "--amount",
+        "1",
+        "--currency",
+        "USD"
+      ]
+    },
+    {
+      "resource": "apps",
+      "verb": "by-handle",
+      "argv": [
+        "--id",
+        "1",
+        "--handle",
+        "test"
+      ]
+    },
+    {
+      "resource": "apps",
+      "verb": "by-key",
+      "argv": [
+        "--id",
+        "1",
+        "--api-key",
+        "test"
+      ]
+    },
+    {
+      "resource": "apps",
+      "verb": "current-installation",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "apps",
+      "verb": "discount-type",
+      "argv": [
+        "--id",
+        "1",
+        "--function-id",
+        "1"
+      ]
+    },
+    {
+      "resource": "apps",
+      "verb": "discount-types",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "apps",
+      "verb": "discount-types-nodes",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "apps",
+      "verb": "get",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "apps",
+      "verb": "installations",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "articles",
+      "verb": "authors",
+      "argv": [
+        "--id",
         "1"
       ]
     },
@@ -165,6 +314,16 @@
     },
     {
       "resource": "articles",
+      "verb": "tags",
+      "argv": [
+        "--id",
+        "1",
+        "--limit",
+        "1"
+      ]
+    },
+    {
+      "resource": "articles",
       "verb": "unpublish",
       "argv": [
         "--id",
@@ -180,6 +339,37 @@
         "--input",
         "{}"
       ]
+    },
+    {
+      "resource": "backup",
+      "verb": "available-regions",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "backup",
+      "verb": "region",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "backup",
+      "verb": "region-update",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}"
+      ]
+    },
+    {
+      "resource": "blogs",
+      "verb": "count",
+      "argv": []
     },
     {
       "resource": "blogs",
@@ -427,6 +617,19 @@
       ]
     },
     {
+      "resource": "channels",
+      "verb": "get",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "channels",
+      "verb": "list",
+      "argv": []
+    },
+    {
       "resource": "checkout-branding",
       "verb": "get",
       "argv": [
@@ -550,6 +753,14 @@
     },
     {
       "resource": "comments",
+      "verb": "approve",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "comments",
       "verb": "delete",
       "argv": [
         "--id",
@@ -569,6 +780,22 @@
       "resource": "comments",
       "verb": "list",
       "argv": []
+    },
+    {
+      "resource": "comments",
+      "verb": "not-spam",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "comments",
+      "verb": "spam",
+      "argv": [
+        "--id",
+        "1"
+      ]
     },
     {
       "resource": "companies",
@@ -2138,6 +2365,19 @@
       "argv": []
     },
     {
+      "resource": "file-saved-searches",
+      "verb": "list",
+      "argv": []
+    },
+    {
+      "resource": "files",
+      "verb": "acknowledge-update-failed",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
       "resource": "files",
       "verb": "delete",
       "argv": [
@@ -2619,9 +2859,29 @@
     },
     {
       "resource": "graphql",
+      "verb": "nodes",
+      "argv": [
+        "--id",
+        "1",
+        "--ids",
+        "1,2"
+      ]
+    },
+    {
+      "resource": "graphql",
       "verb": "query",
       "argv": [
         "{ shop { name } }"
+      ]
+    },
+    {
+      "resource": "graphql",
+      "verb": "shopifyql",
+      "argv": [
+        "--id",
+        "1",
+        "--query",
+        "test"
       ]
     },
     {
@@ -2886,6 +3146,14 @@
       "skipReason": "Expected lineItems array via --input or --set lineItems[0].*"
     },
     {
+      "resource": "locales",
+      "verb": "available",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
       "resource": "locations",
       "verb": "activate",
       "argv": [
@@ -3114,6 +3382,21 @@
     },
     {
       "resource": "menus",
+      "verb": "create-basic",
+      "argv": [
+        "--id",
+        "1",
+        "--title",
+        "test",
+        "--handle",
+        "test",
+        "--items",
+        "{}"
+      ],
+      "skipReason": "--items must be a JSON array"
+    },
+    {
+      "resource": "menus",
       "verb": "delete",
       "argv": [
         "--id",
@@ -3144,6 +3427,75 @@
         "{}"
       ],
       "skipReason": "Missing title in --input/--set"
+    },
+    {
+      "resource": "menus",
+      "verb": "update-basic",
+      "argv": [
+        "--id",
+        "1",
+        "--title",
+        "test",
+        "--items",
+        "{}"
+      ],
+      "skipReason": "--items must be a JSON array"
+    },
+    {
+      "resource": "metafield-definition-tools",
+      "verb": "pin",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "metafield-definition-tools",
+      "verb": "standard-enable",
+      "argv": [
+        "--id",
+        "1",
+        "--owner-type",
+        "test"
+      ]
+    },
+    {
+      "resource": "metafield-definition-tools",
+      "verb": "standard-templates",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "metafield-definition-tools",
+      "verb": "types",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "metafield-definition-tools",
+      "verb": "unpin",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "metafield-definition-tools",
+      "verb": "update",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}",
+        "--owner-type",
+        "test",
+        "--key",
+        "test"
+      ]
     },
     {
       "resource": "metafield-definitions",
@@ -3189,6 +3541,29 @@
       ]
     },
     {
+      "resource": "metafields",
+      "verb": "delete",
+      "argv": [
+        "--id",
+        "1",
+        "--yes",
+        "--namespace",
+        "test",
+        "--key",
+        "test"
+      ]
+    },
+    {
+      "resource": "metaobject-definition-tools",
+      "verb": "standard-enable",
+      "argv": [
+        "--id",
+        "1",
+        "--type",
+        "test"
+      ]
+    },
+    {
       "resource": "metaobject-definitions",
       "verb": "create",
       "argv": [
@@ -3230,10 +3605,43 @@
     },
     {
       "resource": "metaobjects",
+      "verb": "bulk-delete",
+      "argv": [
+        "--id",
+        "1",
+        "--yes",
+        "--type",
+        "test"
+      ]
+    },
+    {
+      "resource": "metaobjects",
+      "verb": "by-handle",
+      "argv": [
+        "--id",
+        "1",
+        "--type",
+        "test",
+        "--handle",
+        "test"
+      ]
+    },
+    {
+      "resource": "metaobjects",
       "verb": "create",
       "argv": [
         "--input",
         "{}"
+      ]
+    },
+    {
+      "resource": "metaobjects",
+      "verb": "definition-by-type",
+      "argv": [
+        "--id",
+        "1",
+        "--type",
+        "test"
       ]
     },
     {
@@ -3269,6 +3677,18 @@
         "1",
         "--input",
         "{}"
+      ]
+    },
+    {
+      "resource": "metaobjects",
+      "verb": "upsert",
+      "argv": [
+        "--id",
+        "1",
+        "--type",
+        "test",
+        "--handle",
+        "test"
       ]
     },
     {
@@ -3569,6 +3989,11 @@
         "--input",
         "{}"
       ]
+    },
+    {
+      "resource": "pages",
+      "verb": "count",
+      "argv": []
     },
     {
       "resource": "pages",
@@ -4079,7 +4504,8 @@
         "1",
         "--media-id",
         "1"
-      ]
+      ],
+      "skipReason": "Numeric media ID \"1\" is ambiguous. Use the full GID from \"shop products media list\" (e.g. gid://shopify/MediaImage/1)"
     },
     {
       "resource": "products",
@@ -4100,7 +4526,8 @@
         "1",
         "--alt",
         "test"
-      ]
+      ],
+      "skipReason": "Numeric media ID \"1\" is ambiguous. Use the full GID from \"shop products media list\" (e.g. gid://shopify/MediaImage/1)"
     },
     {
       "resource": "products",
@@ -4673,6 +5100,18 @@
     },
     {
       "resource": "server-pixels",
+      "verb": "pubsub-update",
+      "argv": [
+        "--id",
+        "1",
+        "--pubsub-project",
+        "test",
+        "--pubsub-topic",
+        "APP_UNINSTALLED"
+      ]
+    },
+    {
+      "resource": "server-pixels",
       "verb": "update-eventbridge",
       "argv": [
         "--id",
@@ -4717,6 +5156,56 @@
         "1",
         "--input",
         "{}"
+      ]
+    },
+    {
+      "resource": "shop",
+      "verb": "billing-preferences",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "shop",
+      "verb": "domain",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "shop",
+      "verb": "online-store",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "shop",
+      "verb": "public-api-versions",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "shop",
+      "verb": "shop-pay-receipt",
+      "argv": [
+        "--id",
+        "1",
+        "--token",
+        "test"
+      ]
+    },
+    {
+      "resource": "shop",
+      "verb": "shop-pay-receipts",
+      "argv": [
+        "--id",
+        "1"
       ]
     },
     {
@@ -4773,6 +5262,30 @@
       ]
     },
     {
+      "resource": "staged-uploads",
+      "verb": "target-generate",
+      "argv": [
+        "--id",
+        "1",
+        "--resource",
+        "test",
+        "--filename",
+        "src/test/fixtures/sample.txt",
+        "--mime-type",
+        "test"
+      ]
+    },
+    {
+      "resource": "staged-uploads",
+      "verb": "targets-generate",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "[]"
+      ]
+    },
+    {
       "resource": "store-credit",
       "verb": "credit",
       "argv": [
@@ -4808,6 +5321,16 @@
         "{}"
       ],
       "skipReason": "Missing title"
+    },
+    {
+      "resource": "storefront-access-tokens",
+      "verb": "create-basic",
+      "argv": [
+        "--id",
+        "1",
+        "--title",
+        "test"
+      ]
     },
     {
       "resource": "storefront-access-tokens",
@@ -5519,6 +6042,43 @@
       ]
     },
     {
+      "resource": "web-presences",
+      "verb": "create",
+      "argv": [
+        "--input",
+        "{}"
+      ]
+    },
+    {
+      "resource": "web-presences",
+      "verb": "delete",
+      "argv": [
+        "--id",
+        "1",
+        "--yes"
+      ]
+    },
+    {
+      "resource": "web-presences",
+      "verb": "list",
+      "argv": []
+    },
+    {
+      "resource": "web-presences",
+      "verb": "update",
+      "argv": [
+        "--id",
+        "1",
+        "--input",
+        "{}"
+      ]
+    },
+    {
+      "resource": "webhooks",
+      "verb": "count",
+      "argv": []
+    },
+    {
       "resource": "webhooks",
       "verb": "create",
       "argv": [
@@ -5549,6 +6109,32 @@
       "resource": "webhooks",
       "verb": "list",
       "argv": []
+    },
+    {
+      "resource": "webhooks",
+      "verb": "pubsub-create",
+      "argv": [
+        "--id",
+        "1",
+        "--topic",
+        "APP_UNINSTALLED",
+        "--pubsub-project",
+        "test",
+        "--pubsub-topic",
+        "APP_UNINSTALLED"
+      ]
+    },
+    {
+      "resource": "webhooks",
+      "verb": "pubsub-update",
+      "argv": [
+        "--id",
+        "1",
+        "--pubsub-project",
+        "test",
+        "--pubsub-topic",
+        "APP_UNINSTALLED"
+      ]
     },
     {
       "resource": "webhooks",

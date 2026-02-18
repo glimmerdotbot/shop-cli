@@ -36,6 +36,28 @@ export const runStorefrontAccessTokens = async ({
   verb: string
   argv: string[]
 }) => {
+  if (verb === 'create-basic') {
+    const args = parseStandardArgs({ argv, extraOptions: { title: { type: 'string' } } })
+    const title = (args as any).title as string | undefined
+    if (!title) throw new CliError('Missing --title', 2)
+
+    const result = await runMutation(ctx, {
+      storefrontAccessTokenCreate: {
+        __args: { input: { title } },
+        storefrontAccessToken: storefrontAccessTokenSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.storefrontAccessTokenCreate,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.storefrontAccessTokenCreate?.storefrontAccessToken?.id ?? '')
+    printJson(result.storefrontAccessTokenCreate, ctx.format !== 'raw')
+    return
+  }
+
   if (verb === 'list') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const first = parseFirst(args.first)

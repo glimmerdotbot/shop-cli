@@ -74,13 +74,21 @@ import { runWebPixels } from './verbs/web-pixels'
 import { runWebhooks } from './verbs/webhooks'
 import { runReturns } from './verbs/returns'
 import { runAppBilling } from './verbs/app-billing'
+import { runApps } from './verbs/apps'
+import { runBackup } from './verbs/backup'
+import { runChannels } from './verbs/channels'
+import { runFileSavedSearches } from './verbs/file-saved-searches'
 import { runGraphQL } from './verbs/graphql'
+import { runLocales } from './verbs/locales'
 import { runDiscountsAutomatic } from './verbs/discounts-automatic'
 import { runDiscountsCode } from './verbs/discounts-code'
 import { runAbandonedCheckouts } from './verbs/abandoned-checkouts'
 import { runPaymentCustomizations } from './verbs/payment-customizations'
 import { runTaxonomy } from './verbs/taxonomy'
 import { runStaff } from './verbs/staff'
+import { runMetafieldDefinitionTools } from './verbs/metafield-definition-tools'
+import { runMetafields } from './verbs/metafields'
+import { runMetaobjectDefinitionTools } from './verbs/metaobject-definition-tools'
 import { runStorefrontAccessTokens } from './verbs/storefront-access-tokens'
 import { runFulfillmentConstraintRules } from './verbs/fulfillment-constraint-rules'
 import { runShopifyPayments } from './verbs/shopify-payments'
@@ -94,9 +102,12 @@ import { runDisputes } from './verbs/disputes'
 import { runFlow } from './verbs/flow'
 import { runMobilePlatformApplications } from './verbs/mobile-platform-applications'
 import { runShippingPackages } from './verbs/shipping-packages'
+import { runShop } from './verbs/shop-utils'
+import { runStagedUploads } from './verbs/staged-uploads'
 import { runTags } from './verbs/tags'
 import { runTax } from './verbs/tax'
 import { runTypes } from './verbs/types'
+import { runWebPresences } from './verbs/web-presences'
 
 export type CliView = 'summary' | 'ids' | 'full' | 'raw' | 'all'
 
@@ -261,7 +272,18 @@ export const runCommand = async ({
   if (resource === 'marketing-activities') return runMarketingActivities({ ctx, verb, argv })
   if (resource === 'bulk-operations') return runBulkOperations({ ctx, verb, argv })
   if (resource === 'app-billing') return runAppBilling({ ctx, verb, argv })
+  if (resource === 'apps') return runApps({ ctx, verb, argv })
+  if (resource === 'backup') return runBackup({ ctx, verb, argv })
+  if (resource === 'channels') return runChannels({ ctx, verb, argv })
   if (resource === 'config') return runShopConfig({ ctx, verb, argv })
+  if (resource === 'file-saved-searches') return runFileSavedSearches({ ctx, verb, argv })
+  if (resource === 'locales') return runLocales({ ctx, verb, argv })
+  if (resource === 'metafield-definition-tools') return runMetafieldDefinitionTools({ ctx, verb, argv })
+  if (resource === 'metaobject-definition-tools') return runMetaobjectDefinitionTools({ ctx, verb, argv })
+  if (resource === 'metafields') return runMetafields({ ctx, verb, argv })
+  if (resource === 'shop') return runShop({ ctx, verb, argv })
+  if (resource === 'staged-uploads') return runStagedUploads({ ctx, verb, argv })
+  if (resource === 'web-presences') return runWebPresences({ ctx, verb, argv })
   if (resource === 'translations') return runTranslations({ ctx, verb, argv })
   if (resource === 'events') return runEvents({ ctx, verb, argv })
   if (resource === 'functions') return runShopifyFunctions({ ctx, verb, argv })

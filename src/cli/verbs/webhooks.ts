@@ -46,7 +46,8 @@ export const runWebhooks = async ({
         '  shop webhooks <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete',
+        '  create|get|list|update|delete|count',
+        '  pubsub-create|pubsub-update',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -54,6 +55,38 @@ export const runWebhooks = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'count') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { limit: { type: 'string' } },
+    })
+    const query = args.query as any
+    const limitRaw = (args as any).limit as any
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const result = await runQuery(ctx, {
+      webhookSubscriptionsCount: {
+        __args: {
+          ...(query ? { query } : {}),
+          ...(limit !== undefined ? { limit: Math.floor(limit) } : {}),
+        },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.webhookSubscriptionsCount?.count ?? '')
+    printJson(result.webhookSubscriptionsCount, ctx.format !== 'raw')
     return
   }
 
@@ -107,6 +140,83 @@ export const runWebhooks = async ({
       quiet: ctx.quiet,
       nextPageArgs: buildListNextPageArgs('webhooks', { first, query, sort: sortKey, reverse }),
     })
+    return
+  }
+
+  if (verb === 'pubsub-create') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { topic: { type: 'string' }, 'pubsub-project': { type: 'string' }, 'pubsub-topic': { type: 'string' } },
+    })
+    const topic = args.topic as string | undefined
+    if (!topic) throw new CliError('Missing --topic', 2)
+
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    const input = built.used ? (built.input as any) : {}
+
+    const pubSubProject = (args as any)['pubsub-project'] ?? input.pubSubProject
+    const pubSubTopic = (args as any)['pubsub-topic'] ?? input.pubSubTopic
+    if (!pubSubProject) throw new CliError('Missing --pubsub-project', 2)
+    if (!pubSubTopic) throw new CliError('Missing --pubsub-topic', 2)
+
+    const webhookSubscription = { ...input, pubSubProject, pubSubTopic }
+
+    const result = await runMutation(ctx, {
+      pubSubWebhookSubscriptionCreate: {
+        __args: { topic, webhookSubscription },
+        webhookSubscription: webhookSummarySelection,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.pubSubWebhookSubscriptionCreate,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.pubSubWebhookSubscriptionCreate?.webhookSubscription?.id ?? '')
+    printJson(result.pubSubWebhookSubscriptionCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'pubsub-update') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { 'pubsub-project': { type: 'string' }, 'pubsub-topic': { type: 'string' } },
+    })
+    const id = requireId(args.id, 'WebhookSubscription')
+
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    const input = built.used ? (built.input as any) : {}
+
+    const pubSubProject = (args as any)['pubsub-project'] ?? input.pubSubProject
+    const pubSubTopic = (args as any)['pubsub-topic'] ?? input.pubSubTopic
+    if (!pubSubProject) throw new CliError('Missing --pubsub-project', 2)
+    if (!pubSubTopic) throw new CliError('Missing --pubsub-topic', 2)
+
+    const webhookSubscription = { ...input, pubSubProject, pubSubTopic }
+
+    const result = await runMutation(ctx, {
+      pubSubWebhookSubscriptionUpdate: {
+        __args: { id, webhookSubscription },
+        webhookSubscription: webhookSummarySelection,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.pubSubWebhookSubscriptionUpdate,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.pubSubWebhookSubscriptionUpdate?.webhookSubscription?.id ?? '')
+    printJson(result.pubSubWebhookSubscriptionUpdate, ctx.format !== 'raw')
     return
   }
 

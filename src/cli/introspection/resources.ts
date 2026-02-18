@@ -1,6 +1,7 @@
 export const resourceToType: Record<string, string> = {
   'abandoned-checkouts': 'Abandonment',
   'app-billing': 'AppInstallation',
+  apps: 'App',
   articles: 'Article',
   blogs: 'Blog',
   'bulk-operations': 'BulkOperation',
@@ -19,6 +20,7 @@ export const resourceToType: Record<string, string> = {
   'customer-segments': 'CustomerSegmentMember',
   'customer-account-pages': 'CustomerAccountPage',
   customers: 'Customer',
+  channels: 'Channel',
   'delivery-customizations': 'DeliveryCustomization',
   'delivery-profiles': 'DeliveryProfile',
   'discounts-automatic': 'DiscountAutomaticNode',
@@ -26,6 +28,7 @@ export const resourceToType: Record<string, string> = {
   'draft-orders': 'DraftOrder',
   events: 'Event',
   files: 'File',
+  'file-saved-searches': 'SavedSearch',
   'fulfillment-orders': 'FulfillmentOrder',
   'fulfillment-services': 'FulfillmentService',
   fulfillments: 'Fulfillment',
@@ -37,6 +40,8 @@ export const resourceToType: Record<string, string> = {
   locations: 'Location',
   'marketing-activities': 'MarketingActivity',
   markets: 'Market',
+  backup: 'MarketRegion',
+  locales: 'Locale',
   'metafield-definitions': 'MetafieldDefinition',
   'metaobject-definitions': 'MetaobjectDefinition',
   metaobjects: 'Metaobject',
@@ -70,6 +75,8 @@ export const resourceToType: Record<string, string> = {
   validations: 'Validation',
   'web-pixels': 'WebPixel',
   webhooks: 'WebhookSubscription',
+  'web-presences': 'MarketWebPresence',
+  'staged-uploads': 'StagedUploadTarget',
   // Resource name differs from file name:
   config: 'Shop',
 } as const

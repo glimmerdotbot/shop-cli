@@ -47,7 +47,7 @@ export const runPages = async ({
         '  shop pages <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete|publish|unpublish',
+        '  create|get|list|update|delete|publish|unpublish|count',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -55,6 +55,33 @@ export const runPages = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'count') {
+    const args = parseStandardArgs({ argv, extraOptions: { limit: { type: 'string' } } })
+    const limitRaw = (args as any).limit as any
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const result = await runQuery(ctx, {
+      pagesCount: {
+        __args: {
+          ...(limit !== undefined ? { limit: Math.floor(limit) } : {}),
+        },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.pagesCount?.count ?? '')
+    printJson(result.pagesCount, ctx.format !== 'raw')
     return
   }
 

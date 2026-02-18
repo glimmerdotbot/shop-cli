@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { parseJsonArg, requireId } from './_shared'
+import { parseCsv, parseJsonArg, requireId } from './_shared'
 
 const appInstallationSelection = {
   id: true,
@@ -48,8 +48,204 @@ export const runAppBilling = async ({
         '  create-one-time|create-subscription|cancel-subscription',
         '  update-line-item|extend-trial|create-usage-record',
         '  get-installation|list-subscriptions',
+        '',
+        'Plan 5 verbs:',
+        '  purchase-one-time-create|subscription-create',
+        '  subscription-trial-extend|usage-record-create',
+        '  uninstall|revoke-access-scopes',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'purchase-one-time-create') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        name: { type: 'string' },
+        amount: { type: 'string' },
+        currency: { type: 'string' },
+        'return-url': { type: 'string' },
+        test: { type: 'boolean' },
+      },
+    })
+
+    const name = args.name as string | undefined
+    const returnUrl = args['return-url'] as string | undefined
+    const amountRaw = args.amount as string | undefined
+    const currency = args.currency as string | undefined
+    const test = args.test as boolean | undefined
+
+    if (!name) throw new CliError('Missing --name', 2)
+    if (!returnUrl) throw new CliError('Missing --return-url', 2)
+    if (!amountRaw) throw new CliError('Missing --amount', 2)
+    if (!currency) throw new CliError('Missing --currency', 2)
+
+    const amount = Number(amountRaw)
+    if (!Number.isFinite(amount)) throw new CliError('--amount must be a number', 2)
+
+    const result = await runMutation(ctx, {
+      appPurchaseOneTimeCreate: {
+        __args: { name, returnUrl, price: { amount, currencyCode: currency }, ...(test === undefined ? {} : { test }) },
+        appPurchaseOneTime: { id: true, name: true, status: true },
+        confirmationUrl: true,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.appPurchaseOneTimeCreate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.appPurchaseOneTimeCreate?.appPurchaseOneTime?.id ?? '')
+    printJson(result.appPurchaseOneTimeCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'subscription-create') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        name: { type: 'string' },
+        'return-url': { type: 'string' },
+        'line-items': { type: 'string' },
+        test: { type: 'boolean' },
+        'trial-days': { type: 'string' },
+        'replacement-behavior': { type: 'string' },
+      },
+    })
+
+    const name = args.name as string | undefined
+    const returnUrl = args['return-url'] as string | undefined
+    if (!name) throw new CliError('Missing --name', 2)
+    if (!returnUrl) throw new CliError('Missing --return-url', 2)
+
+    const lineItemsRaw = (args as any)['line-items'] as string | undefined
+    const parsedLineItems = lineItemsRaw ? parseJsonArg(lineItemsRaw, '--line-items') : []
+    if (!Array.isArray(parsedLineItems)) throw new CliError('--line-items must be a JSON array', 2)
+
+    const trialDaysRaw = (args as any)['trial-days'] as string | undefined
+    const trialDays =
+      trialDaysRaw === undefined ? undefined : Number.isFinite(Number(trialDaysRaw)) ? Math.floor(Number(trialDaysRaw)) : undefined
+    if (trialDaysRaw !== undefined && trialDays === undefined) throw new CliError('--trial-days must be an integer', 2)
+
+    const replacementBehavior = (args as any)['replacement-behavior'] as any
+    const test = args.test as boolean | undefined
+
+    const result = await runMutation(ctx, {
+      appSubscriptionCreate: {
+        __args: {
+          name,
+          returnUrl,
+          lineItems: parsedLineItems as any,
+          ...(replacementBehavior ? { replacementBehavior } : {}),
+          ...(test === undefined ? {} : { test }),
+          ...(trialDays === undefined ? {} : { trialDays }),
+        },
+        appSubscription: { id: true, name: true, status: true },
+        confirmationUrl: true,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.appSubscriptionCreate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.appSubscriptionCreate?.appSubscription?.id ?? '')
+    printJson(result.appSubscriptionCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'subscription-trial-extend') {
+    const args = parseStandardArgs({ argv, extraOptions: { days: { type: 'string' } } })
+    const id = requireId(args.id, 'AppSubscription')
+    const days = Number(args.days)
+    if (!Number.isFinite(days) || days <= 0) throw new CliError('--days must be a positive integer', 2)
+
+    const result = await runMutation(ctx, {
+      appSubscriptionTrialExtend: {
+        __args: { id, days: Math.floor(days) },
+        appSubscription: { id: true, name: true, status: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.appSubscriptionTrialExtend, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.appSubscriptionTrialExtend?.appSubscription?.id ?? '')
+    printJson(result.appSubscriptionTrialExtend, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'usage-record-create') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'subscription-line-item-id': { type: 'string' },
+        description: { type: 'string' },
+        amount: { type: 'string' },
+        currency: { type: 'string' },
+        'idempotency-key': { type: 'string' },
+      },
+    })
+    const subscriptionLineItemId = (args as any)['subscription-line-item-id'] as string | undefined
+    const description = args.description as string | undefined
+    const amountRaw = args.amount as string | undefined
+    const currency = args.currency as string | undefined
+    const idempotencyKey = (args as any)['idempotency-key'] as string | undefined
+
+    if (!subscriptionLineItemId) throw new CliError('Missing --subscription-line-item-id', 2)
+    if (!description) throw new CliError('Missing --description', 2)
+    if (!amountRaw) throw new CliError('Missing --amount', 2)
+    if (!currency) throw new CliError('Missing --currency', 2)
+
+    const amount = Number(amountRaw)
+    if (!Number.isFinite(amount)) throw new CliError('--amount must be a number', 2)
+
+    const result = await runMutation(ctx, {
+      appUsageRecordCreate: {
+        __args: {
+          subscriptionLineItemId,
+          description,
+          price: { amount, currencyCode: currency },
+          ...(idempotencyKey ? { idempotencyKey } : {}),
+        },
+        appUsageRecord: { id: true, description: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.appUsageRecordCreate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.appUsageRecordCreate?.appUsageRecord?.id ?? '')
+    printJson(result.appUsageRecordCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'uninstall') {
+    const result = await runMutation(ctx, {
+      appUninstall: {
+        app: { id: true, handle: true, apiKey: true },
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.appUninstall, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.appUninstall?.app?.id ?? '')
+    printJson(result.appUninstall, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'revoke-access-scopes') {
+    const args = parseStandardArgs({ argv, extraOptions: { scopes: { type: 'string' } } })
+    const raw = (args as any).scopes as string | undefined
+    if (!raw) throw new CliError('Missing --scopes', 2)
+    const scopes = parseCsv(raw, '--scopes')
+
+    const result = await runMutation(ctx, {
+      appRevokeAccessScopes: {
+        __args: { scopes },
+        revoked: { handle: true, description: true },
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.appRevokeAccessScopes, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.appRevokeAccessScopes?.revoked ?? '')
+    printJson(result.appRevokeAccessScopes, ctx.format !== 'raw')
     return
   }
 

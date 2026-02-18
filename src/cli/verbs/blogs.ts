@@ -44,7 +44,7 @@ export const runBlogs = async ({
         '  shop blogs <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete|publish|unpublish',
+        '  create|get|list|update|delete|publish|unpublish|count',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -56,6 +56,35 @@ export const runBlogs = async ({
         '  blogs publish/unpublish updates isPublished for all articles in the blog.',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'count') {
+    const args = parseStandardArgs({ argv, extraOptions: { limit: { type: 'string' } } })
+    const query = args.query as any
+    const limitRaw = (args as any).limit as any
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const result = await runQuery(ctx, {
+      blogsCount: {
+        __args: {
+          ...(query ? { query } : {}),
+          ...(limit !== undefined ? { limit: Math.floor(limit) } : {}),
+        },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.blogsCount?.count ?? '')
+    printJson(result.blogsCount, ctx.format !== 'raw')
     return
   }
 

@@ -47,6 +47,7 @@ export const runArticles = async ({
         '',
         'Verbs:',
         '  create|get|list|update|delete|publish|unpublish',
+        '  authors|tags',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -54,6 +55,48 @@ export const runArticles = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'authors') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const reverse = args.reverse as any
+
+    const result = await runQuery(ctx, {
+      articleAuthors: {
+        __args: { first, after, reverse },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: { name: true },
+      },
+    })
+    if (result === undefined) return
+    printConnection({
+      connection: result.articleAuthors,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: { base: 'shop articles authors', first, reverse: reverse === true },
+    })
+    return
+  }
+
+  if (verb === 'tags') {
+    const args = parseStandardArgs({ argv, extraOptions: { limit: { type: 'string' } } })
+    const sort = args.sort as any
+    const limitRaw = (args as any).limit as any
+    if (limitRaw === undefined || limitRaw === null || limitRaw === '') throw new CliError('Missing --limit', 2)
+    const limit = Number(limitRaw)
+    if (!Number.isFinite(limit) || !Number.isInteger(limit) || limit <= 0) throw new CliError('--limit must be a positive integer', 2)
+
+    const result = await runQuery(ctx, {
+      articleTags: {
+        __args: { ...(sort ? { sort } : {}), limit: Math.floor(limit) },
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return
+    printJson(result.articleTags, ctx.format !== 'raw')
     return
   }
 

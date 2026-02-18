@@ -43,7 +43,7 @@ export const runComments = async ({
         '  shop comments <verb> [flags]',
         '',
         'Verbs:',
-        '  get|list|delete',
+        '  get|list|delete|approve|spam|not-spam',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -51,6 +51,28 @@ export const runComments = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'approve' || verb === 'spam' || verb === 'not-spam') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id, 'Comment')
+
+    const mutation =
+      verb === 'approve' ? 'commentApprove' : verb === 'spam' ? 'commentSpam' : 'commentNotSpam'
+
+    const result = await runMutation(ctx, {
+      [mutation]: {
+        __args: { id },
+        comment: commentSummarySelection,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    const payload = (result as any)[mutation]
+    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(payload?.comment?.id ?? '')
+    printJson(payload, ctx.format !== 'raw')
     return
   }
 

@@ -3,34 +3,19 @@
   "totals": {
     "queryFields": 269,
     "mutationFields": 496,
-    "usedQueryFields": 173,
-    "usedMutationFields": 359,
-    "missingQueryFields": 96,
-    "missingMutationFields": 137
+    "usedQueryFields": 205,
+    "usedMutationFields": 386,
+    "missingQueryFields": 64,
+    "missingMutationFields": 110
   },
   "missing": {
     "queries": [
-      "app",
-      "appByHandle",
-      "appByKey",
-      "appDiscountType",
-      "appDiscountTypes",
-      "appDiscountTypesNodes",
-      "appInstallations",
-      "articleAuthors",
-      "articleTags",
       "assignedFulfillmentOrders",
       "automaticDiscount",
       "automaticDiscounts",
       "automaticDiscountSavedSearches",
-      "availableBackupRegions",
-      "availableLocales",
-      "backupRegion",
-      "blogsCount",
       "catalogOperations",
       "catalogsCount",
-      "channel",
-      "channels",
       "checkoutBranding",
       "checkoutProfile",
       "checkoutProfiles",
@@ -38,7 +23,6 @@
       "collectionByHandle",
       "collectionByIdentifier",
       "collectionRulesConditions",
-      "currentAppInstallation",
       "deletionEvents",
       "deliveryPromiseProvider",
       "discountNode",
@@ -46,8 +30,6 @@
       "discountNodesCount",
       "discountRedeemCodeBulkCreation",
       "discountRedeemCodeSavedSearches",
-      "domain",
-      "fileSavedSearches",
       "financeAppAccessPolicy",
       "financeKycInformation",
       "inventoryLevel",
@@ -64,15 +46,9 @@
       "marketLocalizableResources",
       "marketLocalizableResourcesByIds",
       "marketsResolvedValues",
-      "metafieldDefinitionTypes",
-      "metaobjectByHandle",
-      "metaobjectDefinitionByType",
-      "nodes",
-      "onlineStore",
       "orderByIdentifier",
       "orderEditSession",
       "orderPaymentStatus",
-      "pagesCount",
       "pendingOrdersCount",
       "primaryMarket",
       "productByHandle",
@@ -86,35 +62,21 @@
       "productTypes",
       "productVariantByIdentifier",
       "productVendors",
-      "publicApiVersions",
       "publicationsCount",
       "publishedProductsCount",
       "returnableFulfillment",
       "reverseDelivery",
       "reverseFulfillmentOrder",
-      "shopBillingPreferences",
-      "shopifyqlQuery",
-      "shopPayPaymentRequestReceipt",
-      "shopPayPaymentRequestReceipts",
-      "standardMetafieldDefinitionTemplates",
       "subscriptionBillingAttempts",
       "subscriptionBillingCycle",
       "subscriptionBillingCycleBulkResults",
       "tenderTransactions",
       "urlRedirectImport",
       "urlRedirectSavedSearches",
-      "urlRedirectsCount",
-      "webhookSubscriptionsCount",
-      "webPresences"
+      "urlRedirectsCount"
     ],
     "mutations": [
-      "appPurchaseOneTimeCreate",
-      "appRevokeAccessScopes",
-      "appSubscriptionCreate",
       "appSubscriptionTrialExtend",
-      "appUninstall",
-      "appUsageRecordCreate",
-      "backupRegionUpdate",
       "bulkOperationCancel",
       "bulkProductResourceFeedbackCreate",
       "catalogContextUpdate",
@@ -122,9 +84,6 @@
       "collectionAddProducts",
       "collectionReorderProducts",
       "combinedListingUpdate",
-      "commentApprove",
-      "commentNotSpam",
-      "commentSpam",
       "deliveryCustomizationActivation",
       "deliveryPromiseProviderUpsert",
       "deliverySettingUpdate",
@@ -132,7 +91,6 @@
       "discountCodeRedeemCodeBulkDelete",
       "eventBridgeWebhookSubscriptionCreate",
       "eventBridgeWebhookSubscriptionUpdate",
-      "fileAcknowledgeUpdateFailed",
       "fulfillmentCreate",
       "fulfillmentServiceCreate",
       "fulfillmentServiceUpdate",
@@ -158,12 +116,6 @@
       "marketWebPresenceUpdate",
       "menuCreate",
       "menuUpdate",
-      "metafieldDefinitionPin",
-      "metafieldDefinitionUnpin",
-      "metafieldDefinitionUpdate",
-      "metafieldsDelete",
-      "metaobjectBulkDelete",
-      "metaobjectUpsert",
       "orderCapture",
       "orderCreateManualPayment",
       "orderCustomerRemove",
@@ -206,9 +158,6 @@
       "productVariantsBulkUpdate",
       "publishablePublishToCurrentChannel",
       "publishableUnpublishToCurrentChannel",
-      "pubSubServerPixelUpdate",
-      "pubSubWebhookSubscriptionCreate",
-      "pubSubWebhookSubscriptionUpdate",
       "quantityRulesAdd",
       "quantityRulesDelete",
       "returnLineItemRemoveFromReturn",
@@ -221,11 +170,6 @@
       "sellingPlanGroupRemoveProductVariants",
       "shopifyPaymentsPayoutAlternateCurrencyCreate",
       "shopResourceFeedbackCreate",
-      "stagedUploadTargetGenerate",
-      "stagedUploadTargetsGenerate",
-      "standardMetafieldDefinitionEnable",
-      "standardMetaobjectDefinitionEnable",
-      "storefrontAccessTokenCreate",
       "subscriptionBillingCycleCharge",
       "subscriptionBillingCycleContractDraftCommit",
       "subscriptionBillingCycleContractDraftConcatenate",
@@ -241,10 +185,7 @@
       "urlRedirectBulkDeleteBySavedSearch",
       "urlRedirectBulkDeleteBySearch",
       "urlRedirectImportCreate",
-      "urlRedirectImportSubmit",
-      "webPresenceCreate",
-      "webPresenceDelete",
-      "webPresenceUpdate"
+      "urlRedirectImportSubmit"
     ],
     "grouped": {
       "queries": [
@@ -262,18 +203,6 @@
             "productTypes",
             "productVariantByIdentifier",
             "productVendors"
-          ]
-        },
-        {
-          "prefix": "app",
-          "ops": [
-            "app",
-            "appByHandle",
-            "appByKey",
-            "appDiscountType",
-            "appDiscountTypes",
-            "appDiscountTypesNodes",
-            "appInstallations"
           ]
         },
         {
@@ -328,14 +257,6 @@
           ]
         },
         {
-          "prefix": "shop",
-          "ops": [
-            "shopBillingPreferences",
-            "shopPayPaymentRequestReceipt",
-            "shopPayPaymentRequestReceipts"
-          ]
-        },
-        {
           "prefix": "subscription",
           "ops": [
             "subscriptionBillingAttempts",
@@ -349,20 +270,6 @@
             "urlRedirectImport",
             "urlRedirectSavedSearches",
             "urlRedirectsCount"
-          ]
-        },
-        {
-          "prefix": "article",
-          "ops": [
-            "articleAuthors",
-            "articleTags"
-          ]
-        },
-        {
-          "prefix": "available",
-          "ops": [
-            "availableBackupRegions",
-            "availableLocales"
           ]
         },
         {
@@ -394,13 +301,6 @@
           ]
         },
         {
-          "prefix": "metaobject",
-          "ops": [
-            "metaobjectByHandle",
-            "metaobjectDefinitionByType"
-          ]
-        },
-        {
           "prefix": "reverse",
           "ops": [
             "reverseDelivery",
@@ -411,18 +311,6 @@
           "prefix": "assigned",
           "ops": [
             "assignedFulfillmentOrders"
-          ]
-        },
-        {
-          "prefix": "backup",
-          "ops": [
-            "backupRegion"
-          ]
-        },
-        {
-          "prefix": "blogs",
-          "ops": [
-            "blogsCount"
           ]
         },
         {
@@ -438,27 +326,9 @@
           ]
         },
         {
-          "prefix": "channel",
-          "ops": [
-            "channel"
-          ]
-        },
-        {
-          "prefix": "channels",
-          "ops": [
-            "channels"
-          ]
-        },
-        {
           "prefix": "code",
           "ops": [
             "codeDiscountSavedSearches"
-          ]
-        },
-        {
-          "prefix": "current",
-          "ops": [
-            "currentAppInstallation"
           ]
         },
         {
@@ -471,18 +341,6 @@
           "prefix": "delivery",
           "ops": [
             "deliveryPromiseProvider"
-          ]
-        },
-        {
-          "prefix": "domain",
-          "ops": [
-            "domain"
-          ]
-        },
-        {
-          "prefix": "file",
-          "ops": [
-            "fileSavedSearches"
           ]
         },
         {
@@ -510,30 +368,6 @@
           ]
         },
         {
-          "prefix": "metafield",
-          "ops": [
-            "metafieldDefinitionTypes"
-          ]
-        },
-        {
-          "prefix": "nodes",
-          "ops": [
-            "nodes"
-          ]
-        },
-        {
-          "prefix": "online",
-          "ops": [
-            "onlineStore"
-          ]
-        },
-        {
-          "prefix": "pages",
-          "ops": [
-            "pagesCount"
-          ]
-        },
-        {
           "prefix": "pending",
           "ops": [
             "pendingOrdersCount"
@@ -543,12 +377,6 @@
           "prefix": "primary",
           "ops": [
             "primaryMarket"
-          ]
-        },
-        {
-          "prefix": "public",
-          "ops": [
-            "publicApiVersions"
           ]
         },
         {
@@ -570,33 +398,9 @@
           ]
         },
         {
-          "prefix": "shopifyql",
-          "ops": [
-            "shopifyqlQuery"
-          ]
-        },
-        {
-          "prefix": "standard",
-          "ops": [
-            "standardMetafieldDefinitionTemplates"
-          ]
-        },
-        {
           "prefix": "tender",
           "ops": [
             "tenderTransactions"
-          ]
-        },
-        {
-          "prefix": "web",
-          "ops": [
-            "webPresences"
-          ]
-        },
-        {
-          "prefix": "webhook",
-          "ops": [
-            "webhookSubscriptionsCount"
           ]
         }
       ],
@@ -673,17 +477,6 @@
           ]
         },
         {
-          "prefix": "app",
-          "ops": [
-            "appPurchaseOneTimeCreate",
-            "appRevokeAccessScopes",
-            "appSubscriptionCreate",
-            "appSubscriptionTrialExtend",
-            "appUninstall",
-            "appUsageRecordCreate"
-          ]
-        },
-        {
           "prefix": "inventory",
           "ops": [
             "inventoryActivate",
@@ -743,22 +536,6 @@
           ]
         },
         {
-          "prefix": "comment",
-          "ops": [
-            "commentApprove",
-            "commentNotSpam",
-            "commentSpam"
-          ]
-        },
-        {
-          "prefix": "metafield",
-          "ops": [
-            "metafieldDefinitionPin",
-            "metafieldDefinitionUnpin",
-            "metafieldDefinitionUpdate"
-          ]
-        },
-        {
           "prefix": "payment",
           "ops": [
             "paymentCustomizationActivation",
@@ -767,27 +544,11 @@
           ]
         },
         {
-          "prefix": "pub",
-          "ops": [
-            "pubSubServerPixelUpdate",
-            "pubSubWebhookSubscriptionCreate",
-            "pubSubWebhookSubscriptionUpdate"
-          ]
-        },
-        {
           "prefix": "reverse",
           "ops": [
             "reverseDeliveryCreateWithShipping",
             "reverseDeliveryShippingUpdate",
             "reverseFulfillmentOrderDispose"
-          ]
-        },
-        {
-          "prefix": "web",
-          "ops": [
-            "webPresenceCreate",
-            "webPresenceDelete",
-            "webPresenceUpdate"
           ]
         },
         {
@@ -826,13 +587,6 @@
           ]
         },
         {
-          "prefix": "metaobject",
-          "ops": [
-            "metaobjectBulkDelete",
-            "metaobjectUpsert"
-          ]
-        },
-        {
           "prefix": "publishable",
           "ops": [
             "publishablePublishToCurrentChannel",
@@ -847,23 +601,9 @@
           ]
         },
         {
-          "prefix": "staged",
+          "prefix": "app",
           "ops": [
-            "stagedUploadTargetGenerate",
-            "stagedUploadTargetsGenerate"
-          ]
-        },
-        {
-          "prefix": "standard",
-          "ops": [
-            "standardMetafieldDefinitionEnable",
-            "standardMetaobjectDefinitionEnable"
-          ]
-        },
-        {
-          "prefix": "backup",
-          "ops": [
-            "backupRegionUpdate"
+            "appSubscriptionTrialExtend"
           ]
         },
         {
@@ -891,21 +631,9 @@
           ]
         },
         {
-          "prefix": "file",
-          "ops": [
-            "fileAcknowledgeUpdateFailed"
-          ]
-        },
-        {
           "prefix": "location",
           "ops": [
             "locationLocalPickupEnable"
-          ]
-        },
-        {
-          "prefix": "metafields",
-          "ops": [
-            "metafieldsDelete"
           ]
         },
         {
@@ -924,12 +652,6 @@
           "prefix": "shopify",
           "ops": [
             "shopifyPaymentsPayoutAlternateCurrencyCreate"
-          ]
-        },
-        {
-          "prefix": "storefront",
-          "ops": [
-            "storefrontAccessTokenCreate"
           ]
         },
         {
@@ -958,6 +680,19 @@
             "customerSegmentMembers",
             "customerSegmentMembership",
             "customerSegmentMembersQuery"
+          ]
+        },
+        {
+          "prefix": "app",
+          "ops": [
+            "app",
+            "appByHandle",
+            "appByKey",
+            "appDiscountType",
+            "appDiscountTypes",
+            "appDiscountTypesNodes",
+            "appInstallation",
+            "appInstallations"
           ]
         },
         {
@@ -1013,6 +748,16 @@
           ]
         },
         {
+          "prefix": "metaobject",
+          "ops": [
+            "metaobject",
+            "metaobjectByHandle",
+            "metaobjectDefinition",
+            "metaobjectDefinitionByType",
+            "metaobjectDefinitions"
+          ]
+        },
+        {
           "prefix": "product",
           "ops": [
             "product",
@@ -1030,6 +775,16 @@
             "segmentFilterSuggestions",
             "segmentMigrations",
             "segmentValueSuggestions"
+          ]
+        },
+        {
+          "prefix": "shop",
+          "ops": [
+            "shop",
+            "shopBillingPreferences",
+            "shopLocales",
+            "shopPayPaymentRequestReceipt",
+            "shopPayPaymentRequestReceipts"
           ]
         },
         {
@@ -1052,6 +807,22 @@
           ]
         },
         {
+          "prefix": "article",
+          "ops": [
+            "article",
+            "articleAuthors",
+            "articleTags"
+          ]
+        },
+        {
+          "prefix": "available",
+          "ops": [
+            "availableBackupRegions",
+            "availableCarrierServices",
+            "availableLocales"
+          ]
+        },
+        {
           "prefix": "code",
           "ops": [
             "codeDiscountNode",
@@ -1060,11 +831,19 @@
           ]
         },
         {
-          "prefix": "metaobject",
+          "prefix": "current",
           "ops": [
-            "metaobject",
-            "metaobjectDefinition",
-            "metaobjectDefinitions"
+            "currentAppInstallation",
+            "currentBulkOperation",
+            "currentStaffMember"
+          ]
+        },
+        {
+          "prefix": "metafield",
+          "ops": [
+            "metafieldDefinition",
+            "metafieldDefinitions",
+            "metafieldDefinitionTypes"
           ]
         },
         {
@@ -1100,6 +879,14 @@
           ]
         },
         {
+          "prefix": "webhook",
+          "ops": [
+            "webhookSubscription",
+            "webhookSubscriptions",
+            "webhookSubscriptionsCount"
+          ]
+        },
+        {
           "prefix": "abandoned",
           "ops": [
             "abandonedCheckouts",
@@ -1118,6 +905,13 @@
           "ops": [
             "automaticDiscountNode",
             "automaticDiscountNodes"
+          ]
+        },
+        {
+          "prefix": "blogs",
+          "ops": [
+            "blogs",
+            "blogsCount"
           ]
         },
         {
@@ -1177,13 +971,6 @@
           ]
         },
         {
-          "prefix": "current",
-          "ops": [
-            "currentBulkOperation",
-            "currentStaffMember"
-          ]
-        },
-        {
           "prefix": "customers",
           "ops": [
             "customers",
@@ -1219,13 +1006,6 @@
           ]
         },
         {
-          "prefix": "metafield",
-          "ops": [
-            "metafieldDefinition",
-            "metafieldDefinitions"
-          ]
-        },
-        {
           "prefix": "mobile",
           "ops": [
             "mobilePlatformApplication",
@@ -1244,6 +1024,13 @@
           "ops": [
             "orders",
             "ordersCount"
+          ]
+        },
+        {
+          "prefix": "pages",
+          "ops": [
+            "pages",
+            "pagesCount"
           ]
         },
         {
@@ -1282,13 +1069,6 @@
           ]
         },
         {
-          "prefix": "shop",
-          "ops": [
-            "shop",
-            "shopLocales"
-          ]
-        },
-        {
           "prefix": "staff",
           "ops": [
             "staffMember",
@@ -1303,22 +1083,10 @@
           ]
         },
         {
-          "prefix": "webhook",
+          "prefix": "web",
           "ops": [
-            "webhookSubscription",
-            "webhookSubscriptions"
-          ]
-        },
-        {
-          "prefix": "app",
-          "ops": [
-            "appInstallation"
-          ]
-        },
-        {
-          "prefix": "article",
-          "ops": [
-            "article"
+            "webPixel",
+            "webPresences"
           ]
         },
         {
@@ -1328,21 +1096,15 @@
           ]
         },
         {
-          "prefix": "available",
+          "prefix": "backup",
           "ops": [
-            "availableCarrierServices"
+            "backupRegion"
           ]
         },
         {
           "prefix": "blog",
           "ops": [
             "blog"
-          ]
-        },
-        {
-          "prefix": "blogs",
-          "ops": [
-            "blogs"
           ]
         },
         {
@@ -1361,6 +1123,18 @@
           "prefix": "catalogs",
           "ops": [
             "catalogs"
+          ]
+        },
+        {
+          "prefix": "channel",
+          "ops": [
+            "channel"
+          ]
+        },
+        {
+          "prefix": "channels",
+          "ops": [
+            "channels"
           ]
         },
         {
@@ -1388,9 +1162,21 @@
           ]
         },
         {
+          "prefix": "domain",
+          "ops": [
+            "domain"
+          ]
+        },
+        {
           "prefix": "event",
           "ops": [
             "event"
+          ]
+        },
+        {
+          "prefix": "file",
+          "ops": [
+            "fileSavedSearches"
           ]
         },
         {
@@ -1442,15 +1228,21 @@
           ]
         },
         {
-          "prefix": "page",
+          "prefix": "nodes",
           "ops": [
-            "page"
+            "nodes"
           ]
         },
         {
-          "prefix": "pages",
+          "prefix": "online",
           "ops": [
-            "pages"
+            "onlineStore"
+          ]
+        },
+        {
+          "prefix": "page",
+          "ops": [
+            "page"
           ]
         },
         {
@@ -1463,6 +1255,12 @@
           "prefix": "privacy",
           "ops": [
             "privacySettings"
+          ]
+        },
+        {
+          "prefix": "public",
+          "ops": [
+            "publicApiVersions"
           ]
         },
         {
@@ -1493,6 +1291,18 @@
           "prefix": "server",
           "ops": [
             "serverPixel"
+          ]
+        },
+        {
+          "prefix": "shopifyql",
+          "ops": [
+            "shopifyqlQuery"
+          ]
+        },
+        {
+          "prefix": "standard",
+          "ops": [
+            "standardMetafieldDefinitionTemplates"
           ]
         },
         {
@@ -1529,12 +1339,6 @@
           "prefix": "validations",
           "ops": [
             "validations"
-          ]
-        },
-        {
-          "prefix": "web",
-          "ops": [
-            "webPixel"
           ]
         }
       ],
@@ -1809,6 +1613,19 @@
           ]
         },
         {
+          "prefix": "metaobject",
+          "ops": [
+            "metaobjectBulkDelete",
+            "metaobjectCreate",
+            "metaobjectDefinitionCreate",
+            "metaobjectDefinitionDelete",
+            "metaobjectDefinitionUpdate",
+            "metaobjectDelete",
+            "metaobjectUpdate",
+            "metaobjectUpsert"
+          ]
+        },
+        {
           "prefix": "theme",
           "ops": [
             "themeCreate",
@@ -1819,6 +1636,18 @@
             "themeFilesUpsert",
             "themePublish",
             "themeUpdate"
+          ]
+        },
+        {
+          "prefix": "app",
+          "ops": [
+            "appPurchaseOneTimeCreate",
+            "appRevokeAccessScopes",
+            "appSubscriptionCancel",
+            "appSubscriptionCreate",
+            "appSubscriptionLineItemUpdate",
+            "appUninstall",
+            "appUsageRecordCreate"
           ]
         },
         {
@@ -1857,14 +1686,14 @@
           ]
         },
         {
-          "prefix": "metaobject",
+          "prefix": "web",
           "ops": [
-            "metaobjectCreate",
-            "metaobjectDefinitionCreate",
-            "metaobjectDefinitionDelete",
-            "metaobjectDefinitionUpdate",
-            "metaobjectDelete",
-            "metaobjectUpdate"
+            "webPixelCreate",
+            "webPixelDelete",
+            "webPixelUpdate",
+            "webPresenceCreate",
+            "webPresenceDelete",
+            "webPresenceUpdate"
           ]
         },
         {
@@ -1878,6 +1707,16 @@
           ]
         },
         {
+          "prefix": "metafield",
+          "ops": [
+            "metafieldDefinitionCreate",
+            "metafieldDefinitionDelete",
+            "metafieldDefinitionPin",
+            "metafieldDefinitionUnpin",
+            "metafieldDefinitionUpdate"
+          ]
+        },
+        {
           "prefix": "payment",
           "ops": [
             "paymentCustomizationCreate",
@@ -1885,6 +1724,24 @@
             "paymentCustomizationUpdate",
             "paymentReminderSend",
             "paymentTermsDelete"
+          ]
+        },
+        {
+          "prefix": "comment",
+          "ops": [
+            "commentApprove",
+            "commentDelete",
+            "commentNotSpam",
+            "commentSpam"
+          ]
+        },
+        {
+          "prefix": "file",
+          "ops": [
+            "fileAcknowledgeUpdateFailed",
+            "fileCreate",
+            "fileDelete",
+            "fileUpdate"
           ]
         },
         {
@@ -1929,14 +1786,6 @@
           ]
         },
         {
-          "prefix": "file",
-          "ops": [
-            "fileCreate",
-            "fileDelete",
-            "fileUpdate"
-          ]
-        },
-        {
           "prefix": "market",
           "ops": [
             "marketCreate",
@@ -1966,6 +1815,14 @@
             "priceListCreate",
             "priceListDelete",
             "priceListUpdate"
+          ]
+        },
+        {
+          "prefix": "pub",
+          "ops": [
+            "pubSubServerPixelUpdate",
+            "pubSubWebhookSubscriptionCreate",
+            "pubSubWebhookSubscriptionUpdate"
           ]
         },
         {
@@ -2017,6 +1874,14 @@
           ]
         },
         {
+          "prefix": "staged",
+          "ops": [
+            "stagedUploadsCreate",
+            "stagedUploadTargetGenerate",
+            "stagedUploadTargetsGenerate"
+          ]
+        },
+        {
           "prefix": "url",
           "ops": [
             "urlRedirectCreate",
@@ -2033,14 +1898,6 @@
           ]
         },
         {
-          "prefix": "web",
-          "ops": [
-            "webPixelCreate",
-            "webPixelDelete",
-            "webPixelUpdate"
-          ]
-        },
-        {
           "prefix": "webhook",
           "ops": [
             "webhookSubscriptionCreate",
@@ -2053,13 +1910,6 @@
           "ops": [
             "abandonmentEmailStateUpdate",
             "abandonmentUpdateActivitiesDeliveryStatuses"
-          ]
-        },
-        {
-          "prefix": "app",
-          "ops": [
-            "appSubscriptionCancel",
-            "appSubscriptionLineItemUpdate"
           ]
         },
         {
@@ -2091,10 +1941,10 @@
           ]
         },
         {
-          "prefix": "metafield",
+          "prefix": "metafields",
           "ops": [
-            "metafieldDefinitionCreate",
-            "metafieldDefinitionDelete"
+            "metafieldsDelete",
+            "metafieldsSet"
           ]
         },
         {
@@ -2112,10 +1962,24 @@
           ]
         },
         {
+          "prefix": "standard",
+          "ops": [
+            "standardMetafieldDefinitionEnable",
+            "standardMetaobjectDefinitionEnable"
+          ]
+        },
+        {
           "prefix": "store",
           "ops": [
             "storeCreditAccountCredit",
             "storeCreditAccountDebit"
+          ]
+        },
+        {
+          "prefix": "storefront",
+          "ops": [
+            "storefrontAccessTokenCreate",
+            "storefrontAccessTokenDelete"
           ]
         },
         {
@@ -2133,9 +1997,9 @@
           ]
         },
         {
-          "prefix": "comment",
+          "prefix": "backup",
           "ops": [
-            "commentDelete"
+            "backupRegionUpdate"
           ]
         },
         {
@@ -2175,12 +2039,6 @@
           ]
         },
         {
-          "prefix": "metafields",
-          "ops": [
-            "metafieldsSet"
-          ]
-        },
-        {
           "prefix": "privacy",
           "ops": [
             "privacyFeaturesDisable"
@@ -2202,18 +2060,6 @@
           "prefix": "remove",
           "ops": [
             "removeFromReturn"
-          ]
-        },
-        {
-          "prefix": "staged",
-          "ops": [
-            "stagedUploadsCreate"
-          ]
-        },
-        {
-          "prefix": "storefront",
-          "ops": [
-            "storefrontAccessTokenDelete"
           ]
         },
         {

@@ -32,7 +32,7 @@ export const runServerPixels = async ({
         '  shop server-pixels <verb> [flags]',
         '',
         'Verbs:',
-        '  get|create|delete|update-pubsub|update-eventbridge',
+        '  get|create|delete|update-pubsub|pubsub-update|update-eventbridge',
         '',
         'Common output flags:',
         '  --view summary|ids|raw',
@@ -101,6 +101,29 @@ export const runServerPixels = async ({
     const pubSubProject = args['pubsub-project'] as string | undefined
     const pubSubTopic = args['pubsub-topic'] as string | undefined
     if (!pubSubProject || !pubSubTopic) throw new CliError('Missing --pubsub-project or --pubsub-topic', 2)
+
+    const result = await runMutation(ctx, {
+      pubSubServerPixelUpdate: {
+        __args: { pubSubProject, pubSubTopic },
+        serverPixel: serverPixelSelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.pubSubServerPixelUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    printJson(result.pubSubServerPixelUpdate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'pubsub-update') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { 'pubsub-project': { type: 'string' }, 'pubsub-topic': { type: 'string' } },
+    })
+    const pubSubProject = args['pubsub-project'] as string | undefined
+    const pubSubTopic = args['pubsub-topic'] as string | undefined
+    if (!pubSubProject) throw new CliError('Missing --pubsub-project', 2)
+    if (!pubSubTopic) throw new CliError('Missing --pubsub-topic', 2)
 
     const result = await runMutation(ctx, {
       pubSubServerPixelUpdate: {

@@ -32,7 +32,7 @@ export const runFiles = async ({
         '  shop files <verb> [flags]',
         '',
         'Verbs:',
-        '  get|list|upload|update|delete',
+        '  get|list|upload|update|delete|acknowledge-update-failed',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -40,6 +40,34 @@ export const runFiles = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'acknowledge-update-failed') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const ids =
+      args.ids !== undefined
+        ? parseIds(args.ids as any, 'File')
+        : args.id
+          ? [requireId(args.id as any, 'File')]
+          : []
+
+    if (ids.length === 0) throw new CliError('Missing --id or --ids', 2)
+
+    const result = await runMutation(ctx, {
+      fileAcknowledgeUpdateFailed: {
+        __args: { fileIds: ids },
+        files: fileSelection,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.fileAcknowledgeUpdateFailed, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) {
+      printIds((result.fileAcknowledgeUpdateFailed?.files ?? []).map((f: any) => f?.id))
+      return
+    }
+    printJson(result.fileAcknowledgeUpdateFailed, ctx.format !== 'raw')
     return
   }
 

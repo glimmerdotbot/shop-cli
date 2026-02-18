@@ -5,7 +5,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
 
-import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseFirst, parseJsonArg, requireId } from './_shared'
 
 const menuSummarySelection = {
   id: true,
@@ -50,6 +50,7 @@ export const runMenus = async ({
         '',
         'Verbs:',
         '  create|get|list|update|delete',
+        '  create-basic|update-basic',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -57,6 +58,66 @@ export const runMenus = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'create-basic') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { title: { type: 'string' }, handle: { type: 'string' }, items: { type: 'string' } },
+    })
+    const title = (args as any).title as string | undefined
+    const handle = (args as any).handle as string | undefined
+    const itemsRaw = (args as any).items as string | undefined
+
+    if (!title) throw new CliError('Missing --title', 2)
+    if (!handle) throw new CliError('Missing --handle', 2)
+    if (!itemsRaw) throw new CliError('Missing --items', 2)
+
+    const items = parseJsonArg(itemsRaw, '--items')
+    if (!Array.isArray(items)) throw new CliError('--items must be a JSON array', 2)
+
+    const result = await runMutation(ctx, {
+      menuCreate: {
+        __args: { title, handle, items },
+        menu: menuSummarySelection,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.menuCreate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.menuCreate?.menu?.id ?? '')
+    printJson(result.menuCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'update-basic') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { title: { type: 'string' }, handle: { type: 'string' }, items: { type: 'string' } },
+    })
+    const id = requireId(args.id, 'Menu')
+    const title = (args as any).title as string | undefined
+    const handle = (args as any).handle as string | undefined
+    const itemsRaw = (args as any).items as string | undefined
+
+    if (!title) throw new CliError('Missing --title', 2)
+    if (!itemsRaw) throw new CliError('Missing --items', 2)
+
+    const items = parseJsonArg(itemsRaw, '--items')
+    if (!Array.isArray(items)) throw new CliError('--items must be a JSON array', 2)
+
+    const result = await runMutation(ctx, {
+      menuUpdate: {
+        __args: { id, title, ...(handle ? { handle } : {}), items },
+        menu: menuSummarySelection,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.menuUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.menuUpdate?.menu?.id ?? '')
+    printJson(result.menuUpdate, ctx.format !== 'raw')
     return
   }
 

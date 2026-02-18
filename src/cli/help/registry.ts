@@ -103,6 +103,26 @@ const flagProfileId = flag('--profile-id <gid>', 'Checkout profile ID')
 const flagEnabled = flag('--enabled <bool>', 'Enable/disable')
 const flagRoles = flag('--roles <role>', 'Theme roles (repeatable)')
 const flagName = flag('--name <string>', 'Name')
+const flagHandle = flag('--handle <string>', 'Handle')
+const flagApiKey = flag('--api-key <string>', 'API key')
+const flagReturnUrl = flag('--return-url <url>', 'Return URL')
+const flagLineItems = flag('--line-items <json>', 'Line items JSON array')
+const flagTrialDays = flag('--trial-days <n>', 'Trial days')
+const flagReplacementBehavior = flag('--replacement-behavior <value>', 'Replacement behavior')
+const flagScopes = flag('--scopes <csv>', 'Scopes (comma-separated)')
+const flagCategory = flag('--category <value>', 'Category filter')
+const flagPrivacy = flag('--privacy <value>', 'Privacy filter')
+const flagDefinitionId = flag('--definition-id <gid>', 'Definition ID')
+const flagConstraintSubtype = flag('--constraint-subtype <value>', 'Constraint subtype')
+const flagConstraintStatus = flag('--constraint-status <value>', 'Constraint status')
+const flagExcludeActivated = flag('--exclude-activated', 'Exclude activated templates')
+const flagVisibleToStorefrontApi = flag('--visible-to-storefront-api <bool>', 'Visible to Storefront API')
+const flagUseAsCollectionCondition = flag('--use-as-collection-condition <bool>', 'Use as collection condition')
+const flagResource = flag('--resource <type>', 'Resource type')
+const flagFilename = flag('--filename <string>', 'Filename')
+const flagMimeType = flag('--mime-type <mime>', 'MIME type')
+const flagFileSize = flag('--file-size <bytes>', 'File size in bytes')
+const flagHttpMethod = flag('--http-method <method>', 'HTTP method')
 const flagRole = flag('--role <role>', 'Role')
 const flagSource = flag('--source <url>', 'Source URL (or src)')
 const flagFiles = flag('--files <json>', 'Files JSON (paths or mappings)')
@@ -1606,6 +1626,14 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId, flagAlt],
       },
       {
+        verb: 'acknowledge-update-failed',
+        description: 'Acknowledge failed file updates.',
+        operation: { type: 'mutation', name: 'fileAcknowledgeUpdateFailed' },
+        requiredFlags: [flagId],
+        flags: [flagId, flagIds],
+        notes: ['Provide --id or --ids.'],
+      },
+      {
         verb: 'delete',
         description: 'Delete files.',
         operation: { type: 'mutation', name: 'fileDelete' },
@@ -1636,6 +1664,19 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'articles',
     description: 'Manage blog articles.',
     verbs: [
+      {
+        verb: 'authors',
+        description: 'List article authors.',
+        operation: { type: 'query', name: 'articleAuthors' },
+        output: { pagination: true },
+      },
+      {
+        verb: 'tags',
+        description: 'List article tags.',
+        operation: { type: 'query', name: 'articleTags' },
+        requiredFlags: [flagLimit],
+        flags: [flagSort, flagLimit],
+      },
       createVerb({ operation: 'articleCreate', description: 'Create an article.' }),
       getVerb({ operation: 'article', description: 'Fetch an article by ID.' }),
       listVerb({ operation: 'articles', description: 'List articles.' }),
@@ -1663,6 +1704,12 @@ const baseCommandRegistry: ResourceSpec[] = [
       createVerb({ operation: 'blogCreate', description: 'Create a blog.' }),
       getVerb({ operation: 'blog', description: 'Fetch a blog by ID.' }),
       listVerb({ operation: 'blogs', description: 'List blogs.' }),
+      {
+        verb: 'count',
+        description: 'Count blogs.',
+        operation: { type: 'query', name: 'blogsCount' },
+        flags: [flagQuery, flagLimit],
+      },
       updateVerb({ operation: 'blogUpdate', description: 'Update a blog.' }),
       {
         verb: 'publish',
@@ -1689,6 +1736,12 @@ const baseCommandRegistry: ResourceSpec[] = [
       createVerb({ operation: 'pageCreate', description: 'Create a page.' }),
       getVerb({ operation: 'page', description: 'Fetch a page by ID.' }),
       listVerb({ operation: 'pages', description: 'List pages.' }),
+      {
+        verb: 'count',
+        description: 'Count pages.',
+        operation: { type: 'query', name: 'pagesCount' },
+        flags: [flagLimit],
+      },
       updateVerb({ operation: 'pageUpdate', description: 'Update a page.' }),
       {
         verb: 'publish',
@@ -1710,6 +1763,24 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'comments',
     description: 'Manage comments.',
     verbs: [
+      {
+        verb: 'approve',
+        description: 'Approve a comment.',
+        operation: { type: 'mutation', name: 'commentApprove' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'spam',
+        description: 'Mark a comment as spam.',
+        operation: { type: 'mutation', name: 'commentSpam' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'not-spam',
+        description: 'Mark a comment as not spam.',
+        operation: { type: 'mutation', name: 'commentNotSpam' },
+        requiredFlags: [flagId],
+      },
       getVerb({ operation: 'comment', description: 'Fetch a comment by ID.' }),
       listVerb({ operation: 'comments', description: 'List comments.' }),
       deleteVerb({ operation: 'commentDelete', description: 'Delete a comment.' }),
@@ -1720,12 +1791,27 @@ const baseCommandRegistry: ResourceSpec[] = [
     description: 'Manage navigation menus.',
     verbs: [
       {
+        verb: 'create-basic',
+        description: 'Create a menu (basic flags).',
+        operation: { type: 'mutation', name: 'menuCreate' },
+        requiredFlags: [flagTitle, flagHandle, flagItems],
+        notes: ['--items must be a JSON array string.'],
+      },
+      {
         ...createVerb({ operation: 'menuCreate', description: 'Create a menu.' }),
         input: { mode: 'set', required: true },
         notes: ['Use --set title=..., --set handle=..., --set items=[...].'],
       },
       getVerb({ operation: 'menu', description: 'Fetch a menu by ID.' }),
       listVerb({ operation: 'menus', description: 'List menus.' }),
+      {
+        verb: 'update-basic',
+        description: 'Update a menu (basic flags).',
+        operation: { type: 'mutation', name: 'menuUpdate' },
+        requiredFlags: [flagId, flagTitle, flagItems],
+        flags: [flagHandle],
+        notes: ['--items must be a JSON array string.'],
+      },
       {
         ...updateVerb({ operation: 'menuUpdate', description: 'Update a menu.' }),
         input: { mode: 'set', required: true },
@@ -1972,6 +2058,12 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'webhooks',
     description: 'Manage webhook subscriptions.',
     verbs: [
+      {
+        verb: 'count',
+        description: 'Count webhook subscriptions.',
+        operation: { type: 'query', name: 'webhookSubscriptionsCount' },
+        flags: [flagQuery, flagLimit],
+      },
       inputVerb({
         verb: 'create',
         description: 'Create a webhook subscription.',
@@ -1988,6 +2080,22 @@ const baseCommandRegistry: ResourceSpec[] = [
         inputArg: 'webhookSubscription',
         requiredFlags: [flagId],
       }),
+      {
+        verb: 'pubsub-create',
+        description: 'Create a Pub/Sub webhook subscription.',
+        operation: { type: 'mutation', name: 'pubSubWebhookSubscriptionCreate' },
+        requiredFlags: [flagTopic, flagPubSubProject, flagPubSubTopic],
+        flags: inputFlags,
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'pubsub-update',
+        description: 'Update a Pub/Sub webhook subscription.',
+        operation: { type: 'mutation', name: 'pubSubWebhookSubscriptionUpdate' },
+        requiredFlags: [flagId, flagPubSubProject, flagPubSubTopic],
+        flags: inputFlags,
+        output: { view: true, selection: true },
+      },
       deleteVerb({ operation: 'webhookSubscriptionDelete', description: 'Delete a webhook subscription.' }),
     ],
   },
@@ -2254,6 +2362,35 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'metaobjects',
     description: 'Manage metaobjects.',
     verbs: [
+      {
+        verb: 'by-handle',
+        description: 'Fetch a metaobject by type + handle.',
+        operation: { type: 'query', name: 'metaobjectByHandle' },
+        requiredFlags: [flagType, flagHandle],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'definition-by-type',
+        description: 'Fetch a metaobject definition by type.',
+        operation: { type: 'query', name: 'metaobjectDefinitionByType' },
+        requiredFlags: [flagType],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'upsert',
+        description: 'Upsert a metaobject by type + handle.',
+        operation: { type: 'mutation', name: 'metaobjectUpsert' },
+        requiredFlags: [flagType, flagHandle],
+        flags: inputFlags,
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'bulk-delete',
+        description: 'Bulk delete metaobjects.',
+        operation: { type: 'mutation', name: 'metaobjectBulkDelete' },
+        requiredFlags: [flagYes],
+        flags: [flagType, flagIds],
+      },
       createVerb({
         operation: 'metaobjectCreate',
         inputArg: 'metaobject',
@@ -2812,6 +2949,12 @@ const baseCommandRegistry: ResourceSpec[] = [
       {
         verb: 'update-pubsub',
         description: 'Update Pub/Sub endpoint.',
+        operation: { type: 'mutation', name: 'pubSubServerPixelUpdate' },
+        requiredFlags: [flagPubSubProject, flagPubSubTopic],
+      },
+      {
+        verb: 'pubsub-update',
+        description: 'Update Pub/Sub endpoint (Plan 5 alias).',
         operation: { type: 'mutation', name: 'pubSubServerPixelUpdate' },
         requiredFlags: [flagPubSubProject, flagPubSubTopic],
       },
@@ -3659,6 +3802,12 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flag('--title <string>', 'Token title')],
       }),
       {
+        verb: 'create-basic',
+        description: 'Create a storefront access token (basic flags).',
+        operation: { type: 'mutation', name: 'storefrontAccessTokenCreate' },
+        requiredFlags: [flagTitle],
+      },
+      {
         verb: 'delete',
         description: 'Delete a storefront access token.',
         operation: { type: 'mutation', name: 'storefrontAccessTokenDelete' },
@@ -3851,6 +4000,44 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'app-billing',
     description: 'Manage app billing.',
     verbs: [
+      {
+        verb: 'purchase-one-time-create',
+        description: 'Create a one-time purchase (Plan 5).',
+        operation: { type: 'mutation', name: 'appPurchaseOneTimeCreate' },
+        requiredFlags: [flagName, flagAmount, flagCurrency, flagReturnUrl],
+        flags: [flag('--test', 'Test mode')],
+      },
+      {
+        verb: 'subscription-create',
+        description: 'Create an app subscription (Plan 5).',
+        operation: { type: 'mutation', name: 'appSubscriptionCreate' },
+        requiredFlags: [flagName, flagReturnUrl],
+        flags: [flagLineItems, flagTrialDays, flagReplacementBehavior, flag('--test', 'Test mode')],
+      },
+      {
+        verb: 'subscription-trial-extend',
+        description: 'Extend an app subscription trial (Plan 5).',
+        operation: { type: 'mutation', name: 'appSubscriptionTrialExtend' },
+        requiredFlags: [flagId, flagDays],
+      },
+      {
+        verb: 'usage-record-create',
+        description: 'Create a usage record (Plan 5).',
+        operation: { type: 'mutation', name: 'appUsageRecordCreate' },
+        requiredFlags: [flagSubscriptionLineItemId, flagDescription, flagAmount, flagCurrency],
+        flags: [flagIdempotencyKey],
+      },
+      {
+        verb: 'uninstall',
+        description: 'Uninstall the app (Plan 5).',
+        operation: { type: 'mutation', name: 'appUninstall' },
+      },
+      {
+        verb: 'revoke-access-scopes',
+        description: 'Revoke app access scopes (Plan 5).',
+        operation: { type: 'mutation', name: 'appRevokeAccessScopes' },
+        requiredFlags: [flagScopes],
+      },
       inputVerb({
         verb: 'create-one-time',
         description: 'Create a one-time purchase.',
@@ -3902,6 +4089,291 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'appInstallation' },
         flags: [flagId],
         output: { view: true, selection: true },
+      },
+    ],
+  },
+  {
+    resource: 'apps',
+    description: 'Query apps and app installations.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Fetch an app by ID.',
+        operation: { type: 'query', name: 'app' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'by-handle',
+        description: 'Fetch an app by handle.',
+        operation: { type: 'query', name: 'appByHandle' },
+        requiredFlags: [flagHandle],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'by-key',
+        description: 'Fetch an app by API key.',
+        operation: { type: 'query', name: 'appByKey' },
+        requiredFlags: [flagApiKey],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'installations',
+        description: 'List app installations.',
+        operation: { type: 'query', name: 'appInstallations' },
+        flags: [flagFirst, flagAfter, flagSort, flagReverse, flagCategory, flagPrivacy],
+        output: { view: true, selection: true, pagination: true },
+      },
+      {
+        verb: 'current-installation',
+        description: 'Fetch the current app installation.',
+        operation: { type: 'query', name: 'currentAppInstallation' },
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'discount-type',
+        description: 'Fetch an app discount type by function ID.',
+        operation: { type: 'query', name: 'appDiscountType' },
+        requiredFlags: [flagFunctionId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'discount-types',
+        description: 'List app discount types.',
+        operation: { type: 'query', name: 'appDiscountTypes' },
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'discount-types-nodes',
+        description: 'List app discount types via a connection.',
+        operation: { type: 'query', name: 'appDiscountTypesNodes' },
+        flags: [flagFirst, flagAfter, flagReverse],
+        output: { view: true, selection: true, pagination: true },
+      },
+    ],
+  },
+  {
+    resource: 'channels',
+    description: 'Query channels.',
+    verbs: [
+      getVerb({ operation: 'channel', description: 'Fetch a channel by ID.' }),
+      listVerb({ operation: 'channels', description: 'List channels.' }),
+    ],
+  },
+  {
+    resource: 'backup',
+    description: 'Backup regions and settings.',
+    verbs: [
+      {
+        verb: 'available-regions',
+        description: 'List available backup regions.',
+        operation: { type: 'query', name: 'availableBackupRegions' },
+      },
+      {
+        verb: 'region',
+        description: 'Get the current backup region.',
+        operation: { type: 'query', name: 'backupRegion' },
+        output: { view: true, selection: true },
+      },
+      inputVerb({
+        verb: 'region-update',
+        description: 'Update the backup region.',
+        operation: 'backupRegionUpdate',
+        inputArg: 'region',
+      }),
+    ],
+  },
+  {
+    resource: 'locales',
+    description: 'Locale helpers.',
+    verbs: [
+      {
+        verb: 'available',
+        description: 'List available locales.',
+        operation: { type: 'query', name: 'availableLocales' },
+      },
+    ],
+  },
+  {
+    resource: 'web-presences',
+    description: 'Manage global web presences.',
+    verbs: [
+      {
+        verb: 'list',
+        description: 'List web presences.',
+        operation: { type: 'query', name: 'webPresences' },
+        output: { view: true, selection: true, pagination: true },
+      },
+      inputVerb({
+        verb: 'create',
+        description: 'Create a web presence.',
+        operation: 'webPresenceCreate',
+        inputArg: 'input',
+      }),
+      inputVerb({
+        verb: 'update',
+        description: 'Update a web presence.',
+        operation: 'webPresenceUpdate',
+        requiredFlags: [flagId],
+        inputArg: 'input',
+      }),
+      deleteVerb({ operation: 'webPresenceDelete', description: 'Delete a web presence.' }),
+    ],
+  },
+  {
+    resource: 'staged-uploads',
+    description: 'Generate staged upload targets.',
+    verbs: [
+      {
+        verb: 'target-generate',
+        description: 'Generate a staged upload target.',
+        operation: { type: 'mutation', name: 'stagedUploadTargetGenerate' },
+        requiredFlags: [flagResource, flagFilename, flagMimeType],
+        flags: [flagFileSize, flagHttpMethod, ...inputFlags],
+      },
+      {
+        verb: 'targets-generate',
+        description: 'Generate multiple staged upload targets.',
+        operation: { type: 'mutation', name: 'stagedUploadTargetsGenerate' },
+        requiredFlags: [flagInput],
+        notes: ['--input must be a JSON array of StageImageInput objects.'],
+      },
+    ],
+  },
+  {
+    resource: 'file-saved-searches',
+    description: 'Saved searches for files.',
+    verbs: [
+      {
+        verb: 'list',
+        description: 'List file saved searches.',
+        operation: { type: 'query', name: 'fileSavedSearches' },
+        flags: [flagFirst, flagAfter, flagReverse],
+        output: { pagination: true },
+      },
+    ],
+  },
+  {
+    resource: 'metafield-definition-tools',
+    description: 'Metafield definition utilities.',
+    verbs: [
+      {
+        verb: 'types',
+        description: 'List metafield definition types.',
+        operation: { type: 'query', name: 'metafieldDefinitionTypes' },
+      },
+      {
+        verb: 'pin',
+        description: 'Pin a metafield definition.',
+        operation: { type: 'mutation', name: 'metafieldDefinitionPin' },
+        flags: [flagDefinitionId, flagOwnerType, flagNamespace, flagKey],
+      },
+      {
+        verb: 'unpin',
+        description: 'Unpin a metafield definition.',
+        operation: { type: 'mutation', name: 'metafieldDefinitionUnpin' },
+        flags: [flagDefinitionId, flagOwnerType, flagNamespace, flagKey],
+      },
+      inputVerb({
+        verb: 'update',
+        description: 'Update a metafield definition (direct).',
+        operation: 'metafieldDefinitionUpdate',
+        inputArg: 'definition',
+        flags: [flagOwnerType, flagNamespace, flagKey],
+      }),
+      {
+        verb: 'standard-templates',
+        description: 'List standard metafield definition templates.',
+        operation: { type: 'query', name: 'standardMetafieldDefinitionTemplates' },
+        flags: [flagConstraintSubtype, flagConstraintStatus, flagExcludeActivated, flagFirst, flagAfter, flagReverse],
+        output: { view: true, selection: true, pagination: true },
+      },
+      {
+        verb: 'standard-enable',
+        description: 'Enable a standard metafield definition.',
+        operation: { type: 'mutation', name: 'standardMetafieldDefinitionEnable' },
+        requiredFlags: [flagOwnerType],
+        flags: [
+          flag('--id <id>', 'Template ID'),
+          flagNamespace,
+          flagKey,
+          flag('--pin <bool>', 'Pin definition'),
+          flagVisibleToStorefrontApi,
+          flagUseAsCollectionCondition,
+          ...inputFlags,
+        ],
+        output: { view: true, selection: true },
+      },
+    ],
+  },
+  {
+    resource: 'metaobject-definition-tools',
+    description: 'Metaobject definition utilities.',
+    verbs: [
+      {
+        verb: 'standard-enable',
+        description: 'Enable a standard metaobject definition.',
+        operation: { type: 'mutation', name: 'standardMetaobjectDefinitionEnable' },
+        requiredFlags: [flagType],
+        flags: inputFlags,
+        output: { view: true, selection: true },
+      },
+    ],
+  },
+  {
+    resource: 'metafields',
+    description: 'Metafield utilities.',
+    verbs: [
+      {
+        verb: 'delete',
+        description: 'Delete metafields by identifier.',
+        operation: { type: 'mutation', name: 'metafieldsDelete' },
+        requiredFlags: [flagYes],
+        flags: [flagOwnerId, flagNamespace, flagKey, ...inputFlags],
+        notes: ['Provide --owner-id/--namespace/--key for a single identifier, or pass an identifier array via --input.'],
+      },
+    ],
+  },
+  {
+    resource: 'shop',
+    description: 'Shop-level utilities.',
+    verbs: [
+      {
+        verb: 'billing-preferences',
+        description: 'Get shop billing preferences.',
+        operation: { type: 'query', name: 'shopBillingPreferences' },
+      },
+      {
+        verb: 'domain',
+        description: 'Fetch a domain by ID.',
+        operation: { type: 'query', name: 'domain' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'online-store',
+        description: 'Get Online Store configuration.',
+        operation: { type: 'query', name: 'onlineStore' },
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'public-api-versions',
+        description: 'List public API versions.',
+        operation: { type: 'query', name: 'publicApiVersions' },
+      },
+      {
+        verb: 'shop-pay-receipt',
+        description: 'Fetch a Shop Pay payment request receipt by token.',
+        operation: { type: 'query', name: 'shopPayPaymentRequestReceipt' },
+        requiredFlags: [flagToken],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'shop-pay-receipts',
+        description: 'List Shop Pay payment request receipts.',
+        operation: { type: 'query', name: 'shopPayPaymentRequestReceipts' },
+        flags: [flagFirst, flagAfter, flagQuery, flagSort, flagReverse],
+        output: { pagination: true },
       },
     ],
   },
@@ -4113,6 +4585,19 @@ const baseCommandRegistry: ResourceSpec[] = [
           'Use --var for simple string values, --var-json for complex JSON values.',
           'Mutations are validated against the bundled schema before execution. Use --no-validate to skip.',
         ],
+      },
+      {
+        verb: 'nodes',
+        description: 'Fetch nodes by ID (Admin API nodes query).',
+        operation: { type: 'query', name: 'nodes' },
+        requiredFlags: [flagIds],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'shopifyql',
+        description: 'Run a ShopifyQL query.',
+        operation: { type: 'query', name: 'shopifyqlQuery' },
+        requiredFlags: [flag('--query <string>', 'ShopifyQL query')],
       },
     ],
   },
