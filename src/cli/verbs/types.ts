@@ -106,6 +106,31 @@ const collectNestedTypes = (
   return result
 }
 
+/** Format a field line with proper indentation for multiline descriptions */
+const formatFieldLine = (
+  field: InputFieldHelp,
+  nameWidth: number,
+  typeWidth: number,
+  lineIndent: string,
+): string => {
+  const name = field.name.padEnd(nameWidth)
+  const type = formatFieldType(field).padEnd(typeWidth)
+  const required = field.required ? 'Required. ' : ''
+  const desc = field.description ?? ''
+
+  // Calculate indent for continuation lines (align with description start)
+  const prefix = `${lineIndent}${name}  ${type}  `
+  const indent = ' '.repeat(prefix.length)
+
+  // Split description on newlines and indent continuation lines
+  const descLines = `${required}${desc}`.split('\n')
+  const formattedDesc = descLines
+    .map((line, i) => (i === 0 ? line : `${indent}${line}`))
+    .join('\n')
+
+  return `${prefix}${formattedDesc}`
+}
+
 const renderInputType = (
   typeName: string,
   fields: InputFieldHelp[],
@@ -118,11 +143,7 @@ const renderInputType = (
   const typeWidth = Math.max(...fields.map((f) => formatFieldType(f).length), 4)
 
   for (const field of fields) {
-    const name = field.name.padEnd(nameWidth)
-    const type = formatFieldType(field).padEnd(typeWidth)
-    const required = field.required ? 'Required. ' : ''
-    const desc = field.description ?? ''
-    lines.push(`  ${name}  ${type}  ${required}${desc}`)
+    lines.push(formatFieldLine(field, nameWidth, typeWidth, '  '))
   }
 
   // Collect nested types (2 levels)
@@ -137,11 +158,7 @@ const renderInputType = (
     const nestedTypeWidth = Math.max(...nestedFields.map((f) => formatFieldType(f).length), 4)
 
     for (const field of nestedFields) {
-      const name = field.name.padEnd(nestedNameWidth)
-      const type = formatFieldType(field).padEnd(nestedTypeWidth)
-      const required = field.required ? 'Required. ' : ''
-      const desc = field.description ?? ''
-      lines.push(`  ${name}  ${type}  ${required}${desc}`)
+      lines.push(formatFieldLine(field, nestedNameWidth, nestedTypeWidth, '  '))
     }
   }
 
