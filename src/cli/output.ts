@@ -111,9 +111,17 @@ const printMarkdownTable = (rows: Array<Record<string, unknown>>) => {
 const printMarkdownNode = (node: Record<string, unknown>, headingLevel = 2) => {
   const prefix = '#'.repeat(headingLevel)
   for (const [key, value] of Object.entries(node)) {
-    const formatted = value === null || value === undefined ? '' :
-      typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)
-    process.stdout.write(`${prefix} ${key}\n\n${formatted}\n\n`)
+    process.stdout.write(`${prefix} ${key}\n\n`)
+    if (value === null || value === undefined) {
+      process.stdout.write('\n')
+    } else if (isPlainObject(value)) {
+      // Recurse into nested objects with deeper heading level
+      printMarkdownNode(value, headingLevel + 1)
+    } else if (Array.isArray(value)) {
+      process.stdout.write(JSON.stringify(value, null, 2) + '\n\n')
+    } else {
+      process.stdout.write(String(value) + '\n\n')
+    }
   }
 }
 
@@ -147,8 +155,7 @@ export const printNode = ({
       process.stdout.write(`${node}\n`)
       return
     }
-    const flattened = flattenSingleKeyPaths(node as Record<string, unknown>)
-    printMarkdownNode(flattened)
+    printMarkdownNode(node as Record<string, unknown>)
     return
   }
 
@@ -199,8 +206,7 @@ export const printConnection = ({
       } else {
         const title = (n as any).title ?? (n as any).name ?? (n as any).id ?? `Item ${i + 1}`
         process.stdout.write(`# ${title}\n\n`)
-        const flattened = flattenSingleKeyPaths(n as Record<string, unknown>)
-        printMarkdownNode(flattened, 2)
+        printMarkdownNode(n as Record<string, unknown>, 2)
       }
     }
     if (connection.pageInfo) {
