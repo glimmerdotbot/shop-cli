@@ -9,6 +9,7 @@ import {
   type RawGraphQLRequest,
   type RawGraphQLResponse,
 } from '../../adminClient'
+import { validateGraphQL, formatValidationErrors } from '../../graphqlValidator'
 
 type GraphQLCommandContext = CommandContext & {
   shopDomain?: string
@@ -36,6 +37,7 @@ const printHelp = () => {
       '  --var-json <name>=<json>  Set a variable with JSON value (repeatable)',
       '  --variables <json>     Variables as JSON object (or @file.json)',
       '  --operation <name>     Operation name (for multi-operation documents)',
+      '  --no-validate          Skip local schema validation',
       '',
       'Output flags:',
       '  --format json|raw      Output format (default: json)',
@@ -170,6 +172,7 @@ export const runGraphQL = async ({
       variables: { type: 'string' },
       operation: { type: 'string' },
       'include-extensions': { type: 'boolean' },
+      'no-validate': { type: 'boolean' },
       help: { type: 'boolean' },
       h: { type: 'boolean' },
     },
@@ -210,6 +213,18 @@ export const runGraphQL = async ({
   if (ctx.dryRun) {
     printJson(request, ctx.format !== 'raw')
     return
+  }
+
+  // Validate the query against the local schema (unless --no-validate)
+  if (!parsed.values['no-validate'] && ctx.apiVersion) {
+    const validation = validateGraphQL(query, ctx.apiVersion)
+    if (!validation.valid) {
+      const errorMessage = formatValidationErrors(validation.errors)
+      console.error('GraphQL validation failed:\n')
+      console.error(errorMessage)
+      console.error('\nUse --no-validate to skip validation and send the request anyway.')
+      throw new CliError('GraphQL validation failed', 1)
+    }
   }
 
   // Create the raw client
