@@ -20,9 +20,7 @@ Add a `fields` verb to resources that introspects the GraphQL type and lists ava
 
 ```bash
 shop products fields                    # List Product fields
-shop products fields seo                # List fields under Product.seo
-shop products fields --depth 2          # Show nested fields up to depth 2
-shop products fields --json             # Output as JSON for scripting
+shop orders fields                      # List Order fields
 ```
 
 ## Data Sources
@@ -108,7 +106,6 @@ export type FieldInfo = {
   isScalar: boolean
   isConnection: boolean
   hasRequiredArgs: boolean
-  args?: Record<string, { type: string; required: boolean }>
 }
 
 export const getFields = (typeName: string): FieldInfo[] => {
@@ -132,32 +129,8 @@ export const getFields = (typeName: string): FieldInfo[] => {
       isScalar,
       isConnection,
       hasRequiredArgs,
-      args: Object.entries(args).reduce((acc, [argName, arg]) => {
-        if (arg) {
-          acc[argName] = {
-            type: arg[1] ?? arg[0].name,
-            required: arg[1]?.endsWith('!') ?? false
-          }
-        }
-        return acc
-      }, {} as Record<string, { type: string; required: boolean }>)
     }
   })
-}
-
-// Traverse a dot-path and return fields at that path
-export const getFieldsAtPath = (typeName: string, path: string): FieldInfo[] => {
-  const parts = path.split('.')
-  let currentType = typeName
-
-  for (const part of parts) {
-    const type = getType(currentType)
-    const field = type?.fields?.[part]
-    if (!field) return []
-    currentType = field.type.name ?? ''
-  }
-
-  return getFields(currentType)
 }
 ```
 
@@ -217,7 +190,7 @@ In `src/cli/router.ts`, add early handling for the `fields` verb:
 
 ```typescript
 import { resourceToType } from './introspection/resources'
-import { getFields, getFieldsAtPath, type FieldInfo } from './introspection'
+import { getFields } from './introspection'
 
 // Near the top of runCommand, before resource-specific routing:
 if (verb === 'fields') {
@@ -226,19 +199,8 @@ if (verb === 'fields') {
     throw new CliError(`Unknown resource: ${resource}`, 2)
   }
 
-  const path = argv[0]  // optional path like "seo" or "variants.nodes"
-  const depth = parseIntFlag(argv, '--depth') ?? 1
-  const json = argv.includes('--json')
-
-  const fields = path
-    ? getFieldsAtPath(typeName, path)
-    : getFields(typeName)
-
-  if (json) {
-    console.log(JSON.stringify(fields, null, 2))
-  } else {
-    printFieldsTable(fields, depth)
-  }
+  const fields = getFields(typeName)
+  printFieldsTable(fields)
   return
 }
 ```
@@ -250,12 +212,11 @@ Create `src/cli/introspection/format.ts`:
 ```typescript
 import type { FieldInfo } from './index'
 
-export const printFieldsTable = (fields: FieldInfo[], maxDepth = 1) => {
+export const printFieldsTable = (fields: FieldInfo[]) => {
   // Group fields by category
   const scalars = fields.filter(f => f.isScalar && !f.hasRequiredArgs)
   const objects = fields.filter(f => !f.isScalar && !f.isConnection && !f.hasRequiredArgs)
   const connections = fields.filter(f => f.isConnection)
-  const withArgs = fields.filter(f => f.hasRequiredArgs)
 
   console.log('Selectable fields (use with --select):')
   console.log()
@@ -269,28 +230,17 @@ export const printFieldsTable = (fields: FieldInfo[], maxDepth = 1) => {
   }
 
   if (objects.length) {
-    console.log('  Object fields (use dot notation to access nested fields):')
+    console.log('  Object fields (use dot notation, e.g. --select seo.title):')
     for (const f of objects) {
-      console.log(`    ${f.name}  →  ${f.typeName}`)
+      console.log(`    ${f.name}  ->  ${f.typeName}`)
     }
     console.log()
   }
 
   if (connections.length) {
-    console.log('  Connection fields (paginated, use .nodes to access items):')
+    console.log('  Connection fields (use .nodes, e.g. --select variants.nodes.sku):')
     for (const f of connections) {
-      console.log(`    ${f.name}.nodes  →  ${f.typeName.replace('Connection', '')}`)
-    }
-    console.log()
-  }
-
-  if (withArgs.length) {
-    console.log('  Fields requiring arguments (use --selection for these):')
-    for (const f of withArgs) {
-      const argList = Object.entries(f.args ?? {})
-        .map(([name, { type, required }]) => `${name}: ${type}${required ? '' : '?'}`)
-        .join(', ')
-      console.log(`    ${f.name}(${argList})`)
+      console.log(`    ${f.name}.nodes  ->  ${f.typeName.replace('Connection', '')}`)
     }
   }
 }
@@ -301,19 +251,12 @@ export const printFieldsTable = (fields: FieldInfo[], maxDepth = 1) => {
 In `src/cli/help/registry.ts`, add `fields` as a standard verb:
 
 ```typescript
-const fieldsVerb = (typeName: string): VerbSpec => ({
+const fieldsVerb: VerbSpec = {
   name: 'fields',
-  description: `List available fields for ${typeName}`,
-  flags: [
-    flag('--depth <n>', 'Show nested fields up to depth N (default: 1)'),
-    flag('--json', 'Output as JSON'),
-  ],
-  examples: [
-    `shop ${resource} fields`,
-    `shop ${resource} fields seo`,
-    `shop ${resource} fields --depth 2`,
-  ]
-})
+  description: 'List available fields for --select',
+  flags: [],
+  examples: []
+}
 ```
 
 ## Example Output
@@ -335,32 +278,17 @@ Selectable fields (use with --select):
     productType
     ...
 
-  Object fields (use dot notation to access nested fields):
-    seo  →  SEO
-    priceRangeV2  →  ProductPriceRangeV2
-    featuredImage  →  Image
+  Object fields (use dot notation, e.g. --select seo.title):
+    seo  ->  SEO
+    priceRangeV2  ->  ProductPriceRangeV2
+    featuredImage  ->  Image
     ...
 
-  Connection fields (paginated, use .nodes to access items):
-    variants.nodes  →  ProductVariant
-    media.nodes  →  Media
-    collections.nodes  →  Collection
+  Connection fields (use .nodes, e.g. --select variants.nodes.sku):
+    variants.nodes  ->  ProductVariant
+    media.nodes  ->  Media
+    collections.nodes  ->  Collection
     ...
-
-  Fields requiring arguments (use --selection for these):
-    contextualPricing(context: ContextualPricingContext!)
-    metafield(namespace: String!, key: String!)
-    ...
-```
-
-```
-$ shop products fields seo
-
-Selectable fields (use with --select):
-
-  Scalar fields:
-    title
-    description
 ```
 
 ## Files to Create/Modify
@@ -379,8 +307,6 @@ Selectable fields (use with --select):
 1. Unit tests for introspection utilities
 2. Integration tests for `fields` verb on various resources
 3. Verify output matches actual GraphQL schema
-4. Test dot-path navigation (`shop products fields seo`)
-5. Test `--json` output format
 
 ## Future Enhancements
 
@@ -390,4 +316,6 @@ Selectable fields (use with --select):
 
 3. **Validation**: Validate `--select` paths against the type system and provide helpful errors
 
-4. **Search**: `shop products fields --search image` to find fields containing "image"
+4. **Path navigation**: `shop products fields seo` to list fields under a specific path
+
+5. **JSON output**: `shop products fields --json` for scripting
