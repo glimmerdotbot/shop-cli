@@ -38,4 +38,7 @@ export type ResourceSpec = {
   resource: string
   description?: string
   verbs: VerbSpec[]
+  flags?: FlagSpec[]
+  notes?: string[]
+  examples?: string[]
 }
