@@ -93,8 +93,12 @@ const normalizeMediaId = (value: string) => {
   const raw = value.trim()
   if (!raw) throw new CliError('Media ID cannot be empty', 2)
   if (raw.startsWith('gid://')) return raw
-  // Media IDs map to file resources in most workflows; allow numeric IDs by coercing to File.
-  return coerceGid(raw, 'File')
+  // Numeric IDs are ambiguous - could be MediaImage, Video, Model3d, etc.
+  // Require the full GID from `media list` output to avoid confusion.
+  throw new CliError(
+    `Numeric media ID "${raw}" is ambiguous. Use the full GID from "shop products media list" (e.g. gid://shopify/MediaImage/${raw})`,
+    2,
+  )
 }
 
 const mediaTypeToStagedResource = (mediaType: MediaContentType): StagedUploadResource => {
