@@ -125,6 +125,40 @@ shop products list --selection "{ id title handle }"
 shop products list --selection @fields.gql
 ```
 
+### Inline Fragments (Union/Interface Types)
+
+Some fields return interface or union types (e.g., `Catalog` can be `AppCatalog`, `MarketCatalog`, etc.). Use inline fragments to select type-specific fields.
+
+With `--select`, use the `on_TypeName` prefix:
+
+```bash
+# Select apps from an AppCatalog via publications
+shop products get --id 123 --include resourcePublicationsV2 \
+  --select resourcePublicationsV2.nodes.publication.catalog.on_AppCatalog.apps.nodes.title
+```
+
+With `--selection`, use standard GraphQL inline fragment syntax:
+
+```bash
+shop publications list --selection '{
+  id
+  catalog {
+    title
+    ... on AppCatalog {
+      apps(first: 5) {
+        nodes { title handle }
+      }
+    }
+  }
+}'
+```
+
+Or load from a file:
+
+```bash
+shop publications list --selection @my-selection.gql
+```
+
 ### Quiet Mode
 
 Use `--quiet` to output only IDs:
