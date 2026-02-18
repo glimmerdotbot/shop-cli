@@ -74,7 +74,9 @@ const formatOutputFlags = (spec: VerbSpec) => {
 }
 
 export const renderTopLevelHelp = () => {
-  const resources = [...commandRegistry].sort((a, b) => a.resource.localeCompare(b.resource))
+  const resources = [...commandRegistry]
+    .filter((r) => r.resource !== 'graphql')
+    .sort((a, b) => a.resource.localeCompare(b.resource))
   const resourceLines = resources.map((resource) => {
     const verbs = resource.verbs.map((verb) => verb.verb).join('|')
     return `  ${resource.resource}: ${verbs}`
