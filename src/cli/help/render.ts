@@ -127,11 +127,30 @@ export const renderResourceHelp = (resource: string) => {
   if (!spec) return undefined
 
   const verbs = spec.verbs.map((verb) => verb.verb).join('|')
-  const outputFlags = formatFlags({ flags: commonOutputFlags })
 
   const lines: string[] = ['Usage:', `  shop ${spec.resource} <verb> [flags]`, '']
   if (spec.description) lines.push(spec.description, '')
-  lines.push('Verbs:', `  ${verbs}`, '', ...formatSection('Common output flags:', outputFlags))
+  lines.push('Verbs:', `  ${verbs}`, '')
+
+  if (spec.flags && spec.flags.length > 0) {
+    lines.push(...formatSection('Flags:', formatFlags({ flags: spec.flags })))
+    lines.push('')
+  }
+
+  if (spec.notes && spec.notes.length > 0) {
+    lines.push('Notes:')
+    for (const note of spec.notes) lines.push(`  ${note}`)
+    lines.push('')
+  }
+
+  if (spec.examples && spec.examples.length > 0) {
+    lines.push('Examples:')
+    for (const example of spec.examples) lines.push(`  ${example}`)
+    lines.push('')
+  }
+
+  const outputFlags = formatFlags({ flags: commonOutputFlags })
+  lines.push(...formatSection('Common output flags:', outputFlags))
   return lines.join('\n')
 }
 

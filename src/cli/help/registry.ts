@@ -2351,6 +2351,24 @@ export const commandRegistry: ResourceSpec[] = [
   {
     resource: 'graphql',
     description: 'Execute raw GraphQL queries and mutations.',
+    flags: [
+      flag('--var <name>=<value>', 'Set a variable (repeatable)'),
+      flag('--var-json <name>=<json>', 'Set a variable with JSON value (repeatable)'),
+      flag('--variables <json>', 'Variables as JSON object (or @file.json)'),
+      flag('--operation <name>', 'Operation name (for multi-operation documents)'),
+      flag('--no-validate', 'Skip local schema validation'),
+      flag('--include-extensions', 'Include extensions in output'),
+    ],
+    notes: [
+      'The query can be passed inline or loaded from a file with @filename.',
+      'Queries are validated against the bundled schema before execution.',
+    ],
+    examples: [
+      "shop graphql '{ shop { name } }'",
+      'shop graphql @query.graphql --variables @vars.json',
+      "shop graphql query '{ shop { name } }'",
+      "shop graphql mutation @create-product.graphql --var title=Hat",
+    ],
     verbs: [
       {
         verb: 'query',
