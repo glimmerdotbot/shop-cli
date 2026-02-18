@@ -4,15 +4,25 @@ import { fileURLToPath } from 'node:url'
 
 import { buildSchema, type GraphQLSchema } from 'graphql'
 
-let cachedAdminSchema: GraphQLSchema | undefined
+const here = dirname(fileURLToPath(import.meta.url))
+const schemaDir = join(here, '../../../schema')
 
-export const getAdminSchema = (): GraphQLSchema => {
-  if (cachedAdminSchema) return cachedAdminSchema
+const schemaCache = new Map<string, GraphQLSchema>()
 
-  const here = dirname(fileURLToPath(import.meta.url))
-  const schemaPath = join(here, '../../../schema/2026-04.graphql')
+/**
+ * Get the Admin GraphQL schema for a specific API version.
+ * Schemas are cached for performance.
+ */
+export const getAdminSchema = (version?: string): GraphQLSchema => {
+  const targetVersion = version ?? '2026-04'
+
+  const cached = schemaCache.get(targetVersion)
+  if (cached) return cached
+
+  const schemaPath = join(schemaDir, `${targetVersion}.graphql`)
   const schemaSource = readFileSync(schemaPath, 'utf8')
-  cachedAdminSchema = buildSchema(schemaSource)
-  return cachedAdminSchema
+  const schema = buildSchema(schemaSource)
+  schemaCache.set(targetVersion, schema)
+  return schema
 }
 

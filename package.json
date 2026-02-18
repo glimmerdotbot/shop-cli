@@ -10,6 +10,7 @@
   "scripts": {
     "schema:admin": "node scripts/download-admin-schema.js",
     "schema:introspection": "node scripts/generate-introspection-json.js",
+    "schema:setup": "node scripts/setup-api-version.js",
     "codegen:admin": "genql --schema schema/2026-04.graphql --output src/generated/admin-2026-04 --sort -S ARN:string -S BigInt:string -S Color:string -S Date:string -S DateTime:string -S Decimal:string -S FormattedString:string -S HTML:string -S JSON:unknown -S Money:string -S StorefrontID:string -S URL:string -S UnsignedInt64:string -S UtcOffset:string",
     "codegen:help": "tsx scripts/extract-schema-help.ts",
     "dev:shop-name": "tsx dev/shop-name.ts",
