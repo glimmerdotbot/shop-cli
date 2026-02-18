@@ -4,6 +4,7 @@ import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
+import { parsePublishDate } from '../workflows/products/publishablePublish'
 
 import { parseFirst, requireId } from './_shared'
 
@@ -43,14 +44,90 @@ export const runBlogs = async ({
         '  shop blogs <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete',
+        '  create|get|list|update|delete|publish|unpublish',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
         '  --select <path>        (repeatable; dot paths; adds to base view selection)',
         '  --selection <graphql>  (selection override; can be @file.gql)',
+        '',
+        'Notes:',
+        '  Shopify blogs do not have a direct published/unpublished state.',
+        '  blogs publish/unpublish updates isPublished for all articles in the blog.',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'publish' || verb === 'unpublish') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        at: { type: 'string' },
+        now: { type: 'boolean' },
+      },
+    })
+
+    if (ctx.dryRun) {
+      throw new CliError('blogs publish/unpublish is not supported in --dry-run mode (requires pagination)', 2)
+    }
+
+    const id = requireId(args.id, 'Blog')
+    const publishDate =
+      verb === 'publish' ? parsePublishDate({ at: (args as any).at, now: (args as any).now }) : undefined
+
+    const desired = verb === 'publish'
+      ? { isPublished: true, ...(publishDate ? { publishDate } : {}) }
+      : { isPublished: false }
+
+    const updated: any[] = []
+    let after: string | undefined = undefined
+
+    for (;;) {
+      const page = await runQuery(ctx, {
+        blog: {
+          __args: { id },
+          id: true,
+          articles: {
+            __args: { first: 50, after },
+            pageInfo: { hasNextPage: true, endCursor: true },
+            nodes: { id: true, isPublished: true },
+          },
+        },
+      })
+      if (page === undefined) return
+      const connection = page.blog?.articles
+      const nodes = connection?.nodes ?? []
+
+      for (const a of nodes) {
+        const articleId = a?.id
+        if (!articleId) continue
+        const result = await runMutation(ctx, {
+          articleUpdate: {
+            __args: { id: articleId, article: desired },
+            article: { id: true, isPublished: true, publishedAt: true, updatedAt: true },
+            userErrors: { field: true, message: true },
+          },
+        })
+        if (result === undefined) return
+        maybeFailOnUserErrors({ payload: result.articleUpdate, failOnUserErrors: ctx.failOnUserErrors })
+        updated.push(result.articleUpdate)
+      }
+
+      if (!connection?.pageInfo?.hasNextPage) break
+      after = connection.pageInfo.endCursor as any
+      if (!after) break
+    }
+
+    if (ctx.quiet) {
+      for (const u of updated) {
+        const aid = u?.article?.id
+        if (aid) process.stdout.write(`${aid}\n`)
+      }
+      return
+    }
+
+    printJson(updated, ctx.format !== 'raw')
     return
   }
 

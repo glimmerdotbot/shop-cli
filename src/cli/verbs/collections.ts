@@ -1,11 +1,13 @@
 import { CliError } from '../errors'
+import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { runMutation, runQuery, parseStandardArgs, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
+import { resolvePublicationIds } from '../workflows/products/publishablePublish'
 
-import { parseFirst, requireId } from './_shared'
+import { parseFirst, parseJsonArg, parseStringList, requireId } from './_shared'
 
 const collectionSummarySelection = {
   id: true,
@@ -46,7 +48,9 @@ export const runCollections = async ({
         '  shop collections <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete|duplicate',
+        '  create|get|list|count|update|delete|duplicate',
+        '  add-products|remove-products|reorder-products',
+        '  publish|unpublish',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -108,6 +112,35 @@ export const runCollections = async ({
     return
   }
 
+  if (verb === 'count') {
+    const args = parseStandardArgs({ argv, extraOptions: { limit: { type: 'string' } } })
+    const query = args.query as any
+    const limitRaw = args.limit as any
+    const limit =
+      limitRaw === undefined || limitRaw === null || limitRaw === ''
+        ? undefined
+        : Number(limitRaw)
+
+    if (limit !== undefined && (!Number.isFinite(limit) || limit <= 0)) {
+      throw new CliError('--limit must be a positive number', 2)
+    }
+
+    const result = await runQuery(ctx, {
+      collectionsCount: {
+        __args: {
+          ...(query ? { query } : {}),
+          ...(limit !== undefined ? { limit: Math.floor(limit) } : {}),
+        },
+        count: true,
+        precision: true,
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.collectionsCount?.count ?? '')
+    printJson(result.collectionsCount, ctx.format !== 'raw')
+    return
+  }
+
   if (verb === 'create') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const built = buildInput({
@@ -128,6 +161,128 @@ export const runCollections = async ({
     maybeFailOnUserErrors({ payload: result.collectionCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.collectionCreate?.collection?.id ?? '')
     printJson(result.collectionCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'add-products' || verb === 'remove-products') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'product-id': { type: 'string', multiple: true },
+      },
+    })
+
+    const id = requireId(args.id as any, 'Collection')
+    const rawProducts = parseStringList((args as any)['product-id'], '--product-id')
+    const productIds = rawProducts.map((pid) => coerceGid(pid, 'Product'))
+
+    const mutation = verb === 'add-products' ? 'collectionAddProductsV2' : 'collectionRemoveProducts'
+    const result = await runMutation(ctx, {
+      [mutation]: {
+        __args: { id, productIds },
+        job: { id: true, done: true },
+        userErrors: { field: true, message: true },
+      },
+    } as any)
+    if (result === undefined) return
+
+    const payload = (result as any)[mutation]
+    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(payload?.job?.id ?? '')
+    printJson(payload, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'reorder-products') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        moves: { type: 'string' },
+        move: { type: 'string', multiple: true },
+      },
+    })
+    const id = requireId(args.id as any, 'Collection')
+
+    let moves: Array<{ id: string; newPosition: number }> = []
+    if ((args as any).moves) {
+      moves = parseJsonArg((args as any).moves, '--moves')
+      if (!Array.isArray(moves)) throw new CliError('--moves must be a JSON array', 2)
+    } else if ((args as any).move) {
+      const raw = (args as any).move as string[]
+      const parsedMoves: Array<{ id: string; newPosition: number }> = []
+      for (const item of raw) {
+        const parts = item.split(':')
+        if (parts.length !== 2) throw new CliError('--move must be <productId>:<newPosition>', 2)
+        const productId = parts[0]!.trim()
+        const pos = Number(parts[1]!.trim())
+        if (!productId) throw new CliError('--move productId cannot be empty', 2)
+        if (!Number.isFinite(pos) || pos < 0) throw new CliError('--move newPosition must be a non-negative number', 2)
+        parsedMoves.push({ id: coerceGid(productId, 'Product'), newPosition: Math.floor(pos) })
+      }
+      moves = parsedMoves
+    }
+
+    if (moves.length === 0) {
+      throw new CliError('Missing moves: pass either --moves <json|@file> or --move <productId>:<newPosition> (repeatable)', 2)
+    }
+
+    const normalizedMoves = moves.map((move, i) => {
+      const mid = (move as any)?.id
+      const newPosition = (move as any)?.newPosition
+      if (typeof mid !== 'string' || !mid.trim()) throw new CliError(`moves[${i}].id is required`, 2)
+      const pos = Number(newPosition)
+      if (!Number.isFinite(pos) || pos < 0) throw new CliError(`moves[${i}].newPosition must be a non-negative number`, 2)
+      return { id: mid.startsWith('gid://') ? mid : coerceGid(mid, 'Product'), newPosition: Math.floor(pos) }
+    })
+
+    const result = await runMutation(ctx, {
+      collectionReorderProducts: {
+        __args: { id, moves: normalizedMoves },
+        job: { id: true, done: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.collectionReorderProducts, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.collectionReorderProducts?.job?.id ?? '')
+    printJson(result.collectionReorderProducts, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'publish' || verb === 'unpublish') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'publication-id': { type: 'string', multiple: true },
+        publication: { type: 'string', multiple: true },
+      },
+    })
+
+    const id = requireId(args.id as any, 'Collection')
+    const publicationIds = ((args as any)['publication-id'] as any) ?? []
+    const publicationNames = ((args as any).publication as any) ?? []
+
+    const resolvedPublicationIds = await resolvePublicationIds({
+      ctx,
+      publicationIds,
+      publicationNames,
+    })
+
+    const collectionPublications = resolvedPublicationIds.map((publicationId) => ({ publicationId }))
+    const mutation = verb === 'publish' ? 'collectionPublish' : 'collectionUnpublish'
+
+    const result = await runMutation(ctx, {
+      [mutation]: {
+        __args: { input: { id, collectionPublications } },
+        collection: { id: true, title: true },
+        userErrors: { field: true, message: true },
+      },
+    } as any)
+    if (result === undefined) return
+    const payload = (result as any)[mutation]
+    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(payload?.collection?.id ?? '')
+    printJson(payload, ctx.format !== 'raw')
     return
   }
 

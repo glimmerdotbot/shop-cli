@@ -4,6 +4,7 @@ import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
+import { parsePublishDate } from '../workflows/products/publishablePublish'
 
 import { parseFirst, requireId } from './_shared'
 
@@ -46,7 +47,7 @@ export const runPages = async ({
         '  shop pages <verb> [flags]',
         '',
         'Verbs:',
-        '  create|get|list|update|delete',
+        '  create|get|list|update|delete|publish|unpublish',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -54,6 +55,37 @@ export const runPages = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'publish' || verb === 'unpublish') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        at: { type: 'string' },
+        now: { type: 'boolean' },
+      },
+    })
+    const id = requireId(args.id, 'Page')
+
+    const publishDate =
+      verb === 'publish' ? parsePublishDate({ at: (args as any).at, now: (args as any).now }) : undefined
+
+    const page = verb === 'publish'
+      ? { isPublished: true, ...(publishDate ? { publishDate } : {}) }
+      : { isPublished: false }
+
+    const result = await runMutation(ctx, {
+      pageUpdate: {
+        __args: { id, page },
+        page: pageSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.pageUpdate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.pageUpdate?.page?.id ?? '')
+    printJson(result.pageUpdate, ctx.format !== 'raw')
     return
   }
 
