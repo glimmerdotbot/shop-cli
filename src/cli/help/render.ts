@@ -156,10 +156,7 @@ const renderTypeShapesSection = (types: Map<string, InputFieldHelp[]>): string[]
       const type = formatFieldTypeWithMarkers(field).padEnd(typeWidth)
       const required = field.required ? 'Required. ' : ''
       const desc = field.description ?? ''
-      // Truncate description to keep it readable
-      const maxDescLen = 60
-      const truncDesc = desc.length > maxDescLen ? desc.slice(0, maxDescLen - 3) + '...' : desc
-      lines.push(`    ${name}  ${type}  ${required}${truncDesc}`)
+      lines.push(`    ${name}  ${type}  ${required}${desc}`)
     }
   }
 
@@ -318,17 +315,19 @@ export const renderVerbHelp = (
       lines.push('')
     }
 
-    // For --help-full: expand all referenced types at the end
+    // Collect all referenced types (including nested, 2 levels deep)
+    const visited = new Set<string>()
+    const nestedTypes = collectNestedTypes(ordered, 2, visited)
+
     if (options.showAllFields) {
-      const visited = new Set<string>()
-      const nestedTypes = collectNestedTypes(ordered, 2, visited)
+      // For --help-full: expand all referenced types at the end
       if (nestedTypes.size > 0) {
         lines.push(...renderTypeShapesSection(nestedTypes))
         lines.push('')
       }
     } else {
-      // For regular --help: collect type names for footer
-      referencedTypeNames = getReferencedInputTypes(shown)
+      // For regular --help: collect type names for footer (all nested types)
+      referencedTypeNames = Array.from(nestedTypes.keys())
     }
   }
 
