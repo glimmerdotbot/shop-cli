@@ -87,6 +87,21 @@ export const runDeliveryPromises = async ({
     return
   }
 
+  if (verb === 'provider') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'location-id': { type: 'string' } } })
+    const locationId = requireLocationId((args as any)['location-id'], '--location-id')
+
+    const result = await runQuery(ctx, {
+      deliveryPromiseProvider: {
+        __args: { locationId },
+        ...deliveryPromiseProviderSelection,
+      },
+    })
+    if (result === undefined) return
+    printNode({ node: result.deliveryPromiseProvider, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
   if (verb === 'get-participants') {
     const args = parseStandardArgs({
       argv,
@@ -205,6 +220,44 @@ export const runDeliveryPromises = async ({
     return
   }
 
+  if (verb === 'provider-upsert') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'location-id': { type: 'string' },
+        active: { type: 'string' },
+        'fulfillment-delay': { type: 'string' },
+        'time-zone': { type: 'string' },
+      },
+    })
+    const locationId = requireLocationId((args as any)['location-id'], '--location-id')
+    const active = parseBool((args as any).active, '--active')
+    const fulfillmentDelayRaw = (args as any)['fulfillment-delay'] as any
+    const fulfillmentDelay =
+      fulfillmentDelayRaw === undefined ? undefined : parseIntFlag('--fulfillment-delay', fulfillmentDelayRaw)
+    const timeZone = (args as any)['time-zone'] as string | undefined
+
+    const result = await runMutation(ctx, {
+      deliveryPromiseProviderUpsert: {
+        __args: {
+          locationId,
+          ...(active === undefined ? {} : { active }),
+          ...(fulfillmentDelay === undefined ? {} : { fulfillmentDelay }),
+          ...(timeZone ? { timeZone } : {}),
+        },
+        deliveryPromiseProvider: deliveryPromiseProviderSelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.deliveryPromiseProviderUpsert,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.deliveryPromiseProviderUpsert?.deliveryPromiseProvider?.id ?? '')
+    printJson(result.deliveryPromiseProviderUpsert, ctx.format !== 'raw')
+    return
+  }
+
   throw new CliError(`Unknown verb for delivery-promises: ${verb}`, 2)
 }
-

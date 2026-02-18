@@ -170,7 +170,7 @@ export const runReturns = async ({
         '',
         'Verbs:',
         '  create|get|calculate|cancel|close|reopen|process|refund|request|approve-request|decline-request',
-        '  remove-item|reason-definitions|returnable-fulfillments',
+        '  remove-item|line-item-remove|reason-definitions|returnable-fulfillments',
         '',
         'State machine:',
         '  REQUESTED → APPROVED → OPEN → IN_PROGRESS → CLOSED',
@@ -494,6 +494,35 @@ export const runReturns = async ({
     maybeFailOnUserErrors({ payload: result.removeFromReturn, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.removeFromReturn?.return?.id ?? '')
     printJson(result.removeFromReturn, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'line-item-remove') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { 'return-line-item-id': { type: 'string' }, quantity: { type: 'string' } },
+    })
+    const id = requireId(args.id, 'Return')
+    const returnLineItemId = requireReturnLineItemId(args['return-line-item-id'])
+    const quantity = parseQuantity(args.quantity, '--quantity')
+
+    const result = await runMutation(ctx, {
+      returnLineItemRemoveFromReturn: {
+        __args: {
+          returnId: id,
+          returnLineItems: [{ returnLineItemId, quantity }],
+        },
+        return: returnSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.returnLineItemRemoveFromReturn,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.returnLineItemRemoveFromReturn?.return?.id ?? '')
+    printJson(result.returnLineItemRemoveFromReturn, ctx.format !== 'raw')
     return
   }
 

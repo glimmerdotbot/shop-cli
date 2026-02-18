@@ -16,6 +16,7 @@ import { runCarrierServices } from './verbs/carrier-services'
 import { runCartTransforms } from './verbs/cart-transforms'
 import { runCatalogs } from './verbs/catalogs'
 import { runCheckoutBranding } from './verbs/checkout-branding'
+import { runCheckoutProfiles } from './verbs/checkout-profiles'
 import { runCollections } from './verbs/collections'
 import { runComments } from './verbs/comments'
 import { runCompanies } from './verbs/companies'
@@ -27,7 +28,9 @@ import { runCustomerSegments } from './verbs/customer-segments'
 import { runCustomers } from './verbs/customers'
 import { runDelegateTokens } from './verbs/delegate-tokens'
 import { runDeliveryCustomizations } from './verbs/delivery-customizations'
+import { runDeliveryProfileLocations } from './verbs/delivery-profile-locations'
 import { runDeliveryProfiles } from './verbs/delivery-profiles'
+import { runDeliverySettings } from './verbs/delivery-settings'
 import { runDraftOrders } from './verbs/draft-orders'
 import { runEvents } from './verbs/events'
 import { runFiles } from './verbs/files'
@@ -76,6 +79,9 @@ import { runValidations } from './verbs/validations'
 import { runWebPixels } from './verbs/web-pixels'
 import { runWebhooks } from './verbs/webhooks'
 import { runReturns } from './verbs/returns'
+import { runReverseDeliveries } from './verbs/reverse-deliveries'
+import { runReverseFulfillmentOrders } from './verbs/reverse-fulfillment-orders'
+import { runReturnableFulfillments } from './verbs/returnable-fulfillments'
 import { runAppBilling } from './verbs/app-billing'
 import { runApps } from './verbs/apps'
 import { runBackup } from './verbs/backup'
@@ -281,9 +287,12 @@ export const runCommand = async ({
   if (resource === 'cart-transforms') return runCartTransforms({ ctx, verb, argv })
   if (resource === 'validations') return runValidations({ ctx, verb, argv })
   if (resource === 'checkout-branding') return runCheckoutBranding({ ctx, verb, argv })
+  if (resource === 'checkout-profiles') return runCheckoutProfiles({ ctx, verb, argv })
   if (resource === 'delivery-profiles') return runDeliveryProfiles({ ctx, verb, argv })
   if (resource === 'delivery-customizations') return runDeliveryCustomizations({ ctx, verb, argv })
   if (resource === 'delivery-promises') return runDeliveryPromises({ ctx, verb, argv })
+  if (resource === 'delivery-settings') return runDeliverySettings({ ctx, verb, argv })
+  if (resource === 'delivery-profile-locations') return runDeliveryProfileLocations({ ctx, verb, argv })
   if (resource === 'shipping-packages') return runShippingPackages({ ctx, verb, argv })
   if (resource === 'mobile-platform-applications') return runMobilePlatformApplications({ ctx, verb, argv })
   if (resource === 'tax') return runTax({ ctx, verb, argv })
@@ -315,6 +324,9 @@ export const runCommand = async ({
   if (resource === 'functions') return runShopifyFunctions({ ctx, verb, argv })
   if (resource === 'graphql') return runGraphQL({ ctx, verb, argv })
   if (resource === 'types') return runTypes({ verb, argv })
+  if (resource === 'returnable-fulfillments') return runReturnableFulfillments({ ctx, verb, argv })
+  if (resource === 'reverse-deliveries') return runReverseDeliveries({ ctx, verb, argv })
+  if (resource === 'reverse-fulfillment-orders') return runReverseFulfillmentOrders({ ctx, verb, argv })
 
   throw new CliError(`Unknown resource: ${resource}`, 2)
 }

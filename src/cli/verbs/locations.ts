@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { CliError } from '../errors'
+import { coerceGid } from '../gid'
 import { buildInput } from '../input'
 import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
@@ -61,6 +62,22 @@ const maybeFailOnNamedUserErrors = (errors: unknown, ctx: CommandContext) => {
   maybeFailOnUserErrors({ payload: { userErrors: errors }, failOnUserErrors: ctx.failOnUserErrors })
 }
 
+const parseCustomIdInput = ({
+  namespace,
+  key,
+  value,
+}: {
+  namespace?: unknown
+  key?: unknown
+  value?: unknown
+}) => {
+  const customKey = typeof key === 'string' ? key : undefined
+  const customValue = typeof value === 'string' ? value : undefined
+  if (!customKey || !customValue) return undefined
+  const ns = typeof namespace === 'string' && namespace ? namespace : undefined
+  return { ...(ns ? { namespace: ns } : {}), key: customKey, value: customValue }
+}
+
 export const runLocations = async ({
   ctx,
   verb,
@@ -78,6 +95,7 @@ export const runLocations = async ({
         '',
         'Verbs:',
         '  create|get|list|count|update|delete',
+        '  by-identifier',
         '  activate|deactivate|enable-local-pickup|disable-local-pickup',
         '',
         'Common output flags:',
@@ -91,6 +109,51 @@ export const runLocations = async ({
         '  --include-legacy                       (list)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'by-identifier') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'custom-id-namespace': { type: 'string' },
+        'custom-id-key': { type: 'string' },
+        'custom-id-value': { type: 'string' },
+      },
+    })
+
+    const idRaw = args.id as string | undefined
+    const customId = parseCustomIdInput({
+      namespace: (args as any)['custom-id-namespace'],
+      key: (args as any)['custom-id-key'],
+      value: (args as any)['custom-id-value'],
+    })
+
+    if (!idRaw && !customId) throw new CliError('Missing --id or --custom-id-key/--custom-id-value', 2)
+
+    const identifier: any = {
+      ...(idRaw ? { id: coerceGid(idRaw, 'Location') } : {}),
+      ...(customId ? { customId } : {}),
+    }
+
+    const selection = resolveSelection({
+      resource: 'locations',
+      view: ctx.view,
+      baseSelection: getLocationSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
+    const result = await runQuery(ctx, {
+      locationByIdentifier: {
+        __args: { identifier },
+        ...selection,
+      },
+    })
+    if (result === undefined) return
+    printNode({ node: result.locationByIdentifier, format: ctx.format, quiet: ctx.quiet })
     return
   }
 

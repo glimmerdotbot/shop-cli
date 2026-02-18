@@ -67,7 +67,7 @@ export const runBulkOperations = async ({
         '  shop bulk-operations <verb> [flags]',
         '',
         'Verbs:',
-        '  run-query|run-mutation|get|list|current|cancel',
+        '  run-query|run-mutation|get|list|current|cancel|job',
         '',
         'Common output flags:',
         '  --view summary|ids|raw',
@@ -75,6 +75,19 @@ export const runBulkOperations = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'job') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = args.id as string | undefined
+    if (!id) throw new CliError('Missing --id', 2)
+
+    const result = await runQuery(ctx, {
+      job: { __args: { id }, id: true, done: true },
+    })
+    if (result === undefined) return
+    printNode({ node: result.job, format: ctx.format, quiet: ctx.quiet })
     return
   }
 

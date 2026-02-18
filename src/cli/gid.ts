@@ -29,6 +29,7 @@ export type ShopifyGidType =
   | 'DiscountRedeemCode'
   | 'DiscountRedeemCodeBulkCreation'
   | 'InventoryItem'
+  | 'InventoryLevel'
   | 'InventoryShipment'
   | 'InventoryTransfer'
   | 'InventoryTransferLineItem'

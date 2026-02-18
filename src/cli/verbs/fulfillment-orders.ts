@@ -122,6 +122,7 @@ export const runFulfillmentOrders = async ({
         '  shop fulfillment-orders <verb> [flags]',
         '',
         'Verbs:',
+        '  assigned|manual-holds',
         '  get|list|accept-request|reject-request|submit-request',
         '  accept-cancellation|reject-cancellation|submit-cancellation|cancel|close|open',
         '  hold|release-hold|reschedule|move|split|merge|report-progress|mark-prepared',
@@ -133,6 +134,80 @@ export const runFulfillmentOrders = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'assigned') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'assignment-status': { type: 'string' },
+        'location-ids': { type: 'string', multiple: true },
+      },
+    })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const reverse = args.reverse as any
+    const sortKey = args.sort as any
+
+    const assignmentStatus = (args as any)['assignment-status'] as string | undefined
+    const locationIdsRaw = (args as any)['location-ids'] as string[] | undefined
+    const locationIds = locationIdsRaw ? parseIds(locationIdsRaw, 'Location') : undefined
+
+    const result = await runQuery(ctx, {
+      assignedFulfillmentOrders: {
+        __args: {
+          first,
+          after,
+          reverse,
+          ...(sortKey ? { sortKey } : {}),
+          ...(assignmentStatus ? { assignmentStatus } : {}),
+          ...(locationIds && locationIds.length ? { locationIds } : {}),
+        },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: getFulfillmentOrderSelection(ctx.view),
+      },
+    })
+    if (result === undefined) return
+    printConnection({
+      connection: result.assignedFulfillmentOrders,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop fulfillment-orders assigned',
+        first,
+        sort: typeof sortKey === 'string' ? sortKey : undefined,
+        reverse: reverse === true,
+        extraFlags: [
+          ...(assignmentStatus ? [{ flag: '--assignment-status', value: assignmentStatus }] : []),
+          ...(locationIdsRaw ? locationIdsRaw.map((v) => ({ flag: '--location-ids', value: v })) : []),
+        ],
+      },
+    })
+    return
+  }
+
+  if (verb === 'manual-holds') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const reverse = args.reverse as any
+    const query = args.query as any
+
+    const result = await runQuery(ctx, {
+      manualHoldsFulfillmentOrders: {
+        __args: { first, after, reverse, ...(query ? { query } : {}) },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: getFulfillmentOrderSelection(ctx.view),
+      },
+    })
+    if (result === undefined) return
+    printConnection({
+      connection: result.manualHoldsFulfillmentOrders,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: { base: 'shop fulfillment-orders manual-holds', first, query, reverse: reverse === true },
+    })
     return
   }
 

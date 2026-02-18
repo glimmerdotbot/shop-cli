@@ -3,7 +3,7 @@ import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 
-import { buildListNextPageArgs, parseFirst, requireId } from './_shared'
+import { buildListNextPageArgs, parseCsv, parseFirst, requireId } from './_shared'
 
 const eventSummarySelection = {
   id: true,
@@ -28,6 +28,12 @@ const getEventSelection = (view: CommandContext['view']) => {
   return eventSummarySelection
 }
 
+const deletionEventSelection = {
+  subjectId: true,
+  subjectType: true,
+  occurredAt: true,
+} as const
+
 export const runEvents = async ({
   ctx,
   verb,
@@ -44,7 +50,7 @@ export const runEvents = async ({
         '  shop events <verb> [flags]',
         '',
         'Verbs:',
-        '  get|list|count',
+        '  get|list|count|deletion-events',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -52,6 +58,52 @@ export const runEvents = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'deletion-events') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { 'subject-types': { type: 'string' } },
+    })
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const reverse = args.reverse as any
+    const sortKey = args.sort as any
+    const query = args.query as any
+
+    const subjectTypesRaw = (args as any)['subject-types'] as string | undefined
+    const subjectTypes = subjectTypesRaw ? parseCsv(subjectTypesRaw, '--subject-types') : undefined
+
+    const result = await runQuery(ctx, {
+      deletionEvents: {
+        __args: {
+          first,
+          after,
+          reverse,
+          ...(sortKey ? { sortKey } : {}),
+          ...(query ? { query } : {}),
+          ...(subjectTypes ? { subjectTypes } : {}),
+        },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: deletionEventSelection,
+      },
+    })
+    if (result === undefined) return
+
+    printConnection({
+      connection: result.deletionEvents,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop events deletion-events',
+        first,
+        query: typeof query === 'string' ? query : undefined,
+        sort: typeof sortKey === 'string' ? sortKey : undefined,
+        reverse: reverse === true,
+        extraFlags: [...(subjectTypesRaw ? [{ flag: '--subject-types', value: subjectTypesRaw }] : [])],
+      },
+    })
     return
   }
 

@@ -150,8 +150,10 @@ export const runOrderEdit = async ({
         '  shop order-edit <verb> [flags]',
         '',
         'Verbs:',
-        '  begin|get|commit|add-variant|add-custom-item|set-quantity',
+        '  begin|get|commit|session',
+        '  add-variant|add-custom-item|set-quantity',
         '  add-discount|remove-discount|update-discount',
+        '  remove-line-item-discount',
         '  add-shipping|remove-shipping|update-shipping',
         '',
         'Workflow:',
@@ -163,6 +165,19 @@ export const runOrderEdit = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'session') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const idRaw = args.id as string | undefined
+    if (!idRaw) throw new CliError('Missing --id', 2)
+
+    const result = await runQuery(ctx, {
+      orderEditSession: { __args: { id: idRaw }, id: true },
+    })
+    if (result === undefined) return
+    printNode({ node: result.orderEditSession, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -222,6 +237,32 @@ export const runOrderEdit = async ({
     maybeFailOnUserErrors({ payload: result.orderEditBegin, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.orderEditBegin?.calculatedOrder?.id ?? '')
     printJson(result.orderEditBegin, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'remove-line-item-discount') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: { 'discount-application-id': { type: 'string' } },
+    })
+    const id = requireId(args.id, 'CalculatedOrder')
+    const discountApplicationId = requireDiscountApplicationId((args as any)['discount-application-id'])
+
+    const result = await runMutation(ctx, {
+      orderEditRemoveLineItemDiscount: {
+        __args: { id, discountApplicationId },
+        calculatedOrder: { id: true },
+        orderEditSession: { id: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.orderEditRemoveLineItemDiscount,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.orderEditRemoveLineItemDiscount?.calculatedOrder?.id ?? '')
+    printJson(result.orderEditRemoveLineItemDiscount, ctx.format !== 'raw')
     return
   }
 

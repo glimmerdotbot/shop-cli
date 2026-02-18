@@ -37,6 +37,41 @@ const getOrderSelection = (view: CommandContext['view']) => {
   return orderSummarySelection
 }
 
+const parseCustomIdInput = ({
+  namespace,
+  key,
+  value,
+}: {
+  namespace?: unknown
+  key?: unknown
+  value?: unknown
+}) => {
+  const customKey = typeof key === 'string' ? key : undefined
+  const customValue = typeof value === 'string' ? value : undefined
+  if (!customKey || !customValue) return undefined
+  const ns = typeof namespace === 'string' && namespace ? namespace : undefined
+  return { ...(ns ? { namespace: ns } : {}), key: customKey, value: customValue }
+}
+
+const requireOrderIdFlag = (value: unknown, flag = '--order-id') => {
+  if (typeof value !== 'string' || !value) throw new CliError(`Missing ${flag}`, 2)
+  return coerceGid(value, 'Order')
+}
+
+const requirePaymentReferenceId = (value: unknown) => {
+  if (typeof value !== 'string' || !value) throw new CliError('Missing --payment-reference-id', 2)
+  return value
+}
+
+const parseBoolFlag = (value: unknown, flag: string) => {
+  if (value === undefined) return undefined
+  if (typeof value !== 'string') throw new CliError(`${flag} must be true|false`, 2)
+  const v = value.trim().toLowerCase()
+  if (v === 'true' || v === '1' || v === 'yes') return true
+  if (v === 'false' || v === '0' || v === 'no') return false
+  throw new CliError(`${flag} must be true|false`, 2)
+}
+
 export const runOrders = async ({
   ctx,
   verb,
@@ -54,6 +89,9 @@ export const runOrders = async ({
         '',
         'Verbs:',
         '  create|get|list|count|update|delete',
+        '  by-identifier|pending-count',
+        '  payment-status|capture|create-manual-payment|invoice-send|open',
+        '  customer-set|customer-remove|risk-assessment-create',
         '  add-tags|remove-tags|cancel|close|mark-paid|add-note|fulfill',
         '',
         'Common output flags:',
@@ -62,6 +100,14 @@ export const runOrders = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'pending-count') {
+    const result = await runQuery(ctx, { pendingOrdersCount: { count: true, precision: true } })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.pendingOrdersCount?.count ?? '')
+    printJson(result.pendingOrdersCount, ctx.format !== 'raw')
     return
   }
 
@@ -94,6 +140,45 @@ export const runOrders = async ({
     return
   }
 
+  if (verb === 'by-identifier') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'custom-id-namespace': { type: 'string' },
+        'custom-id-key': { type: 'string' },
+        'custom-id-value': { type: 'string' },
+      },
+    })
+
+    const idRaw = args.id as string | undefined
+    const customId = parseCustomIdInput({
+      namespace: (args as any)['custom-id-namespace'],
+      key: (args as any)['custom-id-key'],
+      value: (args as any)['custom-id-value'],
+    })
+    if (!idRaw && !customId) throw new CliError('Missing --id or --custom-id-key/--custom-id-value', 2)
+
+    const identifier: any = {
+      ...(idRaw ? { id: coerceGid(idRaw, 'Order') } : {}),
+      ...(customId ? { customId } : {}),
+    }
+
+    const selection = resolveSelection({
+      resource: 'orders',
+      view: ctx.view,
+      baseSelection: getOrderSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
+    const result = await runQuery(ctx, { orderByIdentifier: { __args: { identifier }, ...selection } })
+    if (result === undefined) return
+    printNode({ node: result.orderByIdentifier, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Order')
@@ -110,6 +195,42 @@ export const runOrders = async ({
     const result = await runQuery(ctx, { order: { __args: { id }, ...selection } })
     if (result === undefined) return
     printNode({ node: result.order, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'payment-status') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'payment-reference-id': { type: 'string' },
+        'order-id': { type: 'string' },
+      },
+    })
+    const orderId =
+      (args as any)['order-id'] !== undefined
+        ? requireOrderIdFlag((args as any)['order-id'], '--order-id')
+        : requireOrderIdFlag(args.id, '--id')
+
+    const paymentReferenceId =
+      (args as any)['payment-reference-id'] !== undefined
+        ? requirePaymentReferenceId((args as any)['payment-reference-id'])
+        : (() => {
+            throw new CliError('Missing --payment-reference-id', 2)
+          })()
+
+    const result = await runQuery(ctx, {
+      orderPaymentStatus: {
+        __args: { orderId, paymentReferenceId },
+        paymentReferenceId: true,
+        status: true,
+        errorMessage: true,
+        translatedErrorMessage: true,
+        transactions: { id: true, kind: true, status: true, amount: true, createdAt: true },
+      },
+    })
+    if (result === undefined) return
+    if (ctx.quiet) return console.log(result.orderPaymentStatus?.status ?? '')
+    printJson(result.orderPaymentStatus, ctx.format !== 'raw')
     return
   }
 
@@ -169,6 +290,222 @@ export const runOrders = async ({
     maybeFailOnUserErrors({ payload: result.orderCreate, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.orderCreate?.order?.id ?? '')
     printJson(result.orderCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'capture') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'parent-transaction-id': { type: 'string' },
+        amount: { type: 'string' },
+        currency: { type: 'string' },
+        'final-capture': { type: 'string' },
+      },
+    })
+    const id = requireId(args.id, 'Order')
+
+    const parentTransactionIdRaw = (args as any)['parent-transaction-id'] as string | undefined
+    const parentTransactionId =
+      parentTransactionIdRaw !== undefined
+        ? coerceGid(parentTransactionIdRaw, 'OrderTransaction')
+        : (() => {
+            throw new CliError('Missing --parent-transaction-id', 2)
+          })()
+
+    const amount =
+      (args as any).amount !== undefined
+        ? parseTextArg((args as any).amount, '--amount')
+        : (() => {
+            throw new CliError('Missing --amount', 2)
+          })()
+
+    const currency = (args as any).currency !== undefined ? parseTextArg((args as any).currency, '--currency') : undefined
+    const finalCapture = parseBoolFlag((args as any)['final-capture'], '--final-capture')
+
+    const result = await runMutation(ctx, {
+      orderCapture: {
+        __args: {
+          input: {
+            id,
+            parentTransactionId,
+            amount,
+            ...(currency ? { currency: currency as any } : {}),
+            ...(finalCapture === undefined ? {} : { finalCapture }),
+          },
+        },
+        transaction: { id: true, kind: true, status: true, amount: true, createdAt: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.orderCapture, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.orderCapture?.transaction?.id ?? '')
+    printJson(result.orderCapture, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'create-manual-payment') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        amount: { type: 'string' },
+        currency: { type: 'string' },
+        'payment-method-name': { type: 'string' },
+        'processed-at': { type: 'string' },
+      },
+    })
+    const id = requireId(args.id, 'Order')
+
+    const amountRaw = (args as any).amount as string | undefined
+    const currencyRaw = (args as any).currency as string | undefined
+    const amount = amountRaw ? parseTextArg(amountRaw, '--amount') : undefined
+    const currencyCode = currencyRaw ? parseTextArg(currencyRaw, '--currency') : undefined
+    if (amount !== undefined && !currencyCode) {
+      throw new CliError('Missing --currency (required with --amount)', 2)
+    }
+
+    const paymentMethodName = (args as any)['payment-method-name'] as string | undefined
+    const processedAt = (args as any)['processed-at'] as string | undefined
+
+    const result = await runMutation(ctx, {
+      orderCreateManualPayment: {
+        __args: {
+          id,
+          ...(amount !== undefined && currencyCode ? { amount: { amount, currencyCode } } : {}),
+          ...(paymentMethodName ? { paymentMethodName } : {}),
+          ...(processedAt ? { processedAt } : {}),
+        },
+        order: orderSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.orderCreateManualPayment, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.orderCreateManualPayment?.order?.id ?? '')
+    printJson(result.orderCreateManualPayment, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'invoice-send') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        email: { type: 'string' },
+      },
+    })
+    const id = requireId(args.id, 'Order')
+    const emailRaw = (args as any).email as string | undefined
+    const email = emailRaw ? parseJsonArg(emailRaw, '--email') : undefined
+    if (email !== undefined && (email === null || typeof email !== 'object' || Array.isArray(email))) {
+      throw new CliError('--email must be a JSON object', 2)
+    }
+
+    const result = await runMutation(ctx, {
+      orderInvoiceSend: {
+        __args: { id, ...(email ? { email } : {}) },
+        order: orderSummarySelection,
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.orderInvoiceSend, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.orderInvoiceSend?.order?.id ?? '')
+    printJson(result.orderInvoiceSend, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'open') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id, 'Order')
+
+    const result = await runMutation(ctx, {
+      orderOpen: {
+        __args: { input: { id } },
+        order: orderSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.orderOpen, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.orderOpen?.order?.id ?? '')
+    printJson(result.orderOpen, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'customer-set') {
+    const args = parseStandardArgs({ argv, extraOptions: { 'customer-id': { type: 'string' } } })
+    const orderId = requireId(args.id as any, 'Order')
+    const customerIdRaw = (args as any)['customer-id'] as string | undefined
+    if (!customerIdRaw) throw new CliError('Missing --customer-id', 2)
+    const customerId = coerceGid(customerIdRaw, 'Customer')
+
+    const result = await runMutation(ctx, {
+      orderCustomerSet: {
+        __args: { orderId, customerId },
+        order: orderSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.orderCustomerSet, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.orderCustomerSet?.order?.id ?? '')
+    printJson(result.orderCustomerSet, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'customer-remove') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const orderId = requireId(args.id as any, 'Order')
+
+    const result = await runMutation(ctx, {
+      orderCustomerRemove: {
+        __args: { orderId },
+        order: orderSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.orderCustomerRemove, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.orderCustomerRemove?.order?.id ?? '')
+    printJson(result.orderCustomerRemove, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'risk-assessment-create') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'risk-level': { type: 'string' },
+        facts: { type: 'string' },
+      },
+    })
+    const orderId = requireId(args.id as any, 'Order')
+
+    const riskLevel = (args as any)['risk-level'] as string | undefined
+    const factsRaw = (args as any).facts as string | undefined
+
+    const orderRiskAssessmentInput: any = {
+      orderId,
+      riskLevel,
+      facts: factsRaw ? parseJsonArg(factsRaw, '--facts') : undefined,
+    }
+
+    if (!orderRiskAssessmentInput.riskLevel) throw new CliError('Missing --risk-level', 2)
+    if (!Array.isArray(orderRiskAssessmentInput.facts) || orderRiskAssessmentInput.facts.length === 0) {
+      throw new CliError('Missing --facts', 2)
+    }
+
+    const result = await runMutation(ctx, {
+      orderRiskAssessmentCreate: {
+        __args: { orderRiskAssessmentInput },
+        orderRiskAssessment: { riskLevel: true, facts: { sentiment: true, description: true } },
+        userErrors: { field: true, message: true, code: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.orderRiskAssessmentCreate, failOnUserErrors: ctx.failOnUserErrors })
+    printJson(result.orderRiskAssessmentCreate, ctx.format !== 'raw')
     return
   }
 

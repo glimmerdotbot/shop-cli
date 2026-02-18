@@ -111,6 +111,29 @@ const flagBlockOnFailure = flag('--block-on-failure', 'Block checkout on failure
 const flagMetafields = flag('--metafields <json>', 'Metafields JSON')
 const flagProfileId = flag('--profile-id <gid>', 'Checkout profile ID')
 const flagEnabled = flag('--enabled <bool>', 'Enable/disable')
+const flagCustomIdNamespace = flag('--custom-id-namespace <string>', 'Custom identifier namespace')
+const flagCustomIdKey = flag('--custom-id-key <string>', 'Custom identifier key')
+const flagCustomIdValue = flag('--custom-id-value <string>', 'Custom identifier value')
+const flagPaymentReferenceId = flag('--payment-reference-id <string>', 'Payment reference ID')
+const flagPaymentMethodName = flag('--payment-method-name <string>', 'Payment method name')
+const flagProcessedAt = flag('--processed-at <iso>', 'Processed at timestamp')
+const flagFinalCapture = flag('--final-capture <bool>', 'Final capture flag')
+const flagRiskLevel = flag('--risk-level <string>', 'Risk level')
+const flagFacts = flag('--facts <json|@file>', 'Facts JSON array')
+const flagSubjectTypes = flag('--subject-types <csv>', 'Subject types (comma-separated)')
+const flagAssignmentStatus = flag('--assignment-status <string>', 'Assignment status filter')
+const flagLocationIds = flag('--location-ids <gid>', 'Location IDs (repeatable or comma-separated)')
+const flagInventoryLevelId = flag('--inventory-level-id <gid>', 'Inventory level ID')
+const flagTransferId = flag('--transfer-id <gid>', 'Inventory transfer ID')
+const flagUpdates = flag('--updates <json|@file>', 'Updates JSON')
+const flagAvailable = flag('--available <int>', 'Available quantity')
+const flagOnHand = flag('--on-hand <int>', 'On-hand quantity')
+const flagStockAtLegacyLocation = flag('--stock-at-legacy-location <bool>', 'Stock at legacy location flag')
+const flagActivate = flag('--activate <bool>', 'Activate flag')
+const flagDisposition = flag('--disposition <id>:<qty>:<type>[:<locationId>]', 'Disposition (repeatable)')
+const flagReverseFulfillmentOrderId = flag('--reverse-fulfillment-order-id <id>', 'Reverse fulfillment order ID')
+const flagLineItem = flag('--line-item <id>:<qty>', 'Reverse delivery line item (repeatable)')
+const flagLabelUrl = flag('--label-url <url>', 'Label URL')
 const flagRoles = flag('--roles <role>', 'Theme roles (repeatable)')
 const flagName = flag('--name <string>', 'Name')
 const flagHandle = flag('--handle <string>', 'Handle')
@@ -1373,6 +1396,73 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'transactionVoid' },
         requiredFlags: [flagParentTransactionId],
       },
+      {
+        verb: 'by-identifier',
+        description: 'Fetch an order by identifier.',
+        operation: { type: 'query', name: 'orderByIdentifier' },
+        flags: [flagId, flagCustomIdNamespace, flagCustomIdKey, flagCustomIdValue],
+        notes: ['Provide either --id or --custom-id-key/--custom-id-value (optionally with --custom-id-namespace).'],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'pending-count',
+        description: 'Get the count of pending orders.',
+        operation: { type: 'query', name: 'pendingOrdersCount' },
+      },
+      {
+        verb: 'payment-status',
+        description: 'Get order payment status by payment reference ID.',
+        operation: { type: 'query', name: 'orderPaymentStatus' },
+        requiredFlags: [flagPaymentReferenceId],
+        flags: [flagId, flagOrderId],
+        notes: ['Use --order-id to specify the order; otherwise uses --id.'],
+      },
+      {
+        verb: 'capture',
+        description: 'Capture an authorized payment for an order.',
+        operation: { type: 'mutation', name: 'orderCapture' },
+        requiredFlags: [flagId, flagParentTransactionId, flagAmount, flagCurrency],
+        flags: [flagFinalCapture],
+      },
+      {
+        verb: 'create-manual-payment',
+        description: 'Create a manual payment for an order.',
+        operation: { type: 'mutation', name: 'orderCreateManualPayment' },
+        requiredFlags: [flagId],
+        flags: [flagAmount, flagCurrency, flagPaymentMethodName, flagProcessedAt],
+        notes: ['If you pass --amount, you must also pass --currency.'],
+      },
+      {
+        verb: 'invoice-send',
+        description: 'Send an invoice for an order.',
+        operation: { type: 'mutation', name: 'orderInvoiceSend' },
+        requiredFlags: [flagId],
+        flags: [flag('--email <json|@file>', 'Email input JSON (optional)')],
+      },
+      {
+        verb: 'open',
+        description: 'Open an order.',
+        operation: { type: 'mutation', name: 'orderOpen' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'customer-set',
+        description: 'Set a customer on an order.',
+        operation: { type: 'mutation', name: 'orderCustomerSet' },
+        requiredFlags: [flagId, flagCustomerId],
+      },
+      {
+        verb: 'customer-remove',
+        description: 'Remove the customer from an order.',
+        operation: { type: 'mutation', name: 'orderCustomerRemove' },
+        requiredFlags: [flagId],
+      },
+      {
+        verb: 'risk-assessment-create',
+        description: 'Create a risk assessment for an order.',
+        operation: { type: 'mutation', name: 'orderRiskAssessmentCreate' },
+        requiredFlags: [flagId, flagRiskLevel, flagFacts],
+      },
     ],
   },
   {
@@ -1410,6 +1500,12 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'node' },
         requiredFlags: [flagId],
         output: { view: true, selection: true },
+      },
+      {
+        verb: 'session',
+        description: 'Get an order edit session by ID (orderEditSession).',
+        operation: { type: 'query', name: 'orderEditSession' },
+        requiredFlags: [flagId],
       },
       {
         verb: 'commit',
@@ -1450,6 +1546,13 @@ const baseCommandRegistry: ResourceSpec[] = [
         inputArg: 'discount',
         output: { view: true, selection: true },
       }),
+      {
+        verb: 'remove-line-item-discount',
+        description: 'Remove a line item discount from the order edit.',
+        operation: { type: 'mutation', name: 'orderEditRemoveLineItemDiscount' },
+        requiredFlags: [flagId, flagDiscountApplicationId],
+        output: { view: true, selection: true },
+      },
       {
         verb: 'remove-discount',
         description: 'Remove a discount from the order edit.',
@@ -1494,6 +1597,68 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'inventory',
     description: 'Adjust inventory quantities.',
     verbs: [
+      {
+        verb: 'properties',
+        description: 'Get inventory properties.',
+        operation: { type: 'query', name: 'inventoryProperties' },
+      },
+      {
+        verb: 'level',
+        description: 'Fetch an inventory level by ID.',
+        operation: { type: 'query', name: 'inventoryLevel' },
+        requiredFlags: [flagId],
+        notes: ['Pass an InventoryLevel ID via --id.'],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'activate',
+        description: 'Activate inventory at a location.',
+        operation: { type: 'mutation', name: 'inventoryActivate' },
+        requiredFlags: [flagLocationId],
+        flags: [flagInventoryItemId, flagVariantId, flagAvailable, flagOnHand, flagStockAtLegacyLocation],
+        notes: ['Pass either --inventory-item-id or --variant-id.'],
+      },
+      {
+        verb: 'deactivate',
+        description: 'Deactivate an inventory level.',
+        operation: { type: 'mutation', name: 'inventoryDeactivate' },
+        requiredFlags: [flagInventoryLevelId],
+      },
+      {
+        verb: 'bulk-toggle-activation',
+        description: 'Bulk toggle inventory activation.',
+        operation: { type: 'mutation', name: 'inventoryBulkToggleActivation' },
+        flags: [flagInventoryItemId, flagVariantId, flagUpdates, flagLocationId, flagActivate],
+        notes: ['Pass either --inventory-item-id or --variant-id and either --updates or (--location-id and --activate).'],
+      },
+      {
+        verb: 'set-on-hand-quantities',
+        description: 'Set on-hand inventory quantities.',
+        operation: { type: 'mutation', name: 'inventorySetOnHandQuantities' },
+        flags: [
+          flagInventoryItemId,
+          flagVariantId,
+          flagLocationId,
+          flagOnHand,
+          flag('--set-quantities <json|@file>', 'Set quantities JSON array'),
+          flagReason,
+          flagReferenceDocumentUri,
+        ],
+        notes: ['Provide --set-quantities, or provide --location-id and --on-hand (plus an item via --inventory-item-id or --variant-id).'],
+      },
+      {
+        verb: 'set-scheduled-changes',
+        description: 'Set scheduled inventory changes.',
+        operation: { type: 'mutation', name: 'inventorySetScheduledChanges' },
+        requiredFlags: [flagReferenceDocumentUri, flagItems],
+        flags: [flagReason],
+      },
+      {
+        verb: 'transfer-set-items',
+        description: 'Set items for an inventory transfer.',
+        operation: { type: 'mutation', name: 'inventoryTransferSetItems' },
+        requiredFlags: [flagTransferId, flag('--line-items <json|@file>', 'Line items JSON array')],
+      },
       {
         verb: 'list',
         description: 'List inventory levels at a location.',
@@ -1623,6 +1788,71 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'removeFromReturn' },
         requiredFlags: [flagId, flagReturnLineItemId, flagQuantity],
       },
+      {
+        verb: 'line-item-remove',
+        description: 'Remove an item from a return (ReturnLineItem remove).',
+        operation: { type: 'mutation', name: 'returnLineItemRemoveFromReturn' },
+        requiredFlags: [flagId, flagReturnLineItemId, flagQuantity],
+      },
+    ],
+  },
+  {
+    resource: 'returnable-fulfillments',
+    description: 'Query returnable fulfillments.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Fetch a returnable fulfillment by ID.',
+        operation: { type: 'query', name: 'returnableFulfillment' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+    ],
+  },
+  {
+    resource: 'reverse-deliveries',
+    description: 'Manage reverse deliveries.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Fetch a reverse delivery by ID.',
+        operation: { type: 'query', name: 'reverseDelivery' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'create-with-shipping',
+        description: 'Create a reverse delivery with shipping.',
+        operation: { type: 'mutation', name: 'reverseDeliveryCreateWithShipping' },
+        requiredFlags: [flagReverseFulfillmentOrderId, flagLineItem],
+        flags: [flagTrackingNumber, flagTrackingUrl, flagLabelUrl, flagNotifyCustomer],
+      },
+      {
+        verb: 'shipping-update',
+        description: 'Update reverse delivery shipping.',
+        operation: { type: 'mutation', name: 'reverseDeliveryShippingUpdate' },
+        requiredFlags: [flagId],
+        flags: [flagTrackingNumber, flagTrackingUrl, flagLabelUrl, flagNotifyCustomer],
+      },
+    ],
+  },
+  {
+    resource: 'reverse-fulfillment-orders',
+    description: 'Manage reverse fulfillment orders.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Fetch a reverse fulfillment order by ID.',
+        operation: { type: 'query', name: 'reverseFulfillmentOrder' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'dispose',
+        description: 'Dispose reverse fulfillment order line items.',
+        operation: { type: 'mutation', name: 'reverseFulfillmentOrderDispose' },
+        requiredFlags: [flagDisposition],
+      },
     ],
   },
   {
@@ -1633,6 +1863,20 @@ const baseCommandRegistry: ResourceSpec[] = [
       {
         ...listVerb({ operation: 'fulfillmentOrders', description: 'List fulfillment orders.' }),
         flags: [flagStatusValue, flag('--location-ids <gid>', 'Location IDs (repeatable)'), flag('--include-closed', 'Include closed fulfillment orders')],
+      },
+      {
+        verb: 'assigned',
+        description: 'List assigned fulfillment orders.',
+        operation: { type: 'query', name: 'assignedFulfillmentOrders' },
+        flags: [flagFirst, flagAfter, flagSort, flagReverse, flagAssignmentStatus, flagLocationIds],
+        output: { view: true, selection: true, pagination: true },
+      },
+      {
+        verb: 'manual-holds',
+        description: 'List fulfillment orders with manual holds.',
+        operation: { type: 'query', name: 'manualHoldsFulfillmentOrders' },
+        flags: [flagFirst, flagAfter, flagQuery, flagReverse],
+        output: { view: true, selection: true, pagination: true },
       },
       {
         verb: 'accept-request',
@@ -1778,6 +2022,14 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flagMessage],
         inputArg: 'fulfillment',
       }),
+      inputVerb({
+        verb: 'create-v1',
+        description: 'Create a fulfillment (fulfillmentCreate).',
+        operation: 'fulfillmentCreate',
+        requiredFlags: [],
+        flags: [flagMessage],
+        inputArg: 'fulfillment',
+      }),
       {
         verb: 'cancel',
         description: 'Cancel a fulfillment.',
@@ -1785,8 +2037,22 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
       },
       {
+        verb: 'tracking-update',
+        description: 'Update fulfillment tracking (fulfillmentTrackingInfoUpdate).',
+        operation: { type: 'mutation', name: 'fulfillmentTrackingInfoUpdate' },
+        requiredFlags: [flagId],
+        flags: [flagTrackingCompany, flagTrackingNumber, flagTrackingUrl, flagNotifyCustomer],
+      },
+      {
         verb: 'update-tracking',
         description: 'Update fulfillment tracking.',
+        operation: { type: 'mutation', name: 'fulfillmentTrackingInfoUpdateV2' },
+        requiredFlags: [flagId],
+        flags: [flagTrackingCompany, flagTrackingNumber, flagTrackingUrl, flagNotifyCustomer],
+      },
+      {
+        verb: 'tracking-update-v2',
+        description: 'Update fulfillment tracking (fulfillmentTrackingInfoUpdateV2).',
         operation: { type: 'mutation', name: 'fulfillmentTrackingInfoUpdateV2' },
         requiredFlags: [flagId],
         flags: [flagTrackingCompany, flagTrackingNumber, flagTrackingUrl, flagNotifyCustomer],
@@ -2565,6 +2831,20 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: inputFlags,
         output: { view: true, selection: true },
       },
+      inputVerb({
+        verb: 'event-bridge-create',
+        description: 'Create an EventBridge webhook subscription.',
+        operation: 'eventBridgeWebhookSubscriptionCreate',
+        inputArg: 'webhookSubscription',
+        requiredFlags: [flagTopic],
+      }),
+      inputVerb({
+        verb: 'event-bridge-update',
+        description: 'Update an EventBridge webhook subscription.',
+        operation: 'eventBridgeWebhookSubscriptionUpdate',
+        inputArg: 'webhookSubscription',
+        requiredFlags: [flagId],
+      }),
       deleteVerb({ operation: 'webhookSubscriptionDelete', description: 'Delete a webhook subscription.' }),
     ],
   },
@@ -3387,6 +3667,26 @@ const baseCommandRegistry: ResourceSpec[] = [
     ],
   },
   {
+    resource: 'checkout-profiles',
+    description: 'Manage checkout profiles.',
+    verbs: [
+      {
+        verb: 'get',
+        description: 'Fetch a checkout profile by ID.',
+        operation: { type: 'query', name: 'checkoutProfile' },
+        requiredFlags: [flagId],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'list',
+        description: 'List checkout profiles.',
+        operation: { type: 'query', name: 'checkoutProfiles' },
+        flags: [flagFirst, flagAfter, flagQuery, flagSort, flagReverse],
+        output: { view: true, selection: true, pagination: true },
+      },
+    ],
+  },
+  {
     resource: 'delivery-profiles',
     description: 'Manage delivery profiles.',
     verbs: [
@@ -3426,6 +3726,41 @@ const baseCommandRegistry: ResourceSpec[] = [
     ],
   },
   {
+    resource: 'delivery-settings',
+    description: 'Manage shop delivery settings.',
+    verbs: [
+      {
+        verb: 'setting-update',
+        description: 'Set the delivery settings for a shop.',
+        operation: { type: 'mutation', name: 'deliverySettingUpdate' },
+      },
+      {
+        verb: 'shipping-origin-assign',
+        description: 'Assign a location as the shipping origin (legacy compatibility mode).',
+        operation: { type: 'mutation', name: 'deliveryShippingOriginAssign' },
+        requiredFlags: [flagLocationId],
+      },
+    ],
+  },
+  {
+    resource: 'delivery-profile-locations',
+    description: 'Query locations available for delivery profiles.',
+    verbs: [
+      {
+        verb: 'available',
+        description: 'List locations available for delivery profiles (deprecated list field).',
+        operation: { type: 'query', name: 'locationsAvailableForDeliveryProfiles' },
+      },
+      {
+        verb: 'available-connection',
+        description: 'List locations available for delivery profiles (paginated).',
+        operation: { type: 'query', name: 'locationsAvailableForDeliveryProfilesConnection' },
+        flags: [flagFirst, flagAfter, flagReverse],
+        output: { pagination: true },
+      },
+    ],
+  },
+  {
     resource: 'delivery-promises',
     description: 'Manage delivery promise settings, participants, and providers.',
     verbs: [
@@ -3450,6 +3785,13 @@ const baseCommandRegistry: ResourceSpec[] = [
         output: { view: true, selection: true },
       },
       {
+        verb: 'provider',
+        description: 'Get delivery promise provider by location.',
+        operation: { type: 'query', name: 'deliveryPromiseProvider' },
+        requiredFlags: [flagLocationId],
+        output: { view: true, selection: true },
+      },
+      {
         verb: 'update-participants',
         description: 'Update delivery promise participants.',
         operation: { type: 'mutation', name: 'deliveryPromiseParticipantsUpdate' },
@@ -3458,6 +3800,13 @@ const baseCommandRegistry: ResourceSpec[] = [
       },
       {
         verb: 'upsert-provider',
+        description: 'Create or update a delivery promise provider.',
+        operation: { type: 'mutation', name: 'deliveryPromiseProviderUpsert' },
+        requiredFlags: [flagLocationId],
+        flags: [flagActive, flagFulfillmentDelay, flagTimeZone],
+      },
+      {
+        verb: 'provider-upsert',
         description: 'Create or update a delivery promise provider.',
         operation: { type: 'mutation', name: 'deliveryPromiseProviderUpsert' },
         requiredFlags: [flagLocationId],
@@ -3653,6 +4002,13 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'Get the current bulk operation.',
         operation: { type: 'query', name: 'currentBulkOperation' },
         flags: [flag('--type <QUERY|MUTATION>', 'Operation type')],
+        output: { view: true, selection: true },
+      },
+      {
+        verb: 'job',
+        description: 'Get a job by ID.',
+        operation: { type: 'query', name: 'job' },
+        requiredFlags: [flagId],
         output: { view: true, selection: true },
       },
       {
@@ -4137,6 +4493,14 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'locations',
     description: 'Manage locations.',
     verbs: [
+      {
+        verb: 'by-identifier',
+        description: 'Fetch a location by identifier.',
+        operation: { type: 'query', name: 'locationByIdentifier' },
+        flags: [flagId, flagCustomIdNamespace, flagCustomIdKey, flagCustomIdValue],
+        notes: ['Provide either --id or --custom-id-key/--custom-id-value (optionally with --custom-id-namespace).'],
+        output: { view: true, selection: true },
+      },
       getVerb({ operation: 'location', description: 'Fetch a location by ID.' }),
       listVerb({ operation: 'locations', description: 'List locations.' }),
       countVerb({ operation: 'locationsCount', description: 'Count locations.', flags: [flagQuery] }),
@@ -5200,6 +5564,13 @@ const baseCommandRegistry: ResourceSpec[] = [
       getVerb({ operation: 'event', description: 'Fetch an event by ID.' }),
       listVerb({ operation: 'events', description: 'List events.' }),
       countVerb({ operation: 'eventsCount', description: 'Count events.', flags: [flagQuery] }),
+      {
+        verb: 'deletion-events',
+        description: 'List deletion events.',
+        operation: { type: 'query', name: 'deletionEvents' },
+        flags: [flagFirst, flagAfter, flagQuery, flagSort, flagReverse, flagSubjectTypes],
+        output: { pagination: true },
+      },
     ],
   },
   {

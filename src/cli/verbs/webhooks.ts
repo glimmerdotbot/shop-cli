@@ -48,6 +48,7 @@ export const runWebhooks = async ({
         'Verbs:',
         '  create|get|list|update|delete|count',
         '  pubsub-create|pubsub-update',
+        '  event-bridge-create|event-bridge-update',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -87,6 +88,63 @@ export const runWebhooks = async ({
     if (result === undefined) return
     if (ctx.quiet) return console.log(result.webhookSubscriptionsCount?.count ?? '')
     printJson(result.webhookSubscriptionsCount, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'event-bridge-create') {
+    const args = parseStandardArgs({ argv, extraOptions: { topic: { type: 'string' } } })
+    const topic = args.topic as string | undefined
+    if (!topic) throw new CliError('Missing --topic', 2)
+
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json (webhookSubscription)', 2)
+
+    const result = await runMutation(ctx, {
+      eventBridgeWebhookSubscriptionCreate: {
+        __args: { topic: topic as any, webhookSubscription: built.input },
+        webhookSubscription: webhookSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.eventBridgeWebhookSubscriptionCreate,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.eventBridgeWebhookSubscriptionCreate?.webhookSubscription?.id ?? '')
+    printJson(result.eventBridgeWebhookSubscriptionCreate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'event-bridge-update') {
+    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const id = requireId(args.id, 'WebhookSubscription')
+
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json (webhookSubscription)', 2)
+
+    const result = await runMutation(ctx, {
+      eventBridgeWebhookSubscriptionUpdate: {
+        __args: { id, webhookSubscription: built.input },
+        webhookSubscription: webhookSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.eventBridgeWebhookSubscriptionUpdate,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.eventBridgeWebhookSubscriptionUpdate?.webhookSubscription?.id ?? '')
+    printJson(result.eventBridgeWebhookSubscriptionUpdate, ctx.format !== 'raw')
     return
   }
 

@@ -121,6 +121,29 @@ export const runFulfillments = async ({
     return
   }
 
+  if (verb === 'create-v1') {
+    const args = parseStandardArgs({ argv, extraOptions: { message: { type: 'string' } } })
+    const built = buildInput({
+      inputArg: args.input as any,
+      setArgs: args.set as any,
+      setJsonArgs: args['set-json'] as any,
+    })
+    if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
+
+    const result = await runMutation(ctx, {
+      fulfillmentCreate: {
+        __args: { fulfillment: built.input, message: args.message as any },
+        fulfillment: fulfillmentSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({ payload: result.fulfillmentCreate, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) return console.log(result.fulfillmentCreate?.fulfillment?.id ?? '')
+    printJson(result.fulfillmentCreate, ctx.format !== 'raw')
+    return
+  }
+
   if (verb === 'cancel') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Fulfillment')
@@ -139,7 +162,46 @@ export const runFulfillments = async ({
     return
   }
 
-  if (verb === 'update-tracking') {
+  if (verb === 'tracking-update') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'tracking-company': { type: 'string' },
+        'tracking-number': { type: 'string' },
+        'tracking-url': { type: 'string' },
+        'notify-customer': { type: 'boolean' },
+      },
+    })
+    const id = requireId(args.id, 'Fulfillment')
+    const trackingInfoInput = parseTrackingInfo({
+      company: args['tracking-company'],
+      number: args['tracking-number'],
+      url: args['tracking-url'],
+    })
+    if (!trackingInfoInput) throw new CliError('Missing tracking info (use --tracking-company/--tracking-number/--tracking-url)', 2)
+
+    const result = await runMutation(ctx, {
+      fulfillmentTrackingInfoUpdate: {
+        __args: {
+          fulfillmentId: id,
+          trackingInfoInput,
+          notifyCustomer: args['notify-customer'] ? true : undefined,
+        },
+        fulfillment: fulfillmentSummarySelection,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.fulfillmentTrackingInfoUpdate,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return console.log(result.fulfillmentTrackingInfoUpdate?.fulfillment?.id ?? '')
+    printJson(result.fulfillmentTrackingInfoUpdate, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'update-tracking' || verb === 'tracking-update-v2') {
     const args = parseStandardArgs({
       argv,
       extraOptions: {

@@ -53,7 +53,9 @@ const defaultValueForFlag = (flag: string) => {
   if (flag === '--now') return undefined
   if (flag === '--notify-customer') return undefined
   if (flag === '--all') return undefined
-  if (flag === '--enabled') return 'true'
+  if (flag === '--enabled') return undefined
+  if (flag === '--wait') return undefined
+  if (flag === '--quiet') return undefined
   if (flag === '--cycle-index') return '1'
   if (flag === '--cycle-indexes') return '1,2'
   if (flag === '--credit-amount') return '1.00,USD'
@@ -61,12 +63,23 @@ const defaultValueForFlag = (flag: string) => {
   if (flag === '--country-code') return 'US'
   if (flag === '--country-codes') return 'US'
   if (flag === '--resource-type') return 'METAOBJECT'
+  if (flag === '--line-item') return '1:1'
+  if (flag === '--disposition') return '1:1:NOT_RESTOCKED'
+  if (flag === '--facts') return '[{"sentiment":"NEUTRAL","description":"test"}]'
+  if (flag === '--items') return '[]'
+  if (flag === '--line-items') return '[]'
+  if (flag === '--set-quantities') return '[{"inventoryItemId":"1","locationId":"1","quantity":1}]'
+  if (flag === '--updates') return '[{"locationId":"1","activate":true}]'
+  if (flag === '--activate') return 'true'
   if (flag.endsWith('-ids') || flag === '--ids' || flag === '--variant-ids') return '1,2'
   if (flag.endsWith('-id') || flag === '--id') return '1'
   if (flag.includes('url')) return 'https://example.com'
   if (flag.includes('file')) return 'src/test/fixtures/sample.txt'
   if (flag.includes('quantity') || flag.includes('amount') || flag.includes('days')) return '1'
   if (flag.includes('available') || flag.includes('delta') || flag.includes('limit')) return '1'
+  if (flag.includes('active')) return 'true'
+  if (flag.includes('final-capture')) return 'true'
+  if (flag.includes('risk-level')) return 'NONE'
   if (flag.includes('status')) return 'ACTIVE'
   if (flag.includes('tags')) return 'tag1,tag2'
   if (flag.includes('media-type')) return 'IMAGE'
@@ -81,6 +94,9 @@ const defaultValueForFlag = (flag: string) => {
 const guessBaseArgs = ({ resource, verb }: { resource: string; verb: string }): string[] => {
   // Add verb-specific args so --dry-run covers more root fields without changing CLI behavior.
   // Keep these narrowly scoped to commands that otherwise need non-standard flags / JSON inputs.
+  if (resource === 'checkout-branding' && verb === 'get') return ['--profile-id', '1']
+  if (resource === 'checkout-branding' && verb === 'upsert') return ['--profile-id', '1', '--input', '{}']
+
   if (resource === 'products') {
     if (verb === 'create-media' || verb === 'update-media') {
       return ['--product-id', '1', '--media', '[]']
@@ -218,7 +234,7 @@ const applyErrorFixes = ({
 }): { updated: boolean; skipReason?: string } => {
   const msg = err.message
 
-  if (msg.includes('Refusing') && msg.includes('without --yes')) {
+  if (/Refusing to .* without --yes/i.test(msg)) {
     addBoolFlag(argv, '--yes')
     return { updated: true }
   }
@@ -229,6 +245,16 @@ const applyErrorFixes = ({
       (entry.resource === 'selling-plan-groups' && (entry.verb === 'add-variants' || entry.verb === 'remove-variants')))
   ) {
     addValueFlag(argv, '--variant-ids', '1,2')
+    return { updated: true }
+  }
+
+  if (entry.resource === 'checkout-branding' && msg.startsWith('Missing --id')) {
+    addValueFlag(argv, '--profile-id', '1')
+    return { updated: true }
+  }
+
+  if (msg.includes('Missing tracking info (use --tracking-company/--tracking-number/--tracking-url)')) {
+    setFlagValue(argv, '--tracking-number', '1')
     return { updated: true }
   }
 
@@ -311,6 +337,11 @@ const applyErrorFixes = ({
     return { updated: true }
   }
 
+  if (msg.includes('Missing pickupTime in --input/--set')) {
+    argv.push('--set', 'pickupTime=test')
+    return { updated: true }
+  }
+
   const missingOrRegex = /^Missing\s+(--[a-z0-9-]+)\s+or\s+(--[a-z0-9-]+)\b/i
   const missingSingleRegex = /^Missing\s+(--[a-z0-9-]+)\b/i
   const missingLabelRegex = /^Missing\s+(\-\-[^\s]+)\b/i
@@ -320,7 +351,7 @@ const applyErrorFixes = ({
     const flag = orMatch[1]!
     const value = defaultValueForFlag(flag)
     if (value === undefined) addBoolFlag(argv, flag)
-    else addValueFlag(argv, flag, value)
+    else setFlagValue(argv, flag, value)
     return { updated: true }
   }
 
@@ -329,7 +360,7 @@ const applyErrorFixes = ({
     const flag = singleMatch[1]!
     const value = defaultValueForFlag(flag)
     if (value === undefined) addBoolFlag(argv, flag)
-    else addValueFlag(argv, flag, value)
+    else setFlagValue(argv, flag, value)
     return { updated: true }
   }
 
@@ -337,6 +368,13 @@ const applyErrorFixes = ({
   if (jsonFlagMatch) {
     const flag = jsonFlagMatch[1]!
     setFlagValue(argv, flag, '{}')
+    return { updated: true }
+  }
+
+  const jsonArrayMatch = msg.match(/(--[a-z0-9-]+)\s+must be a JSON array/i)
+  if (jsonArrayMatch) {
+    const flag = jsonArrayMatch[1]!
+    setFlagValue(argv, flag, '[]')
     return { updated: true }
   }
 
