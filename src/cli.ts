@@ -144,10 +144,10 @@ const main = async () => {
     if (resourceHelp) {
       console.log(resourceHelp)
       if (hasHelpFlag(afterResource)) return
-      throw new CliError(`Missing <verb> for "${resource}"`, 2)
+      throw new CliError(`\nMissing <verb> for "${resource}"`, 2)
     } else {
       console.log(renderTopLevelHelp())
-      throw new CliError(`Unknown resource: ${resource}`, 2)
+      throw new CliError(`\nUnknown resource: ${resource}`, 2)
     }
   }
 
