@@ -18,26 +18,12 @@ The `--dry-run` flag already generates the GraphQL query/mutation strings withou
 
 ---
 
-## Clarifying Questions
+## Decisions
 
-Before finalizing this plan, I need to clarify:
-
-1. **Test Runner Preference**: Do you have a preference for the test framework? Options:
-   - **Vitest** (recommended - fast, modern, TypeScript-first)
-   - **Jest** (widely used, more mature ecosystem)
-   - **Node.js built-in test runner** (minimal dependencies)
-
-2. **Validation Approach**: How strict should validation be?
-   - **Schema validation only** - Ensure queries parse and validate against schema
-   - **Schema + execution simulation** - Also verify variables match expected types
-   - **Schema + real API validation** - Actually hit a test store (slower, requires credentials)
-
-3. **Coverage Scope**: What counts as "100% coverage"?
-   - Every verb handler file has at least one test?
-   - Every public command (resource + verb combination)?
-   - Every code path within each verb (e.g., different flag combinations)?
-
-4. **CI/CD Integration**: Should the plan include CI setup (GitHub Actions, etc.)?
+1. **Test Runner**: Vitest
+2. **Validation Approach**: Schema validation + variable type checking (no real API calls)
+3. **Coverage Scope**: Every resource/verb combination, with all applicable flags tested together where possible
+4. **CI/CD Integration**: Not included (manual runs only)
 
 ---
 
@@ -45,15 +31,12 @@ Before finalizing this plan, I need to clarify:
 
 ### Phase 1: Test Infrastructure Setup
 
-1. **Install test framework** (Vitest recommended)
+1. **Install Vitest**
    ```bash
-   npm install -D vitest @vitest/coverage-v8
+   npm install -D vitest
    ```
 
-2. **Add GraphQL validation utilities**
-   ```bash
-   npm install -D graphql  # Already have this for schema parsing
-   ```
+2. **GraphQL validation** - Already have `graphql` package for schema parsing
 
 3. **Create test configuration**
    - `vitest.config.ts`
@@ -61,42 +44,142 @@ Before finalizing this plan, I need to clarify:
 
 ### Phase 2: GraphQL Validation Library
 
-Create a test utility module that:
+Create test utilities in `/src/test/graphql/`:
 
-1. **Loads the GraphQL schema** from `/schema/2026-04.graphql`
-2. **Validates query strings** against the schema using the `graphql` package's `validate()` function
-3. **Extracts variables** and validates their types
-4. **Reports detailed errors** for invalid operations
-
-**File: `/src/test/validateGraphQL.ts`**
+**File: `validateGraphQL.ts`**
 
 ```typescript
-import { buildSchema, parse, validate, Source } from 'graphql'
+import { buildSchema, parse, validate, TypeInfo, visitWithTypeInfo, visit, isInputType, getNullableType, isListType, isNonNullType, GraphQLInputType } from 'graphql'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-const schemaPath = join(__dirname, '../../schema/2026-04.graphql')
+// Load and parse schema once
+const schemaPath = join(__dirname, '../../../schema/2026-04.graphql')
 const schemaSource = readFileSync(schemaPath, 'utf-8')
 const schema = buildSchema(schemaSource)
 
-export function validateGraphQLOperation(operation: string): {
+export interface ValidationResult {
   valid: boolean
   errors: string[]
-} {
+}
+
+export function validateGraphQLOperation(query: string, variables?: Record<string, unknown>): ValidationResult {
+  const errors: string[] = []
+
+  // 1. Parse the query
+  let document
   try {
-    const document = parse(new Source(operation))
-    const errors = validate(schema, document)
-    return {
-      valid: errors.length === 0,
-      errors: errors.map(e => e.message)
-    }
+    document = parse(query)
   } catch (e) {
-    return {
-      valid: false,
-      errors: [(e as Error).message]
+    return { valid: false, errors: [`Parse error: ${(e as Error).message}`] }
+  }
+
+  // 2. Validate query against schema
+  const validationErrors = validate(schema, document)
+  if (validationErrors.length > 0) {
+    errors.push(...validationErrors.map(e => e.message))
+  }
+
+  // 3. Validate variable types (if variables provided)
+  if (variables && Object.keys(variables).length > 0) {
+    const variableErrors = validateVariableTypes(document, variables)
+    errors.push(...variableErrors)
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+function validateVariableTypes(document: any, variables: Record<string, unknown>): string[] {
+  // Extract variable definitions from the document and validate types
+  const errors: string[] = []
+  const variableDefs = document.definitions[0]?.variableDefinitions ?? []
+
+  for (const varDef of variableDefs) {
+    const varName = varDef.variable.name.value
+    const varValue = variables[varName]
+
+    // Check if required variable is missing
+    if (varDef.type.kind === 'NonNullType' && varValue === undefined) {
+      errors.push(`Missing required variable: $${varName}`)
     }
   }
+
+  return errors
 }
+```
+
+**File: `runDryRun.ts`**
+
+```typescript
+import { spawn } from 'child_process'
+import { join } from 'path'
+
+export interface DryRunResult {
+  query: string
+  variables: Record<string, unknown>
+}
+
+export async function runCommandDryRun(args: string[]): Promise<DryRunResult> {
+  const cliPath = join(__dirname, '../../../cli.ts')
+
+  return new Promise((resolve, reject) => {
+    const child = spawn('npx', ['tsx', cliPath, ...args, '--dry-run'], {
+      cwd: join(__dirname, '../../..'),
+      env: {
+        ...process.env,
+        // Provide dummy credentials to avoid auth errors
+        SHOPIFY_ACCESS_TOKEN: 'test-token',
+        SHOP_DOMAIN: 'test-shop.myshopify.com',
+      },
+    })
+
+    let stdout = ''
+    let stderr = ''
+
+    child.stdout.on('data', (data) => { stdout += data })
+    child.stderr.on('data', (data) => { stderr += data })
+
+    child.on('close', (code) => {
+      if (code !== 0) {
+        reject(new Error(`Command failed with code ${code}: ${stderr}`))
+        return
+      }
+
+      try {
+        const result = JSON.parse(stdout)
+        resolve(result)
+      } catch {
+        reject(new Error(`Failed to parse dry-run output: ${stdout}`))
+      }
+    })
+  })
+}
+```
+
+**File: `commandRegistry.ts`**
+
+```typescript
+export interface CommandSpec {
+  resource: string
+  verb: string
+  args: string[]  // Minimum required arguments
+  description?: string
+}
+
+// Registry of all commands with their minimum required arguments
+export const commands: CommandSpec[] = [
+  // Products
+  { resource: 'products', verb: 'list', args: [] },
+  { resource: 'products', verb: 'get', args: ['--id', 'gid://shopify/Product/1'] },
+  { resource: 'products', verb: 'create', args: ['--set', 'title=Test'] },
+  { resource: 'products', verb: 'update', args: ['--id', 'gid://shopify/Product/1', '--set', 'title=Updated'] },
+  { resource: 'products', verb: 'delete', args: ['--id', 'gid://shopify/Product/1', '--yes'] },
+  { resource: 'products', verb: 'duplicate', args: ['--id', 'gid://shopify/Product/1', '--new-title', 'Copy'] },
+  { resource: 'products', verb: 'set-status', args: ['--id', 'gid://shopify/Product/1', '--status', 'ACTIVE'] },
+  { resource: 'products', verb: 'add-tags', args: ['--id', 'gid://shopify/Product/1', '--tags', 'tag1,tag2'] },
+  { resource: 'products', verb: 'remove-tags', args: ['--id', 'gid://shopify/Product/1', '--tags', 'tag1'] },
+  // ... (continue for all 200+ commands)
+]
 ```
 
 ### Phase 3: Command Discovery & Execution Harness
@@ -144,36 +227,56 @@ For each command:
 4. **Validate against schema**
 5. **Report results**
 
-**Example Test File:**
+**Main Test File: `src/test/graphql/schema-validation.test.ts`**
+
+This single test file iterates over all commands in the registry:
 
 ```typescript
-// /src/test/commands/products.test.ts
 import { describe, it, expect } from 'vitest'
-import { runCommandDryRun, validateGraphQLOperation } from '../testUtils'
+import { commands } from './commandRegistry'
+import { runCommandDryRun } from './runDryRun'
+import { validateGraphQLOperation } from './validateGraphQL'
 
-describe('products commands', () => {
-  it('products list generates valid GraphQL', async () => {
-    const graphql = await runCommandDryRun(['products', 'list'])
-    const result = validateGraphQLOperation(graphql)
-    expect(result.valid).toBe(true)
+describe('GraphQL Schema Validation', () => {
+  // Group tests by resource
+  const byResource = commands.reduce((acc, cmd) => {
+    if (!acc[cmd.resource]) acc[cmd.resource] = []
+    acc[cmd.resource].push(cmd)
+    return acc
+  }, {} as Record<string, typeof commands>)
+
+  for (const [resource, resourceCommands] of Object.entries(byResource)) {
+    describe(resource, () => {
+      for (const cmd of resourceCommands) {
+        it(`${cmd.verb} generates valid GraphQL`, async () => {
+          const result = await runCommandDryRun([cmd.resource, cmd.verb, ...cmd.args])
+
+          const validation = validateGraphQLOperation(result.query, result.variables)
+
+          expect(validation.valid, `GraphQL validation failed:\n${validation.errors.join('\n')}`).toBe(true)
+        })
+      }
+    })
+  }
+})
+```
+
+**Coverage Enforcement: `src/test/graphql/coverage.test.ts`**
+
+```typescript
+import { describe, it, expect } from 'vitest'
+import { commands } from './commandRegistry'
+import { getAllResourceVerbs } from './extractVerbs'
+
+describe('Command Coverage', () => {
+  it('all resource/verb combinations are in the registry', () => {
+    const allVerbs = getAllResourceVerbs() // Extracts from router.ts and verb files
+    const registeredVerbs = new Set(commands.map(c => `${c.resource}:${c.verb}`))
+
+    const missing = allVerbs.filter(v => !registeredVerbs.has(v))
+
+    expect(missing, `Missing commands in registry:\n${missing.join('\n')}`).toEqual([])
   })
-
-  it('products get generates valid GraphQL', async () => {
-    const graphql = await runCommandDryRun(['products', 'get', '--id', 'gid://shopify/Product/123'])
-    const result = validateGraphQLOperation(graphql)
-    expect(result.valid).toBe(true)
-  })
-
-  it('products create generates valid GraphQL', async () => {
-    const graphql = await runCommandDryRun([
-      'products', 'create',
-      '--set', 'title=Test Product'
-    ])
-    const result = validateGraphQLOperation(graphql)
-    expect(result.valid).toBe(true)
-  })
-
-  // ... more test cases
 })
 ```
 
@@ -215,37 +318,45 @@ Create a script that:
 ## Implementation Steps
 
 ### Step 1: Setup Test Infrastructure
-- [ ] Install Vitest and dependencies
+- [ ] Install Vitest: `npm install -D vitest`
 - [ ] Create `vitest.config.ts`
-- [ ] Add test scripts to `package.json`
-- [ ] Create `/src/test/` directory structure
+- [ ] Add test script to `package.json`: `"test:graphql": "vitest run src/test/graphql"`
+- [ ] Create `/src/test/graphql/` directory structure
 
 ### Step 2: Create Validation Utilities
-- [ ] Implement `validateGraphQLOperation()` function
-- [ ] Create `runCommandDryRun()` test helper
-- [ ] Add error formatting utilities
+- [ ] `src/test/graphql/validateGraphQL.ts` - Schema validation + variable type checking
+- [ ] `src/test/graphql/runDryRun.ts` - Execute commands with --dry-run and capture output
+- [ ] `src/test/graphql/commandRegistry.ts` - Registry of all commands with required args
 
 ### Step 3: Build Command Registry
-- [ ] Audit all 66 verb files
-- [ ] Document every resource/verb combination
-- [ ] Identify required vs optional arguments
-- [ ] Create registry data structure
+Based on router.ts analysis, there are **56 resources** to test:
+- products, product-variants, collections, customers, orders, order-edit
+- inventory, returns, fulfillment-orders, fulfillments, inventory-items, inventory-shipments
+- files, publications, articles, blogs, pages, comments, menus
+- catalogs, markets, draft-orders, url-redirects, segments, saved-searches
+- script-tags, carrier-services, webhooks, subscription-contracts, subscription-billing, subscription-drafts
+- metafield-definitions, metaobjects, metaobject-definitions, selling-plan-groups
+- companies, company-contacts, company-locations, store-credit, delegate-tokens
+- themes, cart-transforms, validations, checkout-branding, delivery-profiles, delivery-customizations
+- web-pixels, server-pixels, marketing-activities, bulk-operations, app-billing
+- config, translations, events, functions, graphql
 
-### Step 4: Write Initial Tests
-- [ ] Start with high-traffic commands (products, orders, customers)
-- [ ] Add tests for all CRUD operations
-- [ ] Cover edge cases (empty inputs, special characters)
+For each resource, extract verbs from:
+1. The help text in each verb file (e.g., `'Verbs:\n  create|get|list|update|delete'`)
+2. The `if (verb === '...')` blocks in the code
+
+### Step 4: Write Tests
+For each resource/verb combination:
+1. Determine minimum required arguments (e.g., `--id` for get/update/delete, `--set` for create)
+2. Run command with `--dry-run` flag
+3. Parse JSON output to get `{ query, variables }`
+4. Validate query against schema
+5. Validate variable types match schema expectations
 
 ### Step 5: Achieve 100% Coverage
-- [ ] Generate tests for all remaining commands
-- [ ] Test different view modes (summary, full, ids)
-- [ ] Test selection variations
-- [ ] Test error paths
-
-### Step 6: CI Integration
-- [ ] Add test job to CI pipeline
-- [ ] Configure coverage thresholds
-- [ ] Add pre-commit hooks
+- Generate test for every resource/verb combination
+- Track coverage with a manifest file
+- Fail if any command is missing tests
 
 ---
 
@@ -274,6 +385,41 @@ Based on the router analysis:
 
 ---
 
+## Special Cases to Handle
+
+### 1. Commands That Don't Produce GraphQL
+Some commands may not produce GraphQL output in `--dry-run` mode:
+- `config` commands (local config management)
+- Commands that require prior queries to resolve IDs (e.g., `products publish-all`)
+
+**Solution:** Mark these in the registry with a `skipValidation: true` flag and test them separately.
+
+### 2. Commands with Sub-verbs
+Some commands have sub-verbs like `products metafields upsert`:
+
+```typescript
+{ resource: 'products', verb: 'metafields', args: ['upsert', '--id', '...', '--set', '...'] }
+```
+
+### 3. Commands Requiring File Inputs
+Commands like `products media upload` require actual files:
+
+**Solution:** Either:
+- Skip these specific variations (test `media add` with URLs instead)
+- Create temporary test fixtures
+
+### 4. The `graphql` Command
+The raw `graphql query` and `graphql mutation` commands are special - they execute arbitrary GraphQL:
+
+```typescript
+{ resource: 'graphql', verb: 'query', args: ['{ shop { name } }'] }
+{ resource: 'graphql', verb: 'mutation', args: ['mutation { ... }'] }
+```
+
+These should be tested with sample valid queries.
+
+---
+
 ## Risks & Mitigations
 
 | Risk | Mitigation |
@@ -285,28 +431,75 @@ Based on the router analysis:
 
 ---
 
+## Verb Extraction Utility
+
+To ensure 100% coverage, we need to automatically extract all verbs from the codebase:
+
+**File: `src/test/graphql/extractVerbs.ts`**
+
+```typescript
+import { readFileSync, readdirSync } from 'fs'
+import { join } from 'path'
+
+// Map of resource names to their verb file names
+const resourceToFile: Record<string, string> = {
+  'products': 'products.ts',
+  'product-variants': 'product-variants.ts',
+  'customers': 'customers.ts',
+  // ... (extracted from router.ts)
+}
+
+export function getAllResourceVerbs(): string[] {
+  const verbs: string[] = []
+  const verbsDir = join(__dirname, '../../cli/verbs')
+
+  for (const [resource, filename] of Object.entries(resourceToFile)) {
+    const filepath = join(verbsDir, filename)
+    const content = readFileSync(filepath, 'utf-8')
+
+    // Extract verbs from if (verb === '...') patterns
+    const verbMatches = content.matchAll(/if\s*\(\s*verb\s*===\s*['"]([^'"]+)['"]\s*\)/g)
+    for (const match of verbMatches) {
+      verbs.push(`${resource}:${match[1]}`)
+    }
+
+    // Also check for verb comparisons in other patterns
+    const orMatches = content.matchAll(/verb\s*===\s*['"]([^'"]+)['"]\s*\|\|\s*verb\s*===\s*['"]([^'"]+)['"]/g)
+    for (const match of orMatches) {
+      verbs.push(`${resource}:${match[1]}`)
+      verbs.push(`${resource}:${match[2]}`)
+    }
+  }
+
+  return [...new Set(verbs)] // Deduplicate
+}
+```
+
+This approach ensures:
+1. **No manual tracking** - Verbs are extracted directly from code
+2. **Automatic detection** - New verbs added to code will cause test failures until added to registry
+3. **100% coverage guarantee** - Coverage test fails if any verb is missing
+
+---
+
 ## Files to Create
 
 ```
-/src/test/
-├── setup.ts                    # Test setup, schema loading
-├── validateGraphQL.ts          # GraphQL validation utility
-├── testUtils.ts                # runCommandDryRun, helpers
-├── commandRegistry.ts          # All commands with args
-├── coverage.ts                 # Coverage tracking
-├── commands/
-│   ├── products.test.ts
-│   ├── customers.test.ts
-│   ├── orders.test.ts
-│   ├── collections.test.ts
-│   ├── ... (one per resource)
-│   └── graphql.test.ts         # Raw GraphQL command
-└── fixtures/
-    ├── inputs/                 # Sample input data
-    └── expected/               # Expected GraphQL outputs (optional)
+src/test/graphql/
+├── validateGraphQL.ts          # Schema validation + variable type checking
+├── runDryRun.ts                # Execute commands with --dry-run
+├── extractVerbs.ts             # Extract verbs from verb files (for coverage)
+├── commandRegistry.ts          # All commands with required args
+├── schema-validation.test.ts   # Main test file (iterates all commands)
+└── coverage.test.ts            # Ensures all verbs are tested
 
-/vitest.config.ts               # Vitest configuration
+vitest.config.ts                # Vitest configuration
 ```
+
+**Note:** We use a data-driven approach with a single test file rather than one file per resource. This:
+- Reduces boilerplate
+- Makes it easy to add new commands (just add to registry)
+- Keeps tests consistent
 
 ---
 
