@@ -8,6 +8,7 @@ import { createShopifyAdminClient } from './adminClient'
 type GlobalParsed = {
   passthrough: string[]
   shopDomain?: string
+  graphqlEndpoint?: string
   accessToken?: string
   apiVersion?: string
   format?: string
@@ -15,10 +16,11 @@ type GlobalParsed = {
   dryRun?: boolean
   noFailOnUserErrors?: boolean
   view?: string
+  headers: string[]
 }
 
 const parseGlobalFlags = (args: string[]): GlobalParsed => {
-  const parsed: GlobalParsed = { passthrough: [] }
+  const parsed: GlobalParsed = { passthrough: [], headers: [] }
 
   const takeValue = (i: number, flag: string) => {
     const next = args[i + 1]
@@ -38,6 +40,11 @@ const parseGlobalFlags = (args: string[]): GlobalParsed => {
 
     if (flag === '--shop-domain') {
       parsed.shopDomain = inlineValue ?? takeValue(i, flag)
+      if (!inlineValue) i++
+      continue
+    }
+    if (flag === '--graphql-endpoint') {
+      parsed.graphqlEndpoint = inlineValue ?? takeValue(i, flag)
       if (!inlineValue) i++
       continue
     }
@@ -73,12 +80,34 @@ const parseGlobalFlags = (args: string[]): GlobalParsed => {
       parsed.noFailOnUserErrors = true
       continue
     }
+    if (flag === '--header') {
+      parsed.headers.push(inlineValue ?? takeValue(i, flag))
+      if (!inlineValue) i++
+      continue
+    }
 
     // Unknown option: leave it for the verb parser (and don't consume a value).
     parsed.passthrough.push(token)
   }
 
   return parsed
+}
+
+const parseHeaderValues = (values: string[]) => {
+  const headers: Record<string, string> = {}
+  for (const value of values) {
+    const separatorIndex = value.indexOf(':')
+    if (separatorIndex === -1) {
+      throw new CliError('Invalid --header value: expected "Name: value"', 2)
+    }
+    const name = value.slice(0, separatorIndex).trim()
+    if (!name) {
+      throw new CliError('Invalid --header value: header name is required', 2)
+    }
+    const headerValue = value.slice(separatorIndex + 1).trim()
+    headers[name] = headerValue
+  }
+  return headers
 }
 
 const printHelp = () => {
@@ -132,7 +161,9 @@ const printHelp = () => {
       '',
       'Auth (flags override env):',
       '  --shop-domain <your-shop.myshopify.com> (or env SHOP_DOMAIN / SHOPIFY_SHOP)',
+      '  --graphql-endpoint <url>          (or env GRAPHQL_ENDPOINT; overrides shop domain)',
       '  --access-token <token>              (or env SHOPIFY_ACCESS_TOKEN)',
+      '  --header "Name: value"              (repeatable; adds request headers)',
       '  --api-version <YYYY-MM>             (default: 2026-04)',
       '',
       'Output:',
@@ -189,17 +220,34 @@ const main = async () => {
   const dryRun = parsed.dryRun ?? false
   const wantsHelp = parsed.passthrough.includes('--help') || parsed.passthrough.includes('-h')
   const shopDomain = parsed.shopDomain
+  const graphqlEndpoint = parsed.graphqlEndpoint
   const accessToken = parsed.accessToken
+  const headers = parseHeaderValues(parsed.headers)
+  const resolvedAccessToken = accessToken ?? process.env.SHOPIFY_ACCESS_TOKEN
+  const hasAuthHeader = Object.keys(headers).some((name) => {
+    const normalized = name.toLowerCase()
+    return normalized === 'authorization' || normalized === 'x-shopify-access-token'
+  })
   const apiVersion = parsed.apiVersion as any
+
+  const warnMissingAccessToken = !resolvedAccessToken && !hasAuthHeader
 
   const client = dryRun || wantsHelp
     ? createShopifyAdminClient({
         shopDomain:
           shopDomain ?? process.env.SHOP_DOMAIN ?? process.env.SHOPIFY_SHOP ?? 'example.myshopify.com',
-        accessToken: accessToken ?? process.env.SHOPIFY_ACCESS_TOKEN ?? 'DUMMY',
+        graphqlEndpoint: graphqlEndpoint ?? process.env.GRAPHQL_ENDPOINT,
+        accessToken: resolvedAccessToken ?? 'DUMMY',
         apiVersion: apiVersion ?? '2026-04',
+        headers,
       })
-    : createCliClientFromEnv({ shopDomain, accessToken, apiVersion })
+    : createCliClientFromEnv({
+        shopDomain,
+        graphqlEndpoint,
+        accessToken,
+        apiVersion,
+        headers,
+      })
 
   await runCommand({
     client,
@@ -211,6 +259,7 @@ const main = async () => {
     view: (parsed.view as any) ?? 'summary',
     dryRun,
     failOnUserErrors: !(parsed.noFailOnUserErrors ?? false),
+    warnMissingAccessToken,
   })
 }
 

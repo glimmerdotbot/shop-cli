@@ -4,30 +4,53 @@ export { GenqlError } from './generated/admin-2026-04'
 export type ShopifyAdminApiVersion = '2026-04' | (string & {})
 
 export type CreateShopifyAdminClientOptions = {
-  shopDomain: string
-  accessToken: string
+  shopDomain?: string
+  graphqlEndpoint?: string
+  accessToken?: string
   apiVersion?: ShopifyAdminApiVersion
   fetch?: typeof fetch
+  headers?: Record<string, string>
 }
 
 const normalizeShopDomain = (shopDomain: string) => {
   return shopDomain.replace(/^https?:\/\//, '').replace(/\/+$/, '')
 }
 
+const resolveGraphqlEndpoint = ({
+  graphqlEndpoint,
+  shopDomain,
+  apiVersion,
+}: {
+  graphqlEndpoint?: string
+  shopDomain?: string
+  apiVersion: ShopifyAdminApiVersion
+}) => {
+  if (graphqlEndpoint) return graphqlEndpoint
+  if (!shopDomain) {
+    throw new Error(
+      'Missing shop domain: pass --shop-domain, set SHOP_DOMAIN (or SHOPIFY_SHOP), or set GRAPHQL_ENDPOINT',
+    )
+  }
+  const normalizedShopDomain = normalizeShopDomain(shopDomain)
+  return `https://${normalizedShopDomain}/admin/api/${apiVersion}/graphql.json`
+}
+
 export const createShopifyAdminClient = ({
   shopDomain,
+  graphqlEndpoint,
   accessToken,
   apiVersion = '2026-04',
   fetch,
+  headers,
 }: CreateShopifyAdminClientOptions): Client => {
-  const normalizedShopDomain = normalizeShopDomain(shopDomain)
-  const url = `https://${normalizedShopDomain}/admin/api/${apiVersion}/graphql.json`
+  const url = resolveGraphqlEndpoint({ graphqlEndpoint, shopDomain, apiVersion })
 
   return createClient({
     url,
     fetch,
     headers: () => ({
-      'X-Shopify-Access-Token': accessToken,
+      ...(accessToken ? { 'X-Shopify-Access-Token': accessToken } : {}),
+      ...(headers ?? {}),
     }),
   })
 }

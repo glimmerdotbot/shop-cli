@@ -71,6 +71,7 @@ export type CommandContext = {
   view: CliView
   dryRun: boolean
   failOnUserErrors: boolean
+  warnMissingAccessToken: boolean
 }
 
 export type RunCommandArgs = CommandContext & {
@@ -89,8 +90,17 @@ export const runCommand = async ({
   view,
   dryRun,
   failOnUserErrors,
+  warnMissingAccessToken,
 }: RunCommandArgs) => {
-  const ctx: CommandContext = { client, format, quiet, view, dryRun, failOnUserErrors }
+  const ctx: CommandContext = {
+    client,
+    format,
+    quiet,
+    view,
+    dryRun,
+    failOnUserErrors,
+    warnMissingAccessToken,
+  }
 
   if (resource === 'products') return runProducts({ ctx, verb, argv })
   if (resource === 'product-variants') return runProductVariants({ ctx, verb, argv })
@@ -151,6 +161,13 @@ export const runCommand = async ({
   throw new CliError(`Unknown resource: ${resource}`, 2)
 }
 
+const hasNotAuthorizedError = (err: GenqlError) =>
+  err.errors.some(
+    (error) =>
+      typeof error?.message === 'string' &&
+      error.message.toLowerCase().includes('not authorized'),
+  )
+
 export const parseStandardArgs = ({
   argv,
   extraOptions,
@@ -205,6 +222,9 @@ export const runQuery = async (ctx: CommandContext, request: any): Promise<any> 
     return await ctx.client.query(request)
   } catch (err) {
     if (err instanceof GenqlError) {
+      if (ctx.warnMissingAccessToken && hasNotAuthorizedError(err)) {
+        console.error('SHOPIFY_ACCESS_TOKEN not set')
+      }
       printJsonError({ errors: err.errors, data: err.data })
       throw new CliError('GraphQL query failed', 1)
     }
@@ -222,6 +242,9 @@ export const runMutation = async (ctx: CommandContext, request: any): Promise<an
     return await ctx.client.mutation(request)
   } catch (err) {
     if (err instanceof GenqlError) {
+      if (ctx.warnMissingAccessToken && hasNotAuthorizedError(err)) {
+        console.error('SHOPIFY_ACCESS_TOKEN not set')
+      }
       printJsonError({ errors: err.errors, data: err.data })
       throw new CliError('GraphQL mutation failed', 1)
     }
