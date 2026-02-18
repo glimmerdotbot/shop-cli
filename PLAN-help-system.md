@@ -239,9 +239,9 @@ Examples:
 7. Test all 3 help levels work
 8. Incrementally add specs for remaining resources
 
-## Questions for Clarification
+## Design Decisions
 
-1. Should `shop products` (no verb, no --help) show help or error? Currently shows error after printing help.
-2. Should help output be colorized (using ANSI codes)?
-3. Should there be a machine-readable help format (e.g., `--help --format json`)?
-4. For `--set` fields, how many should display by default before truncating?
+1. `shop products` (no verb) → show resource help (not an error)
+2. No colorized output (plain text)
+3. No machine-readable help format
+4. Show up to 15 `--set` fields by default before truncating
