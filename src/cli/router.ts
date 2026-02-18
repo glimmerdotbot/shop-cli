@@ -5,7 +5,7 @@ import { generateMutationOp, generateQueryOp } from '../generated/admin-2026-04'
 import { GenqlError } from '../generated/admin-2026-04'
 
 import { CliError } from './errors'
-import { printJsonError } from './output'
+import { printJsonError, setGlobalOutputFormat, type OutputFormat } from './output'
 import { getFields, getType } from './introspection'
 import { printFieldsTable } from './introspection/format'
 import { resourceToType } from './introspection/resources'
@@ -91,7 +91,7 @@ export type CliView = 'summary' | 'ids' | 'full' | 'raw'
 
 export type CommandContext = {
   client: Client
-  format: 'json' | 'table' | 'raw'
+  format: OutputFormat
   quiet: boolean
   view: CliView
   dryRun: boolean
@@ -128,6 +128,7 @@ export const runCommand = async ({
   apiVersion,
   headers,
 }: RunCommandArgs) => {
+  setGlobalOutputFormat(format)
   const ctx: CommandContext = {
     client,
     format,
@@ -156,9 +157,10 @@ export const runCommand = async ({
 
     const fields = getFields(typeName)
 
-    if (ctx.format === 'json') {
+    if (ctx.format === 'json' || ctx.format === 'raw' || ctx.format === 'jsonl') {
+      const pretty = ctx.format === 'json'
       // eslint-disable-next-line no-console
-      console.log(JSON.stringify({ resource, typeName, fields }, null, 2))
+      console.log(JSON.stringify({ resource, typeName, fields }, null, pretty ? 2 : 0))
       return
     }
 

@@ -97,7 +97,7 @@ export const renderTopLevelHelp = () => {
     '  --api-version <YYYY-MM>             (default: 2026-04)',
     '',
     'Output:',
-    '  --format json|table|raw|markdown   (default: json)',
+    '  --format json|jsonl|table|raw|markdown   (default: json)',
     '  --view summary|ids|full|raw (default: summary)',
     '  --select <path>           (repeatable; dot paths; adds to base view selection)',
     '  --selection <graphql>     (selection override; can be @file.gql)',

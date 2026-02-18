@@ -101,7 +101,7 @@ export const runSubscriptionBilling = async ({
         '  - Use --cycle-index (not --id) for cycle-specific operations.',
         '',
         'Common output flags:',
-        '  --format json|table|raw',
+        '  --format json|jsonl|table|raw',
         '  --quiet',
       ].join('\n'),
     )

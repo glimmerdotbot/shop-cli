@@ -1,6 +1,12 @@
 import { CliError } from './errors'
 
-export type OutputFormat = 'json' | 'table' | 'raw' | 'markdown'
+export type OutputFormat = 'json' | 'jsonl' | 'table' | 'raw' | 'markdown'
+
+let globalOutputFormat: OutputFormat | undefined
+
+export const setGlobalOutputFormat = (format: OutputFormat) => {
+  globalOutputFormat = format
+}
 
 export const writeJson = (
   data: unknown,
@@ -9,7 +15,8 @@ export const writeJson = (
     stream = process.stdout,
   }: { pretty?: boolean; stream?: NodeJS.WritableStream } = {},
 ) => {
-  stream.write(JSON.stringify(data, null, pretty ? 2 : 0))
+  const effectivePretty = globalOutputFormat === 'jsonl' ? false : pretty
+  stream.write(JSON.stringify(data, null, effectivePretty ? 2 : 0))
   stream.write('\n')
 }
 
@@ -159,6 +166,11 @@ export const printNode = ({
     return
   }
 
+  if (format === 'jsonl') {
+    writeJson(node, { pretty: false })
+    return
+  }
+
   if (format === 'raw') {
     printJson(node, false)
     return
@@ -213,6 +225,12 @@ export const printConnection = ({
       process.stdout.write('---\n\n')
       printJson({ pageInfo: connection.pageInfo })
     }
+    return
+  }
+
+  if (format === 'jsonl') {
+    for (const n of nodes) writeJson(n, { pretty: false })
+    if (connection.pageInfo) writeJson({ pageInfo: connection.pageInfo }, { pretty: false })
     return
   }
 

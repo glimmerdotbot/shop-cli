@@ -46,7 +46,7 @@ const printHelp = () => {
       '  --no-validate             Skip local schema validation',
       '',
       'Output:',
-      '  --format json|raw         Output format (default: json)',
+      '  --format json|jsonl|raw   Output format (default: json)',
       '  --include-extensions      Include extensions in output',
       '',
       'Examples:',
