@@ -196,3 +196,91 @@ View available fields for any resource:
 shop products fields
 shop orders fields --format json
 ```
+
+## Resources
+
+| Resource | Verbs |
+| -------- | ----- |
+| `abandoned-checkouts` | list, count, abandonment, abandonment-by-checkout, update-email-state, update-activity-delivery-status, fields |
+| `app-billing` | create-one-time, create-subscription, cancel-subscription, update-line-item, extend-trial, create-usage-record, get-installation, list-subscriptions, fields |
+| `articles` | create, get, list, update, publish, unpublish, delete, fields |
+| `blogs` | create, get, list, update, publish, unpublish, delete, fields |
+| `bulk-operations` | run-query, run-mutation, get, list, current, cancel, fields |
+| `business-entities` | list, get, fields |
+| `carrier-services` | create, get, list, list-available, update, delete, fields |
+| `cart-transforms` | create, list, delete, fields |
+| `cash-tracking` | get, list, fields |
+| `catalogs` | create, get, list, update, delete, fields |
+| `checkout-branding` | get, upsert |
+| `collections` | create, get, list, count, update, delete, duplicate, add-products, remove-products, reorder-products, publish, unpublish, fields |
+| `comments` | get, list, delete, fields |
+| `companies` | create, get, list, count, update, delete, bulk-delete, assign-main-contact, revoke-main-contact, assign-customer, fields |
+| `company-contacts` | get, create, update, delete, bulk-delete, assign-role, assign-roles, revoke-role, revoke-roles, remove-from-company, send-welcome-email, fields |
+| `company-locations` | get, list, create, update, delete, bulk-delete, assign-address, assign-roles, revoke-roles, assign-staff, remove-staff, assign-tax-exemptions, revoke-tax-exemptions, create-tax-registration, revoke-tax-registration, update-tax-settings, fields |
+| `config` | get, update-policy, enable-locale, disable-locale, update-locale, get-locales, fields |
+| `customer-account-pages` | get, list, fields |
+| `customers` | create, get, list, count, update, delete, metafields upsert, add-tags, remove-tags, merge, send-invite, fields |
+| `delegate-tokens` | create, destroy |
+| `delivery-customizations` | create, get, list, update, delete, activate, fields |
+| `delivery-profiles` | create, get, list, update, delete, fields |
+| `delivery-promises` | get-settings, get-participants, get-provider, update-participants, upsert-provider |
+| `discounts-automatic` | get, list, create-basic, create-bxgy, create-free-shipping, create-app, update-basic, update-bxgy, update-free-shipping, update-app, delete, bulk-delete, activate, deactivate, fields |
+| `discounts-code` | get, get-by-code, list, count, create-basic, create-bxgy, create-free-shipping, create-app, update-basic, update-bxgy, update-free-shipping, update-app, delete, bulk-delete, activate, deactivate, bulk-activate, bulk-deactivate, add-redeem-codes, delete-redeem-codes, fields |
+| `disputes` | get, list, evidence get, evidence update |
+| `draft-orders` | get, list, count, create, update, delete, duplicate, calculate, complete, create-from-order, preview-invoice, send-invoice, bulk-add-tags, bulk-remove-tags, bulk-delete, saved-searches, tags, delivery-options, fields |
+| `events` | get, list, count, fields |
+| `files` | get, list, upload, update, delete, fields |
+| `flow` | generate-signature, trigger-receive |
+| `fulfillment-constraint-rules` | list, create, update, delete |
+| `fulfillment-orders` | get, list, accept-request, reject-request, submit-request, accept-cancellation, reject-cancellation, submit-cancellation, cancel, close, open, hold, release-hold, reschedule, move, split, merge, report-progress, mark-prepared, set-deadline, reroute, fields |
+| `fulfillment-services` | get, list, create, update, delete, fields |
+| `fulfillments` | get, create, cancel, update-tracking, create-event, fields |
+| `functions` | get, list, fields |
+| `gift-cards` | get, list, count, config, create, update, credit, debit, deactivate, notify-customer, notify-recipient, fields |
+| `inventory` | list, set, adjust, move |
+| `inventory-items` | get, list, update, fields |
+| `inventory-shipments` | get, create, create-in-transit, delete, add-items, remove-items, update-quantities, mark-in-transit, receive, set-tracking, fields |
+| `inventory-transfers` | get, list, create, create-ready, edit, duplicate, mark-ready, cancel, set-items, remove-items, delete, fields |
+| `locations` | get, list, count, create, update, delete, activate, deactivate, enable-local-pickup, disable-local-pickup, fields |
+| `marketing-activities` | get, list, create, create-external, update, update-external, upsert-external, delete-external, delete-all-external, create-engagement, delete-engagements, fields |
+| `markets` | create, get, list, update, delete, fields |
+| `menus` | create, get, list, update, delete, fields |
+| `metafield-definitions` | create, get, list, update, delete, fields |
+| `metaobject-definitions` | create, get, list, update, delete, fields |
+| `metaobjects` | create, get, list, update, delete, fields |
+| `mobile-platform-applications` | list, get, create, update, delete |
+| `order-edit` | begin, get, commit, add-variant, add-custom-item, set-quantity, add-discount, remove-discount, update-discount, add-shipping, remove-shipping, update-shipping, fields |
+| `orders` | create, get, list, count, update, delete, add-tags, remove-tags, cancel, close, mark-paid, add-note, fulfill, create-mandate-payment, transaction-void, fields |
+| `pages` | create, get, list, update, publish, unpublish, delete, fields |
+| `payment-customizations` | get, list, create, update, delete, set-enabled, fields |
+| `payment-terms` | templates, create, update, delete, send-reminder, fields |
+| `point-of-sale` | get, fields |
+| `price-lists` | get, list, create, update, delete, add-prices, update-prices, update-prices-by-product, delete-prices, add-quantity-rules, delete-quantity-rules, update-quantity-pricing, fields |
+| `product-variants` | upsert, get, get-by-identifier, list, count, bulk-create, bulk-update, bulk-delete, bulk-reorder, append-media, detach-media, join-selling-plans, leave-selling-plans, update-relationships, fields |
+| `products` | create, get, list, count, update, delete, duplicate, archive, unarchive, set-status, add-tags, remove-tags, set-price, publish, unpublish, publish-all, metafields upsert, media add, media upload, media list, media remove, media update, media reorder, bundle-create, bundle-update, fields |
+| `publications` | resolve, create, get, list, update, delete, fields |
+| `refunds` | get, calculate, create, fields |
+| `returns` | get, reason-definitions, returnable-fulfillments, calculate, create, request, approve-request, decline-request, cancel, close, reopen, process, refund, remove-item, fields |
+| `saved-searches` | create, update, delete, list-products, list-orders, list-customers, list-draft-orders, list-collections, fields |
+| `script-tags` | create, get, list, update, delete, fields |
+| `segments` | create, get, list, update, delete, fields |
+| `selling-plan-groups` | create, get, list, update, delete, add-variants, remove-variants, fields |
+| `server-pixels` | get, create, delete, update-pubsub, update-eventbridge, fields |
+| `shipping-packages` | update, make-default, delete |
+| `shop-policies` | list, update |
+| `shopify-payments` | account, get, fields |
+| `staff` | me, get, list, fields |
+| `store-credit` | get, credit, debit, fields |
+| `storefront-access-tokens` | list, get, create, delete, fields |
+| `subscription-billing` | get-attempt, list-attempts, create-attempt, get-cycle, list-cycles, charge, bulk-charge, bulk-search, skip-cycle, unskip-cycle, edit-schedule, edit-cycle, delete-edits |
+| `subscription-contracts` | get, list, create, atomic-create, update, activate, pause, cancel, expire, fail, set-next-billing, change-product, fields |
+| `subscription-drafts` | get, commit, update, add-line, update-line, remove-line, add-discount, update-discount, remove-discount, apply-code, add-free-shipping, update-free-shipping, fields |
+| `tags` | add, remove |
+| `tax` | configure-app, create-summary |
+| `taxonomy` | categories, list |
+| `themes` | get, list, create, update, delete, duplicate, publish, files-upsert, files-delete, files-copy, fields |
+| `translations` | get, list, list-by-ids, register, remove, fields |
+| `url-redirects` | create, get, list, update, delete, fields |
+| `validations` | create, get, list, update, delete, fields |
+| `web-pixels` | create, get, update, delete, fields |
+| `webhooks` | create, get, list, update, delete, fields |
