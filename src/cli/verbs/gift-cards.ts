@@ -137,10 +137,12 @@ export const runGiftCards = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'GiftCard')
     const selection = resolveSelection({
+      resource: 'gift-cards',
       view: ctx.view,
       baseSelection: getGiftCardSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -159,10 +161,12 @@ export const runGiftCards = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'gift-cards',
       view: ctx.view,
       baseSelection: getGiftCardSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

@@ -2,6 +2,8 @@ import types from '../../generated/admin-2026-04/types'
 import { linkTypeMap } from '../../generated/admin-2026-04/runtime'
 import type { LinkedField, LinkedType, LinkedTypeMap } from '../../generated/admin-2026-04/runtime/types'
 
+export type { LinkedType, LinkedTypeMap } from '../../generated/admin-2026-04/runtime/types'
+
 let cachedTypeMap: LinkedTypeMap | undefined
 
 export const getTypeMap = (): LinkedTypeMap => {
@@ -65,3 +67,5 @@ export const getFields = (typeName: string): FieldInfo[] => {
   out.sort((a, b) => a.name.localeCompare(b.name))
   return out
 }
+
+export { resourceToType } from './resources'

@@ -190,10 +190,12 @@ export const runReturns = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Return')
     const selection = resolveSelection({
+      resource: 'returns',
       view: ctx.view,
       baseSelection: getReturnSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

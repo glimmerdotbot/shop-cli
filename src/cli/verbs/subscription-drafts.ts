@@ -84,10 +84,13 @@ export const runSubscriptionDrafts = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireDraftId(args.id)
     const selection = resolveSelection({
+      resource: 'subscription-drafts',
+      typeName: 'SubscriptionDraft',
       view: ctx.view,
       baseSelection: getSubscriptionDraftSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

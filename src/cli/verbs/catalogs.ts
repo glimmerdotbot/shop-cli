@@ -50,10 +50,12 @@ export const runCatalogs = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Catalog')
     const selection = resolveSelection({
+      resource: 'catalogs',
       view: ctx.view,
       baseSelection: getCatalogSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -73,10 +75,12 @@ export const runCatalogs = async ({
     const type = args.type as any
 
     const nodeSelection = resolveSelection({
+      resource: 'catalogs',
       view: ctx.view,
       baseSelection: getCatalogSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

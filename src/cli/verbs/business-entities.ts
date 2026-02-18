@@ -47,10 +47,12 @@ export const runBusinessEntities = async ({
     const first = parseFirst(args.first)
 
     const selection = resolveSelection({
+      resource: 'business-entities',
       view: ctx.view,
       baseSelection: getBusinessEntitySelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -66,10 +68,12 @@ export const runBusinessEntities = async ({
     const idRaw = args.id as string | undefined
 
     const selection = resolveSelection({
+      resource: 'business-entities',
       view: ctx.view,
       baseSelection: getBusinessEntitySelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

@@ -47,10 +47,12 @@ export const runPaymentCustomizations = async ({
     const id = requireId(args.id, 'PaymentCustomization')
 
     const selection = resolveSelection({
+      resource: 'payment-customizations',
       view: ctx.view,
       baseSelection: getPaymentCustomizationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -68,10 +70,12 @@ export const runPaymentCustomizations = async ({
     const reverse = args.reverse as any
 
     const nodeSelection = resolveSelection({
+      resource: 'payment-customizations',
       view: ctx.view,
       baseSelection: getPaymentCustomizationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -178,4 +182,3 @@ export const runPaymentCustomizations = async ({
 
   throw new CliError(`Unknown verb for payment-customizations: ${verb}`, 2)
 }
-

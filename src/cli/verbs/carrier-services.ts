@@ -53,10 +53,12 @@ export const runCarrierServices = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'DeliveryCarrierService')
     const selection = resolveSelection({
+      resource: 'carrier-services',
       view: ctx.view,
       baseSelection: getCarrierServiceSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, { carrierService: { __args: { id }, ...selection } })
@@ -73,10 +75,12 @@ export const runCarrierServices = async ({
     const reverse = args.reverse as any
 
     const nodeSelection = resolveSelection({
+      resource: 'carrier-services',
       view: ctx.view,
       baseSelection: getCarrierServiceSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

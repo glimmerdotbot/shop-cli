@@ -53,10 +53,12 @@ export const runScriptTags = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'ScriptTag')
     const selection = resolveSelection({
+      resource: 'script-tags',
       view: ctx.view,
       baseSelection: getScriptTagSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -73,10 +75,12 @@ export const runScriptTags = async ({
     const reverse = args.reverse as any
 
     const nodeSelection = resolveSelection({
+      resource: 'script-tags',
       view: ctx.view,
       baseSelection: getScriptTagSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

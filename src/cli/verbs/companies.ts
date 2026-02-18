@@ -84,10 +84,12 @@ export const runCompanies = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Company')
     const selection = resolveSelection({
+      resource: 'companies',
       view: ctx.view,
       baseSelection: getCompanySelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -106,10 +108,12 @@ export const runCompanies = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'companies',
       view: ctx.view,
       baseSelection: getCompanySelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

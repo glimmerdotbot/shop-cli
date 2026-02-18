@@ -49,10 +49,12 @@ export const runWebPixels = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'WebPixel')
     const selection = resolveSelection({
+      resource: 'web-pixels',
       view: ctx.view,
       baseSelection: getWebPixelSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, { webPixel: { __args: { id }, ...selection } })

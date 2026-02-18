@@ -48,10 +48,12 @@ export const runShopifyPayments = async ({
 
   const args = parseStandardArgs({ argv, extraOptions: {} })
   const selection = resolveSelection({
+    resource: 'shopify-payments',
     view: ctx.view,
     baseSelection: getAccountSelection(ctx.view) as any,
     select: args.select,
     selection: (args as any).selection,
+    include: args.include,
     ensureId: ctx.quiet,
   })
 

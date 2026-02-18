@@ -136,10 +136,12 @@ export const runRefunds = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Refund')
     const selection = resolveSelection({
+      resource: 'refunds',
       view: ctx.view,
       baseSelection: getRefundSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -163,10 +165,13 @@ export const runRefunds = async ({
     if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
 
     const selection = resolveSelection({
+      resource: 'refunds',
+      typeName: 'SuggestedRefund',
       view: ctx.view,
       baseSelection: getSuggestedRefundSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: false,
     })
 

@@ -170,10 +170,12 @@ export const runOrderEdit = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'CalculatedOrder')
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -199,10 +201,12 @@ export const runOrderEdit = async ({
     const args = parseStandardArgs({ argv, extraOptions: { 'order-id': { type: 'string' } } })
     const id = requireOrderId(args['order-id'])
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -260,10 +264,12 @@ export const runOrderEdit = async ({
     const locationId = args['location-id'] ? coerceGid(args['location-id'], 'Location') : undefined
 
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -308,10 +314,12 @@ export const runOrderEdit = async ({
     const locationId = args['location-id'] ? coerceGid(args['location-id'], 'Location') : undefined
 
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -345,10 +353,12 @@ export const runOrderEdit = async ({
     const quantity = parseQuantity(args.quantity, '--quantity')
 
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -379,10 +389,12 @@ export const runOrderEdit = async ({
     if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
 
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -407,10 +419,12 @@ export const runOrderEdit = async ({
     const discountApplicationId = requireDiscountApplicationId(args['discount-application-id'])
 
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -441,10 +455,12 @@ export const runOrderEdit = async ({
     if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
 
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -474,10 +490,12 @@ export const runOrderEdit = async ({
     if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
 
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -502,10 +520,12 @@ export const runOrderEdit = async ({
     const shippingLineId = requireShippingLineId(args['shipping-line-id'])
 
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -536,10 +556,12 @@ export const runOrderEdit = async ({
     if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
 
     const selection = resolveSelection({
+      resource: 'order-edit',
       view: ctx.view,
       baseSelection: getCalculatedOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

@@ -24,10 +24,12 @@ export const runPointOfSale = async ({
   const id = requireId(args.id, 'PointOfSaleDevice')
 
   const selection = resolveSelection({
+    resource: 'point-of-sale',
     view: ctx.view,
     baseSelection: deviceSelection as any,
     select: args.select,
     selection: (args as any).selection,
+    include: args.include,
     ensureId: ctx.quiet,
   })
 
@@ -35,4 +37,3 @@ export const runPointOfSale = async ({
   if (result === undefined) return
   printNode({ node: result.pointOfSaleDevice, format: ctx.format, quiet: ctx.quiet })
 }
-

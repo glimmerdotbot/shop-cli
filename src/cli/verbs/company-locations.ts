@@ -114,10 +114,12 @@ export const runCompanyLocations = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'CompanyLocation')
     const selection = resolveSelection({
+      resource: 'company-locations',
       view: ctx.view,
       baseSelection: getCompanyLocationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -136,10 +138,12 @@ export const runCompanyLocations = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'company-locations',
       view: ctx.view,
       baseSelection: getCompanyLocationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

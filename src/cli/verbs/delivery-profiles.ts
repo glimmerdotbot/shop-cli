@@ -82,10 +82,12 @@ export const runDeliveryProfiles = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'DeliveryProfile')
     const selection = resolveSelection({
+      resource: 'delivery-profiles',
       view: ctx.view,
       baseSelection: getDeliveryProfileSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -102,10 +104,12 @@ export const runDeliveryProfiles = async ({
     const reverse = args.reverse as any
 
     const nodeSelection = resolveSelection({
+      resource: 'delivery-profiles',
       view: ctx.view,
       baseSelection: getDeliveryProfileSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

@@ -56,10 +56,12 @@ export const runSellingPlanGroups = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'SellingPlanGroup')
     const selection = resolveSelection({
+      resource: 'selling-plan-groups',
       view: ctx.view,
       baseSelection: getSellingPlanGroupSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -78,10 +80,12 @@ export const runSellingPlanGroups = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'selling-plan-groups',
       view: ctx.view,
       baseSelection: getSellingPlanGroupSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

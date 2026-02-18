@@ -41,10 +41,12 @@ export const runStaff = async ({
   if (verb === 'me') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const selection = resolveSelection({
+      resource: 'staff',
       view: ctx.view,
       baseSelection: getStaffMemberSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -59,10 +61,12 @@ export const runStaff = async ({
     const id = requireId(args.id, 'StaffMember')
 
     const selection = resolveSelection({
+      resource: 'staff',
       view: ctx.view,
       baseSelection: getStaffMemberSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -81,10 +85,12 @@ export const runStaff = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'staff',
       view: ctx.view,
       baseSelection: getStaffMemberSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -102,4 +108,3 @@ export const runStaff = async ({
 
   throw new CliError(`Unknown verb for staff: ${verb}`, 2)
 }
-

@@ -64,10 +64,13 @@ export const runStoreCredit = async ({
     if (!idArg && !ownerIdArg) throw new CliError('Missing --id or --owner-id', 2)
 
     const selection = resolveSelection({
+      resource: 'store-credit',
+      typeName: 'StoreCreditAccount',
       view: ctx.view,
       baseSelection: getStoreCreditSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

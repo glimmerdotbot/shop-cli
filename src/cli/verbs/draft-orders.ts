@@ -67,10 +67,12 @@ export const runDraftOrders = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'DraftOrder')
     const selection = resolveSelection({
+      resource: 'draft-orders',
       view: ctx.view,
       baseSelection: getDraftOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -89,10 +91,12 @@ export const runDraftOrders = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'draft-orders',
       view: ctx.view,
       baseSelection: getDraftOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

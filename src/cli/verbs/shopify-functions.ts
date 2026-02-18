@@ -53,10 +53,12 @@ export const runShopifyFunctions = async ({
     if (!id) throw new CliError('Missing --id', 2)
 
     const selection = resolveSelection({
+      resource: 'functions',
       view: ctx.view,
       baseSelection: getShopifyFunctionSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -75,10 +77,12 @@ export const runShopifyFunctions = async ({
     const useCreationUi = args['use-creation-ui'] as boolean | undefined
 
     const nodeSelection = resolveSelection({
+      resource: 'functions',
       view: ctx.view,
       baseSelection: getShopifyFunctionSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

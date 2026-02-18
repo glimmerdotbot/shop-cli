@@ -31,10 +31,12 @@ export const runCustomerAccountPages = async ({
     const id = requireId(args.id, 'CustomerAccountPage')
 
     const selection = resolveSelection({
+      resource: 'customer-account-pages',
       view: ctx.view,
       baseSelection: getPageSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -51,10 +53,12 @@ export const runCustomerAccountPages = async ({
     const reverse = args.reverse as any
 
     const nodeSelection = resolveSelection({
+      resource: 'customer-account-pages',
       view: ctx.view,
       baseSelection: getPageSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -72,4 +76,3 @@ export const runCustomerAccountPages = async ({
 
   throw new CliError(`Unknown verb for customer-account-pages: ${verb}`, 2)
 }
-

@@ -67,10 +67,12 @@ export const runMarketingActivities = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'MarketingActivity')
     const selection = resolveSelection({
+      resource: 'marketing-activities',
       view: ctx.view,
       baseSelection: getMarketingActivitySelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -98,10 +100,12 @@ export const runMarketingActivities = async ({
     const utm = args.utm ? parseJsonArg(args.utm, '--utm', { allowEmpty: true }) : undefined
 
     const nodeSelection = resolveSelection({
+      resource: 'marketing-activities',
       view: ctx.view,
       baseSelection: getMarketingActivitySelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

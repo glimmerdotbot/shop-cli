@@ -80,10 +80,12 @@ export const runThemes = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'OnlineStoreTheme')
     const selection = resolveSelection({
+      resource: 'themes',
       view: ctx.view,
       baseSelection: getThemeSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -101,10 +103,12 @@ export const runThemes = async ({
     const roles = args.roles ? parseStringList(args.roles, '--roles', { allowEmpty: true }) : undefined
 
     const nodeSelection = resolveSelection({
+      resource: 'themes',
       view: ctx.view,
       baseSelection: getThemeSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

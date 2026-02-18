@@ -94,10 +94,13 @@ export const runPaymentTerms = async ({
     const paymentTermsType = args.type as any
 
     const selection = resolveSelection({
+      resource: 'payment-terms',
+      typeName: 'PaymentTermsTemplate',
       view: ctx.view,
       baseSelection: getPaymentTermsTemplateSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

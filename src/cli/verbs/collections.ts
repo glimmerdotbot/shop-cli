@@ -65,10 +65,12 @@ export const runCollections = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Collection')
     const selection = resolveSelection({
+      resource: 'collections',
       view: ctx.view,
       baseSelection: getCollectionSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -89,10 +91,12 @@ export const runCollections = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'collections',
       view: ctx.view,
       baseSelection: getListNodeSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

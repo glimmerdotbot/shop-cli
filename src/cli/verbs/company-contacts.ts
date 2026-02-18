@@ -63,10 +63,12 @@ export const runCompanyContacts = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'CompanyContact')
     const selection = resolveSelection({
+      resource: 'company-contacts',
       view: ctx.view,
       baseSelection: getCompanyContactSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

@@ -179,10 +179,12 @@ export const runSubscriptionContracts = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'SubscriptionContract')
     const selection = resolveSelection({
+      resource: 'subscription-contracts',
       view: ctx.view,
       baseSelection: getSubscriptionContractSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -201,10 +203,12 @@ export const runSubscriptionContracts = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'subscription-contracts',
       view: ctx.view,
       baseSelection: getSubscriptionContractSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

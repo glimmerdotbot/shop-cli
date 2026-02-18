@@ -120,10 +120,12 @@ export const runDiscountsCode = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'DiscountCodeNode')
     const selection = resolveSelection({
+      resource: 'discounts-code',
       view: ctx.view,
       baseSelection: getCodeDiscountSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -138,10 +140,12 @@ export const runDiscountsCode = async ({
     const code = args.code as string | undefined
     if (!code) throw new CliError('Missing --code', 2)
     const selection = resolveSelection({
+      resource: 'discounts-code',
       view: ctx.view,
       baseSelection: getCodeDiscountSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -160,10 +164,12 @@ export const runDiscountsCode = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'discounts-code',
       view: ctx.view,
       baseSelection: getCodeDiscountSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

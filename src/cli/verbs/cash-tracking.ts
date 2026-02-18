@@ -51,10 +51,12 @@ export const runCashTracking = async ({
     const id = requireId(args.id, 'CashTrackingSession')
 
     const selection = resolveSelection({
+      resource: 'cash-tracking',
       view: ctx.view,
       baseSelection: getSessionSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -73,10 +75,12 @@ export const runCashTracking = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'cash-tracking',
       view: ctx.view,
       baseSelection: getSessionSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -94,4 +98,3 @@ export const runCashTracking = async ({
 
   throw new CliError(`Unknown verb for cash-tracking: ${verb}`, 2)
 }
-

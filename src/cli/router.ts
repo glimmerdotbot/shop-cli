@@ -87,7 +87,7 @@ import { runCashTracking } from './verbs/cash-tracking'
 import { runPointOfSale } from './verbs/point-of-sale'
 import { runCustomerAccountPages } from './verbs/customer-account-pages'
 
-export type CliView = 'summary' | 'ids' | 'full' | 'raw'
+export type CliView = 'summary' | 'ids' | 'full' | 'raw' | 'all'
 
 export type CommandContext = {
   client: Client
@@ -273,6 +273,7 @@ export const parseStandardArgs = ({
       'set-json': { type: 'string', multiple: true },
       select: { type: 'string', multiple: true },
       selection: { type: 'string' },
+      include: { type: 'string', multiple: true },
       id: { type: 'string' },
       ids: { type: 'string', multiple: true },
       yes: { type: 'boolean' },

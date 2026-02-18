@@ -139,10 +139,12 @@ export const runProductVariants = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'ProductVariant')
     const selection = resolveSelection({
+      resource: 'product-variants',
       view: ctx.view,
       baseSelection: getProductVariantSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -174,10 +176,12 @@ export const runProductVariants = async ({
     }
 
     const selection = resolveSelection({
+      resource: 'product-variants',
       view: ctx.view,
       baseSelection: getProductVariantSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -196,10 +200,12 @@ export const runProductVariants = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'product-variants',
       view: ctx.view,
       baseSelection: getProductVariantSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

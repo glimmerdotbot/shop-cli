@@ -83,10 +83,12 @@ export const runInventoryShipments = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'InventoryShipment')
     const selection = resolveSelection({
+      resource: 'inventory-shipments',
       view: ctx.view,
       baseSelection: getInventoryShipmentSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

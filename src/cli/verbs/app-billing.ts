@@ -264,10 +264,13 @@ export const runAppBilling = async ({
     const id = args.id ? requireId(args.id, 'AppInstallation') : undefined
 
     const selection = resolveSelection({
+      resource: 'app-billing',
+      typeName: 'AppInstallation',
       view: ctx.view,
       baseSelection: getAppInstallationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

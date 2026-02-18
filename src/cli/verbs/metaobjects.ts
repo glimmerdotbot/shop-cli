@@ -57,10 +57,12 @@ export const runMetaobjects = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Metaobject')
     const selection = resolveSelection({
+      resource: 'metaobjects',
       view: ctx.view,
       baseSelection: getMetaobjectSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -82,10 +84,12 @@ export const runMetaobjects = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'metaobjects',
       view: ctx.view,
       baseSelection: getMetaobjectSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

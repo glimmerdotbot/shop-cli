@@ -98,10 +98,12 @@ export const runLocations = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Location')
     const selection = resolveSelection({
+      resource: 'locations',
       view: ctx.view,
       baseSelection: getLocationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -128,10 +130,12 @@ export const runLocations = async ({
     const includeLegacy = (args as any)['include-legacy'] as boolean | undefined
 
     const nodeSelection = resolveSelection({
+      resource: 'locations',
       view: ctx.view,
       baseSelection: getLocationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

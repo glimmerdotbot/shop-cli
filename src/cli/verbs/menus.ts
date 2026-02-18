@@ -64,10 +64,12 @@ export const runMenus = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Menu')
     const selection = resolveSelection({
+      resource: 'menus',
       view: ctx.view,
       baseSelection: getMenuSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -86,10 +88,12 @@ export const runMenus = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'menus',
       view: ctx.view,
       baseSelection: getMenuSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

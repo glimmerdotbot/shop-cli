@@ -50,10 +50,12 @@ export const runMetaobjectDefinitions = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'MetaobjectDefinition')
     const selection = resolveSelection({
+      resource: 'metaobject-definitions',
       view: ctx.view,
       baseSelection: getMetaobjectDefinitionSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -70,10 +72,12 @@ export const runMetaobjectDefinitions = async ({
     const reverse = args.reverse as any
 
     const nodeSelection = resolveSelection({
+      resource: 'metaobject-definitions',
       view: ctx.view,
       baseSelection: getMetaobjectDefinitionSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

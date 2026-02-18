@@ -43,10 +43,13 @@ export const runStorefrontAccessTokens = async ({
     const reverse = args.reverse as any
 
     const nodeSelection = resolveSelection({
+      resource: 'storefront-access-tokens',
+      typeName: 'StorefrontAccessToken',
       view: ctx.view,
       baseSelection: getTokenSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -117,4 +120,3 @@ export const runStorefrontAccessTokens = async ({
 
   throw new CliError(`Unknown verb for storefront-access-tokens: ${verb}`, 2)
 }
-

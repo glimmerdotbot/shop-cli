@@ -58,10 +58,12 @@ export const runMetafieldDefinitions = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'MetafieldDefinition')
     const selection = resolveSelection({
+      resource: 'metafield-definitions',
       view: ctx.view,
       baseSelection: getMetafieldDefinitionSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -86,10 +88,12 @@ export const runMetafieldDefinitions = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'metafield-definitions',
       view: ctx.view,
       baseSelection: getMetafieldDefinitionSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

@@ -59,10 +59,13 @@ export const runTranslations = async ({
     if (!locale) throw new CliError('Missing --locale', 2)
 
     const selection = resolveSelection({
+      resource: 'translations',
+      typeName: 'TranslatableResource',
       view: ctx.view,
       baseSelection: buildTranslatableResourceSelection(locale) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: false,
     })
 
@@ -84,10 +87,13 @@ export const runTranslations = async ({
     const reverse = args.reverse as any
 
     const selection = resolveSelection({
+      resource: 'translations',
+      typeName: 'TranslatableResource',
       view: ctx.view,
       baseSelection: buildTranslatableResourceSelection(locale) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: false,
     })
 
@@ -114,10 +120,13 @@ export const runTranslations = async ({
     const reverse = args.reverse as any
 
     const selection = resolveSelection({
+      resource: 'translations',
+      typeName: 'TranslatableResource',
       view: ctx.view,
       baseSelection: buildTranslatableResourceSelection(locale) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: false,
     })
 

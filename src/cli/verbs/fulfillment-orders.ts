@@ -133,10 +133,12 @@ export const runFulfillmentOrders = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'FulfillmentOrder')
     const selection = resolveSelection({
+      resource: 'fulfillment-orders',
       view: ctx.view,
       baseSelection: getFulfillmentOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -172,10 +174,12 @@ export const runFulfillmentOrders = async ({
     const query = queryParts.length > 0 ? queryParts.join(' ') : undefined
 
     const nodeSelection = resolveSelection({
+      resource: 'fulfillment-orders',
       view: ctx.view,
       baseSelection: getFulfillmentOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

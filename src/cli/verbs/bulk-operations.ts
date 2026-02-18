@@ -167,10 +167,12 @@ export const runBulkOperations = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'BulkOperation')
     const selection = resolveSelection({
+      resource: 'bulk-operations',
       view: ctx.view,
       baseSelection: getBulkOperationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -196,10 +198,12 @@ export const runBulkOperations = async ({
     const query = queryParts.length > 0 ? queryParts.join(' ') : undefined
 
     const nodeSelection = resolveSelection({
+      resource: 'bulk-operations',
       view: ctx.view,
       baseSelection: getBulkOperationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {
@@ -219,10 +223,12 @@ export const runBulkOperations = async ({
     const type = args.type as string | undefined
 
     const selection = resolveSelection({
+      resource: 'bulk-operations',
       view: ctx.view,
       baseSelection: getBulkOperationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

@@ -90,10 +90,12 @@ export const runOrders = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Order')
     const selection = resolveSelection({
+      resource: 'orders',
       view: ctx.view,
       baseSelection: getOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -112,10 +114,12 @@ export const runOrders = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'orders',
       view: ctx.view,
       baseSelection: getOrderSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

@@ -52,10 +52,12 @@ export const runValidations = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Validation')
     const selection = resolveSelection({
+      resource: 'validations',
       view: ctx.view,
       baseSelection: getValidationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -72,10 +74,12 @@ export const runValidations = async ({
     const reverse = args.reverse as any
 
     const nodeSelection = resolveSelection({
+      resource: 'validations',
       view: ctx.view,
       baseSelection: getValidationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

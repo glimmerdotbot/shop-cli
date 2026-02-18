@@ -56,10 +56,12 @@ export const runDeliveryCustomizations = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'DeliveryCustomization')
     const selection = resolveSelection({
+      resource: 'delivery-customizations',
       view: ctx.view,
       baseSelection: getDeliveryCustomizationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -76,10 +78,12 @@ export const runDeliveryCustomizations = async ({
     const reverse = args.reverse as any
 
     const nodeSelection = resolveSelection({
+      resource: 'delivery-customizations',
       view: ctx.view,
       baseSelection: getDeliveryCustomizationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

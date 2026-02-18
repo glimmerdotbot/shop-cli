@@ -81,10 +81,12 @@ export const runFulfillmentServices = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'FulfillmentService')
     const selection = resolveSelection({
+      resource: 'fulfillment-services',
       view: ctx.view,
       baseSelection: getFulfillmentServiceSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -99,10 +101,12 @@ export const runFulfillmentServices = async ({
     const first = parseFirst(args.first)
 
     const nodeSelection = resolveSelection({
+      resource: 'fulfillment-services',
       view: ctx.view,
       baseSelection: getFulfillmentServiceSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

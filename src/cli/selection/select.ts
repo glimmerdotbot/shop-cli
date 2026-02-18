@@ -2,6 +2,8 @@ import { CliError } from '../errors'
 import type { CliView } from '../router'
 
 import { parseGraphqlSelectionArg, type GenqlSelection } from './graphqlSelection'
+import { buildAllSelection, validateIncludes } from './buildAllSelection'
+import { resourceToType } from '../introspection'
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -80,17 +82,23 @@ const mergeDotPath = ({
 }
 
 export const resolveSelection = ({
+  resource,
+  typeName,
   view,
   baseSelection,
   select,
   selection,
+  include,
   ensureId,
   defaultConnectionFirst = 10,
 }: {
+  resource?: string
+  typeName?: string
   view: CliView
   baseSelection: GenqlSelection
   select: unknown
   selection: unknown
+  include?: unknown
   ensureId: boolean
   defaultConnectionFirst?: number
 }): GenqlSelection => {
@@ -101,10 +109,25 @@ export const resolveSelection = ({
     if (typeof p !== 'string') throw new CliError('--select must be a string (repeatable)', 2)
   }
 
-  const mergedBase: GenqlSelection =
-    view === 'raw'
-      ? {}
-      : deepCloneSelection(baseSelection)
+  const includeValues = Array.isArray(include) ? include : include === undefined ? [] : [include]
+  for (const v of includeValues) {
+    if (typeof v !== 'string') throw new CliError('--include must be a string (repeatable)', 2)
+  }
+  const includes = Array.from(new Set(includeValues as string[]))
+
+  const mergedBase: GenqlSelection = (() => {
+    if (view === 'raw') return {}
+    if (view === 'all') {
+      const resolvedTypeName = typeName ?? (resource ? resourceToType[resource] : undefined)
+      if (!resolvedTypeName) {
+        const suffix = resource ? ` for resource: ${resource}` : ''
+        throw new CliError(`--view all is not supported${suffix}`, 2)
+      }
+      if (includes.length) validateIncludes(resolvedTypeName, includes)
+      return buildAllSelection(resolvedTypeName, includes, 0, 2, new Set(), defaultConnectionFirst)
+    }
+    return deepCloneSelection(baseSelection)
+  })()
 
   let out = override ? deepCloneSelection(override) : mergedBase
 
@@ -123,4 +146,3 @@ export const resolveSelection = ({
 
   return out
 }
-

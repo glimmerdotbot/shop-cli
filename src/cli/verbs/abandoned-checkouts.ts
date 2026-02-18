@@ -74,10 +74,12 @@ export const runAbandonedCheckouts = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'abandoned-checkouts',
       view: ctx.view,
       baseSelection: getAbandonedCheckoutSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -126,10 +128,12 @@ export const runAbandonedCheckouts = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Abandonment')
     const selection = resolveSelection({
+      resource: 'abandoned-checkouts',
       view: ctx.view,
       baseSelection: abandonmentSummarySelection as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, { abandonment: { __args: { id }, ...selection } })
@@ -145,10 +149,12 @@ export const runAbandonedCheckouts = async ({
     const abandonedCheckoutId = coerceGid(checkoutIdRaw, 'AbandonedCheckout')
 
     const selection = resolveSelection({
+      resource: 'abandoned-checkouts',
       view: ctx.view,
       baseSelection: abandonmentSummarySelection as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

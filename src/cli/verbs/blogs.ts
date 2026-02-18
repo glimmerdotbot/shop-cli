@@ -135,10 +135,12 @@ export const runBlogs = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Blog')
     const selection = resolveSelection({
+      resource: 'blogs',
       view: ctx.view,
       baseSelection: getBlogSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -157,10 +159,12 @@ export const runBlogs = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'blogs',
       view: ctx.view,
       baseSelection: getBlogSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
     const result = await runQuery(ctx, {

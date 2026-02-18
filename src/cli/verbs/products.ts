@@ -293,10 +293,12 @@ export const runProducts = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Product')
     const selection = resolveSelection({
+      resource: 'products',
       view: ctx.view,
       baseSelection: getProductSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -315,10 +317,12 @@ export const runProducts = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'products',
       view: ctx.view,
       baseSelection: getProductSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

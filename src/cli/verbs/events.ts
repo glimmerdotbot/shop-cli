@@ -59,10 +59,12 @@ export const runEvents = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Event')
     const selection = resolveSelection({
+      resource: 'events',
       view: ctx.view,
       baseSelection: getEventSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -81,10 +83,12 @@ export const runEvents = async ({
     const sortKey = args.sort as any
 
     const nodeSelection = resolveSelection({
+      resource: 'events',
       view: ctx.view,
       baseSelection: getEventSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

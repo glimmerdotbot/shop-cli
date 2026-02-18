@@ -53,10 +53,12 @@ export const runShopConfig = async ({
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const selection = resolveSelection({
+      resource: 'config',
       view: ctx.view,
       baseSelection: getShopSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 

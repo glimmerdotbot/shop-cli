@@ -91,10 +91,12 @@ export const runPublications = async ({
     const args = parseStandardArgs({ argv, extraOptions: {} })
     const id = requireId(args.id, 'Publication')
     const selection = resolveSelection({
+      resource: 'publications',
       view: ctx.view,
       baseSelection: getPublicationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
@@ -111,10 +113,12 @@ export const runPublications = async ({
     const reverse = args.reverse as any
 
     const nodeSelection = resolveSelection({
+      resource: 'publications',
       view: ctx.view,
       baseSelection: getPublicationSelection(ctx.view) as any,
       select: args.select,
       selection: (args as any).selection,
+      include: args.include,
       ensureId: ctx.quiet,
     })
 
