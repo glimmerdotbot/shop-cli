@@ -15,7 +15,8 @@
     "dev:shop": "tsx src/cli.ts",
     "check:help": "tsx scripts/check-help-coverage.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "npm run typecheck"
+    "test": "npm run typecheck && vitest run",
+    "test:watch": "vitest"
   },
   "author": "",
   "license": "ISC",
@@ -31,6 +32,7 @@
     "@types/node": "^25.2.3",
     "dotenv": "^17.3.1",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
   }
 }
