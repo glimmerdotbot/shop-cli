@@ -6,6 +6,7 @@ export type CliClientOptions = {
   accessToken?: string
   apiVersion?: ShopifyAdminApiVersion
   headers?: Record<string, string>
+  verbose?: boolean
 }
 
 export const createCliClientFromEnv = ({
@@ -14,6 +15,7 @@ export const createCliClientFromEnv = ({
   accessToken,
   apiVersion,
   headers,
+  verbose,
 }: CliClientOptions) => {
   const resolvedGraphqlEndpoint = graphqlEndpoint ?? process.env.GRAPHQL_ENDPOINT
   const resolvedShopDomain = shopDomain ?? process.env.SHOPIFY_SHOP
@@ -31,5 +33,6 @@ export const createCliClientFromEnv = ({
     accessToken: resolvedAccessToken,
     apiVersion: apiVersion ?? '2026-04',
     headers,
+    verbose,
   })
 }

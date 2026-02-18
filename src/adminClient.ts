@@ -22,6 +22,7 @@ export type CreateShopifyAdminClientOptions = {
   apiVersion?: ShopifyAdminApiVersion
   fetch?: typeof fetch
   headers?: Record<string, string>
+  verbose?: boolean
 }
 
 const normalizeShopDomain = (shopDomain: string) => {
@@ -56,18 +57,51 @@ export const createShopifyAdminClient = ({
   graphqlEndpoint,
   accessToken,
   apiVersion = '2026-04',
-  fetch,
+  fetch: _fetch,
   headers,
+  verbose,
 }: CreateShopifyAdminClientOptions): Client => {
   const url = resolveGraphqlEndpoint({ graphqlEndpoint, shopDomain, apiVersion })
+  const fetchImpl = _fetch ?? fetch
+
+  const resolvedHeaders = () => ({
+    'Content-Type': 'application/json',
+    ...(accessToken ? { 'X-Shopify-Access-Token': accessToken } : {}),
+    ...(headers ?? {}),
+  })
+
+  if (verbose) {
+    return createClient({
+      url,
+      fetcher: async (body) => {
+        const headersObj = resolvedHeaders()
+        console.error(`POST ${url}`)
+        console.error('Headers:')
+        for (const [name, value] of Object.entries(headersObj)) {
+          console.error(`  ${name}: ${value}`)
+        }
+        console.error('Body:')
+        console.error(JSON.stringify(body, null, 2))
+        console.error('')
+
+        const res = await fetchImpl(url, {
+          method: 'POST',
+          headers: headersObj,
+          body: JSON.stringify(body),
+        })
+
+        if (!res.ok) {
+          throw new Error(`${res.statusText}: ${await res.text()}`)
+        }
+        return res.json()
+      },
+    })
+  }
 
   return createClient({
     url,
-    fetch,
-    headers: () => ({
-      ...(accessToken ? { 'X-Shopify-Access-Token': accessToken } : {}),
-      ...(headers ?? {}),
-    }),
+    fetch: fetchImpl,
+    headers: resolvedHeaders,
   })
 }
 
@@ -82,19 +116,33 @@ export const createRawGraphQLClient = ({
   apiVersion = '2026-04',
   fetch: _fetch,
   headers,
+  verbose,
 }: CreateShopifyAdminClientOptions): RawGraphQLClient => {
   const url = resolveGraphqlEndpoint({ graphqlEndpoint, shopDomain, apiVersion })
   const fetchImpl = _fetch ?? fetch
 
   return {
     request: async (req: RawGraphQLRequest): Promise<RawGraphQLResponse> => {
+      const reqHeaders = {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { 'X-Shopify-Access-Token': accessToken } : {}),
+        ...(headers ?? {}),
+      }
+
+      if (verbose) {
+        console.error(`POST ${url}`)
+        console.error('Headers:')
+        for (const [name, value] of Object.entries(reqHeaders)) {
+          console.error(`  ${name}: ${value}`)
+        }
+        console.error('Body:')
+        console.error(JSON.stringify(req, null, 2))
+        console.error('')
+      }
+
       const res = await fetchImpl(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(accessToken ? { 'X-Shopify-Access-Token': accessToken } : {}),
-          ...(headers ?? {}),
-        },
+        headers: reqHeaders,
         body: JSON.stringify(req),
       })
 

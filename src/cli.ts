@@ -18,6 +18,7 @@ type GlobalParsed = {
   noFailOnUserErrors?: boolean
   view?: string
   headers: string[]
+  verbose?: boolean
 }
 
 const parseGlobalFlags = (args: string[]): GlobalParsed => {
@@ -84,6 +85,10 @@ const parseGlobalFlags = (args: string[]): GlobalParsed => {
     if (flag === '--header') {
       parsed.headers.push(inlineValue ?? takeValue(i, flag))
       if (!inlineValue) i++
+      continue
+    }
+    if (flag === '--verbose') {
+      parsed.verbose = true
       continue
     }
 
@@ -182,6 +187,8 @@ const main = async () => {
 
   const warnMissingAccessToken = !resolvedAccessToken && !hasAuthHeader
 
+  const verbose = parsed.verbose ?? false
+
   const client = dryRun
     ? createShopifyAdminClient({
         shopDomain:
@@ -190,6 +197,7 @@ const main = async () => {
         accessToken: resolvedAccessToken ?? 'DUMMY',
         apiVersion: apiVersion ?? '2026-04',
         headers,
+        verbose,
       })
     : createCliClientFromEnv({
         shopDomain,
@@ -197,6 +205,7 @@ const main = async () => {
         accessToken,
         apiVersion,
         headers,
+        verbose,
       })
 
   await runCommand({
