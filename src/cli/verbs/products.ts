@@ -364,10 +364,24 @@ export const runProducts = async ({
   }
 
   if (verb === 'list') {
-    const args = parseStandardArgs({ argv, extraOptions: {} })
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        published: { type: 'boolean' },
+      },
+    })
     const first = parseFirst(args.first)
     const after = args.after as any
-    const query = args.query as any
+    const userQuery =
+      typeof args.query === 'string' && args.query.trim() ? (args.query.trim() as any) : undefined
+    const published = args.published === true
+    const publishedFilter = 'published_status:published'
+    const query =
+      published && typeof userQuery === 'string' && userQuery.includes(publishedFilter)
+        ? userQuery
+        : published
+          ? (userQuery ? `${userQuery} ${publishedFilter}` : publishedFilter)
+          : userQuery
     const reverse = args.reverse as any
     const sortKey = args.sort as any
 
@@ -394,7 +408,11 @@ export const runProducts = async ({
       connection: result.products,
       format: ctx.format,
       quiet: ctx.quiet,
-      nextPageArgs: buildListNextPageArgs('products', { first, query, sort: sortKey, reverse }),
+      nextPageArgs: buildListNextPageArgs(
+        'products',
+        { first, query: userQuery, sort: sortKey, reverse },
+        published ? [{ flag: '--published', value: true }] : undefined,
+      ),
     })
     return
   }

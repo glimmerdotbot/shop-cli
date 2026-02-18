@@ -68,4 +68,23 @@ describe('output jsonl', () => {
     expect(stdout).toBe('{"id":"1"}\n')
     expect(stderr).toBe('Next page: shop products list --after "CURSOR"\n')
   })
+
+  it('includes boolean extra flags in next-page hint', () => {
+    setGlobalOutputFormat('jsonl')
+    printConnection({
+      connection: {
+        nodes: [{ id: '1' }],
+        pageInfo: { hasNextPage: true, endCursor: 'CURSOR' },
+      },
+      format: 'jsonl',
+      quiet: false,
+      nextPageArgs: {
+        base: 'shop products list',
+        first: 50,
+        extraFlags: [{ flag: '--published', value: true }],
+      },
+    })
+    expect(stdout).toBe('{"id":"1"}\n')
+    expect(stderr).toBe('Next page: shop products list --published --after "CURSOR"\n')
+  })
 })

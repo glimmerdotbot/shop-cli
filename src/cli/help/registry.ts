@@ -12,6 +12,10 @@ const flagSetJson = flag('--set-json <path>=<json>', 'Set individual fields with
 const flagFirst = flag('--first <n>', 'Page size (default: 50)')
 const flagAfter = flag('--after <cursor>', 'Pagination cursor')
 const flagQuery = flag('--query <string>', 'Search query')
+const flagPublished = flag(
+  '--published',
+  'Filter to published products (adds published_status:published to --query)',
+)
 const flagLimit = flag('--limit <n>', 'Upper bound on count value (default: 10000)')
 const flagSort = flag('--sort <key>', 'Sort key')
 const flagReverse = flag('--reverse', 'Reverse sort order')
@@ -316,16 +320,19 @@ const listVerb = ({
   operation,
   description,
   notes,
+  flags,
 }: {
   operation: string
   description?: string
   notes?: string[]
+  flags?: FlagSpec[]
 }): VerbSpec => ({
   verb: 'list',
   description,
   operation: { type: 'query', name: operation },
   output: { view: true, selection: true, pagination: true },
   notes,
+  flags,
 })
 
 const deleteVerb = ({
@@ -427,7 +434,11 @@ const baseCommandRegistry: ResourceSpec[] = [
     verbs: [
       createVerb({ operation: 'productCreate', description: 'Create a new product.' }),
       getVerb({ operation: 'product', description: 'Fetch a product by ID.' }),
-      listVerb({ operation: 'products', description: 'List products.' }),
+      listVerb({
+        operation: 'products',
+        description: 'List products.',
+        flags: [flagPublished],
+      }),
       countVerb({
         operation: 'productsCount',
         description: 'Count products.',
