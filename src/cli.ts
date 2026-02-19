@@ -14,6 +14,7 @@ import { runCommand } from './cli/router'
 import { createShopifyAdminClient } from './adminClient'
 import { resolveAdminApiVersion } from './defaults'
 import { resolveCliCommand } from './cli/command'
+import { buildMissingIdHint, buildUnexpectedPositionalHint, parseVerbAndRest } from './cli/parse-command'
 import { setGlobalCommand } from './cli/output'
 
 const helpFlags = new Set(['--help', '-h', '--help-full', '--help-all'])
@@ -63,13 +64,7 @@ const main = async () => {
   }
 
   const afterResource = argv.slice(1)
-  const firstFlagIndex = afterResource.findIndex((t) => t.startsWith('-'))
-  const verbParts =
-    firstFlagIndex === -1 ? afterResource : afterResource.slice(0, firstFlagIndex)
-  const rest =
-    firstFlagIndex === -1 ? [] : afterResource.slice(firstFlagIndex)
-
-  const verb = verbParts.join(' ')
+  const { verb, rest } = parseVerbAndRest({ resource, afterResource })
 
   // Special handling for `types` command (no verb required for --help)
   const isTypesCommand = resource === 'types'
@@ -111,6 +106,16 @@ const main = async () => {
       console.log(renderTopLevelHelp(command))
       return
     }
+  }
+
+  const missingIdHint = buildMissingIdHint({ command, resource, verb, rest })
+  if (missingIdHint) {
+    throw new CliError(missingIdHint, 2)
+  }
+
+  const unexpectedPositionalHint = buildUnexpectedPositionalHint({ command, resource, verb, rest })
+  if (unexpectedPositionalHint) {
+    throw new CliError(unexpectedPositionalHint, 2)
   }
 
   const parsed = parseGlobalFlags(rest)
