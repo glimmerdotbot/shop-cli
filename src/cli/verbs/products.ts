@@ -64,11 +64,77 @@ const productFullSelectionForGet = {
   ...computedPublicationsSelection,
 } as const
 
+const productTagsSummarySelection = {
+  ...productSummarySelection,
+  tags: true,
+} as const
+
+const productOptionSelection = {
+  id: true,
+  name: true,
+  position: true,
+  values: true,
+} as const
+
+const productOptionsSummarySelection = {
+  ...productSummarySelection,
+  options: {
+    __args: { first: 100 },
+    ...productOptionSelection,
+  },
+} as const
+
+const productOptionsFullSelection = {
+  ...productFullSelection,
+  options: {
+    __args: { first: 100 },
+    ...productOptionSelection,
+  },
+} as const
+
+const productVariantSummarySelection = {
+  id: true,
+  displayName: true,
+  sku: true,
+  price: true,
+  availableForSale: true,
+} as const
+
+const productVariantFullSelection = {
+  ...productVariantSummarySelection,
+  barcode: true,
+  compareAtPrice: true,
+  inventoryQuantity: true,
+  product: { id: true, title: true },
+  inventoryItem: { id: true },
+} as const
+
+const getProductVariantSelection = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'full') return productVariantFullSelection
+  if (view === 'raw') return {} as const
+  return productVariantSummarySelection
+}
+
 const getProductSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
   if (view === 'full') return productFullSelection
   if (view === 'raw') return {} as const
   return productSummarySelection
+}
+
+const getProductSelectionForTags = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'full') return productFullSelection
+  if (view === 'raw') return {} as const
+  return productTagsSummarySelection
+}
+
+const getProductSelectionForOptions = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'full') return productOptionsFullSelection
+  if (view === 'raw') return {} as const
+  return productOptionsSummarySelection
 }
 
 const getProductSelectionForGet = (view: CommandContext['view']) => {
@@ -441,17 +507,26 @@ export const runProducts = async ({
     const status = args.status as string | undefined
     if (!status) throw new CliError('Missing --status (ACTIVE|DRAFT|ARCHIVED)', 2)
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
     const result = await runMutation(ctx, {
       productChangeStatus: {
         __args: { productId, status: status as any },
-        product: productSummarySelection,
+        product: selection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productChangeStatus, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productChangeStatus?.product?.id ?? '')
-    printJson(result.productChangeStatus, ctx.format !== 'raw')
+    printNode({ node: result.productChangeStatus?.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -513,6 +588,16 @@ export const runProducts = async ({
     const id = requireId(args.id, 'Product')
     const sellingPlanGroupIds = parseIds((args as any)['group-ids'], 'SellingPlanGroup')
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
     const mutation = verb === 'join-selling-plan-groups'
       ? 'productJoinSellingPlanGroups'
       : 'productLeaveSellingPlanGroups'
@@ -520,15 +605,14 @@ export const runProducts = async ({
     const result = await runMutation(ctx, {
       [mutation]: {
         __args: { id, sellingPlanGroupIds },
-        product: { id: true, title: true },
+        product: selection,
         userErrors: { field: true, message: true },
       },
     } as any)
     if (result === undefined) return
     const payload = (result as any)[mutation]
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(payload?.product?.id ?? '')
-    printJson(payload, ctx.format !== 'raw')
+    printNode({ node: payload?.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -558,6 +642,16 @@ export const runProducts = async ({
       : undefined
     const variantStrategy = (args as any)['variant-strategy'] as string | undefined
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelectionForOptions(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
     const result = await runMutation(ctx, {
       productOptionUpdate: {
         __args: {
@@ -568,14 +662,13 @@ export const runProducts = async ({
           ...(optionValuesToUpdate !== undefined ? { optionValuesToUpdate } : {}),
           ...(variantStrategy ? { variantStrategy } : {}),
         },
-        product: productSummarySelection,
+        product: selection,
         userErrors: { code: true, field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productOptionUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productOptionUpdate?.product?.id ?? '')
-    printJson(result.productOptionUpdate, ctx.format !== 'raw')
+    printNode({ node: result.productOptionUpdate?.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -593,6 +686,16 @@ export const runProducts = async ({
     if (!Array.isArray(options)) throw new CliError('--options must be a JSON array', 2)
     const variantStrategy = (args as any)['variant-strategy'] as string | undefined
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelectionForOptions(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
     const result = await runMutation(ctx, {
       productOptionsCreate: {
         __args: {
@@ -600,14 +703,13 @@ export const runProducts = async ({
           options,
           ...(variantStrategy ? { variantStrategy } : {}),
         },
-        product: productSummarySelection,
+        product: selection,
         userErrors: { code: true, field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productOptionsCreate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productOptionsCreate?.product?.id ?? '')
-    printJson(result.productOptionsCreate, ctx.format !== 'raw')
+    printNode({ node: result.productOptionsCreate?.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -628,14 +730,23 @@ export const runProducts = async ({
       productOptionsDelete: {
         __args: { productId, options, ...(strategy ? { strategy } : {}) },
         deletedOptionsIds: true,
-        product: productSummarySelection,
         userErrors: { code: true, field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productOptionsDelete, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productOptionsDelete?.product?.id ?? '')
-    printJson(result.productOptionsDelete, ctx.format !== 'raw')
+    const deleted = (result.productOptionsDelete?.deletedOptionsIds ?? []) as Array<string | undefined | null>
+    if (ctx.quiet) {
+      for (const id of deleted) {
+        if (typeof id === 'string' && id) console.log(id)
+      }
+      return
+    }
+    printNode({
+      node: { deletedOptionsIds: deleted.filter((id): id is string => typeof id === 'string' && id.length > 0) },
+      format: ctx.format,
+      quiet: false,
+    })
     return
   }
 
@@ -651,17 +762,26 @@ export const runProducts = async ({
     const options = parseJsonArg((args as any).options, '--options')
     if (!Array.isArray(options)) throw new CliError('--options must be a JSON array', 2)
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelectionForOptions(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
     const result = await runMutation(ctx, {
       productOptionsReorder: {
         __args: { productId, options },
-        product: productSummarySelection,
+        product: selection,
         userErrors: { code: true, field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productOptionsReorder, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productOptionsReorder?.product?.id ?? '')
-    printJson(result.productOptionsReorder, ctx.format !== 'raw')
+    printNode({ node: result.productOptionsReorder?.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -693,6 +813,16 @@ export const runProducts = async ({
       : undefined
     const title = args.title as string | undefined
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
     const result = await runMutation(ctx, {
       combinedListingUpdate: {
         __args: {
@@ -703,14 +833,13 @@ export const runProducts = async ({
           ...(productsEdited !== undefined ? { productsEdited } : {}),
           ...(productsRemovedIds !== undefined ? { productsRemovedIds } : {}),
         },
-        product: productSummarySelection,
+        product: selection,
         userErrors: { code: true, field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.combinedListingUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.combinedListingUpdate?.product?.id ?? '')
-    printJson(result.combinedListingUpdate, ctx.format !== 'raw')
+    printNode({ node: result.combinedListingUpdate?.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -993,17 +1122,27 @@ export const runProducts = async ({
     })
     if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
     const result = await runMutation(ctx, {
       productCreate: {
         __args: { input: built.input },
-        product: productSummarySelection,
+        product: selection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productCreate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productCreate?.product?.id ?? '')
-    printJson(result.productCreate, ctx.format !== 'raw')
+    printNode({ node: result.productCreate?.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -1013,17 +1152,27 @@ export const runProducts = async ({
     const status =
       verb === 'archive' ? 'ARCHIVED' : ((args.status as string | undefined) ?? 'DRAFT')
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
     const result = await runMutation(ctx, {
       productUpdate: {
         __args: { input: { id, status } },
-        product: productSummarySelection,
+        product: selection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-    printJson(result.productUpdate, ctx.format !== 'raw')
+    printNode({ node: result.productUpdate?.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -1039,17 +1188,27 @@ export const runProducts = async ({
 
     const input = { ...built.input, id }
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
     const result = await runMutation(ctx, {
       productUpdate: {
         __args: { input },
-        product: productSummarySelection,
+        product: selection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-    printJson(result.productUpdate, ctx.format !== 'raw')
+    printNode({ node: result.productUpdate?.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -1100,17 +1259,27 @@ export const runProducts = async ({
       ...(built.used ? built.input : {}),
     }
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
     const result = await runMutation(ctx, {
       productDuplicate: {
         __args: mutationArgs,
-        newProduct: productSummarySelection,
+        newProduct: selection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productDuplicate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productDuplicate?.newProduct?.id ?? '')
-    printJson(result.productDuplicate, ctx.format !== 'raw')
+    printNode({ node: result.productDuplicate?.newProduct, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -1120,17 +1289,27 @@ export const runProducts = async ({
     const status = args.status as string | undefined
     if (!status) throw new CliError('Missing --status (ACTIVE|DRAFT|ARCHIVED)', 2)
 
+    const selection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
     const result = await runMutation(ctx, {
       productUpdate: {
         __args: { input: { id, status } },
-        product: productSummarySelection,
+        product: selection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-    printJson(result.productUpdate, ctx.format !== 'raw')
+    printNode({ node: result.productUpdate?.product, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -1171,6 +1350,17 @@ export const runProducts = async ({
       productId = pid
     }
 
+    const variantSelection = resolveSelection({
+      typeName: 'ProductVariant',
+      view: ctx.view,
+      baseSelection: getProductVariantSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
     const result = await runMutation(ctx, {
       productVariantsBulkUpdate: {
         __args: {
@@ -1184,6 +1374,7 @@ export const runProducts = async ({
           ],
         },
         userErrors: { field: true, message: true },
+        productVariants: variantSelection,
       },
     })
     if (result === undefined) return
@@ -1191,8 +1382,8 @@ export const runProducts = async ({
       payload: result.productVariantsBulkUpdate,
       failOnUserErrors: ctx.failOnUserErrors,
     })
-    if (ctx.quiet) return console.log(variantId)
-    printJson(result.productVariantsBulkUpdate, ctx.format !== 'raw')
+    const variant = result.productVariantsBulkUpdate?.productVariants?.[0]
+    printNode({ node: variant, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -1202,10 +1393,20 @@ export const runProducts = async ({
     const tags = parseTags(args.tags as any)
 
     const mutationField = verb === 'add-tags' ? 'tagsAdd' : 'tagsRemove'
+    const nodeSelection = resolveSelection({
+      typeName: 'Product',
+      view: ctx.view,
+      baseSelection: getProductSelectionForTags(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
     const request: any = {
       [mutationField]: {
         __args: { id, tags },
-        node: { id: true },
+        node: { __typename: true, on_Product: nodeSelection },
         userErrors: { field: true, message: true },
       },
     }
@@ -1214,8 +1415,7 @@ export const runProducts = async ({
     if (result === undefined) return
     const payload = result[mutationField]
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(payload?.node?.id ?? '')
-    printJson(payload, ctx.format !== 'raw')
+    printNode({ node: payload?.node, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
