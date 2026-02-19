@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildMissingIdHint, buildUnexpectedPositionalHint, parseVerbAndRest } from '../cli/parse-command'
+import { buildUnexpectedPositionalHint, parseVerbAndRest, rewritePositionalIdAsFlag } from '../cli/parse-command'
 
 describe('parse-command', () => {
   it('parses a known single-word verb and leaves positionals in rest', () => {
@@ -35,48 +35,40 @@ describe('parse-command', () => {
     expect(parsed).toEqual({ verb: 'query { shop { name } }', rest: [] })
   })
 
-  it('builds a helpful missing --id hint for positional IDs', () => {
-    const msg = buildMissingIdHint({
-      command: 'shop',
+  it('rewrites positional numeric IDs to --id for verbs that support it', () => {
+    const rewritten = rewritePositionalIdAsFlag({
       resource: 'products',
       verb: 'get',
       rest: ['7815068024874'],
     })
-    expect(msg).toBe(
-      'Missing --id <ID>\nDid you mean:\n  shop products get --id 7815068024874',
-    )
+    expect(rewritten).toEqual(['--id', '7815068024874'])
   })
 
-  it('uses the configured command name in the suggested command', () => {
-    const msg = buildMissingIdHint({
-      command: 'shopcli',
+  it('rewrites positional gid://shopify/... IDs case-insensitively', () => {
+    const rewritten = rewritePositionalIdAsFlag({
       resource: 'products',
       verb: 'get',
-      rest: ['7815068024874'],
+      rest: ['GID://SHOPIFY/Product/7815068024874'],
     })
-    expect(msg).toBe(
-      'Missing --id <ID>\nDid you mean:\n  shopcli products get --id 7815068024874',
-    )
+    expect(rewritten).toEqual(['--id', 'GID://SHOPIFY/Product/7815068024874'])
   })
 
-  it('does not build a hint when --id is already present', () => {
-    const msg = buildMissingIdHint({
-      command: 'shop',
+  it('does not rewrite when --id is already present', () => {
+    const rewritten = rewritePositionalIdAsFlag({
       resource: 'products',
       verb: 'get',
       rest: ['--id', '7815068024874'],
     })
-    expect(msg).toBeUndefined()
+    expect(rewritten).toEqual(['--id', '7815068024874'])
   })
 
-  it('does not build a hint for non-ID positionals', () => {
-    const msg = buildMissingIdHint({
-      command: 'shop',
+  it('does not rewrite for verbs that do not support --id', () => {
+    const rewritten = rewritePositionalIdAsFlag({
       resource: 'products',
-      verb: 'get',
-      rest: ['not-an-id'],
+      verb: 'list',
+      rest: ['7815068024874'],
     })
-    expect(msg).toBeUndefined()
+    expect(rewritten).toEqual(['7815068024874'])
   })
 
   it('builds a generic hint for unexpected positionals on known verbs', () => {

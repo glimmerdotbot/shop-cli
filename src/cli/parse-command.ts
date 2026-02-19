@@ -49,51 +49,37 @@ export const parseVerbAndRest = ({
 
 const looksLikeShopifyId = (value: string) => {
   if (/^\d+$/.test(value)) return true
-  if (value.startsWith('gid://')) return true
+  if (/^gid:\/\/shopify\//i.test(value)) return true
   return false
 }
 
-const requiresIdFlag = (resource: string, verb: string) => {
+const supportsIdFlag = (resource: string, verb: string) => {
   const spec = findVerbSpec(resource, verb)
-  return Boolean(spec?.requiredFlags?.some((f) => f.label === '--id <gid>' || f.label.startsWith('--id ')))
+  const all = [...(spec?.requiredFlags ?? []), ...(spec?.flags ?? [])]
+  return all.some((f) => f.label === '--id <gid>' || f.label.startsWith('--id '))
 }
 
 const hasIdFlag = (args: string[]) => args.some((t) => t === '--id' || t.startsWith('--id='))
 
-export const buildMissingIdHint = ({
-  command,
+export const rewritePositionalIdAsFlag = ({
   resource,
   verb,
   rest,
 }: {
-  command: string
   resource: string
   verb: string
   rest: string[]
-}): string | undefined => {
-  if (!verb) return undefined
-  if (!requiresIdFlag(resource, verb)) return undefined
-  if (hasIdFlag(rest)) return undefined
+}): string[] => {
+  if (!verb) return rest
+  if (resource === 'types' || resource === 'graphql') return rest
+  if (!supportsIdFlag(resource, verb)) return rest
+  if (hasIdFlag(rest)) return rest
 
-  // If the first token after the verb isn't a flag, it's likely a positional ID.
   const first = rest[0]
-  if (typeof first !== 'string' || !first || first.startsWith('-')) return undefined
-  if (!looksLikeShopifyId(first)) return undefined
+  if (typeof first !== 'string' || !first || first.startsWith('-')) return rest
+  if (!looksLikeShopifyId(first)) return rest
 
-  // If they're asking for help, don't override help output with a hint.
-  if (rest.some(isHelpLikeFlag)) return undefined
-
-  const tail = rest.slice(1)
-  const tailText = tail.length > 0 ? ` ${tail.join(' ')}` : ''
-  const suggested = formatCommandRef(
-    `  shop ${resource} ${verb} --id ${first}${tailText}`,
-    command,
-  )
-  return [
-    'Missing --id <ID>',
-    'Did you mean:',
-    suggested,
-  ].join('\n')
+  return ['--id', first, ...rest.slice(1)]
 }
 
 export const buildUnexpectedPositionalHint = ({
