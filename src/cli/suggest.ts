@@ -48,10 +48,12 @@ const scoreMatch = (query: string, candidate: string): number => {
   const c = candidate.toLowerCase()
 
   if (c === q) return 0
-  if (c.startsWith(q)) return 1
-  if (q.startsWith(c)) return 2
-  if (c.includes(q)) return 3
-  if (q.includes(c)) return 4
+  // Prefer simple pluralization ("product" -> "products") over other prefix matches ("product-feeds").
+  if (c === `${q}s` || c === `${q}es`) return 1
+  if (c.startsWith(q)) return 2
+  if (q.startsWith(c)) return 3
+  if (c.includes(q)) return 4
+  if (q.includes(c)) return 5
 
   const dist = levenshteinDistance(q, c, 3)
   if (dist <= 3) return 10 + dist
@@ -78,4 +80,3 @@ export const findSuggestions = ({
 
   return scored.map(({ name }) => name)
 }
-
