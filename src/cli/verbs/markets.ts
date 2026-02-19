@@ -26,6 +26,12 @@ const requireCountryCode = (value: unknown) => {
   return value.trim().toUpperCase()
 }
 
+const marketRegionCountrySummarySelection = {
+  id: true,
+  code: true,
+  name: true,
+} as const
+
 export const runMarkets = async ({
   ctx,
   verb,
@@ -234,14 +240,47 @@ export const runMarkets = async ({
     const result = await runMutation(ctx, {
       marketRegionsCreate: {
         __args: { marketId, regions },
-        market: marketSummarySelection,
+        market: { id: true },
         userErrors: { field: true, message: true, code: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.marketRegionsCreate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.marketRegionsCreate?.market?.id ?? '')
-    printJson(result.marketRegionsCreate, ctx.format !== 'raw')
+
+    const createdCodeSet = new Set(countryCodes.map((c) => c.trim().toUpperCase()).filter(Boolean))
+
+    const regionsResult = await runQuery(ctx, {
+      market: {
+        __args: { id: marketId },
+        conditions: {
+          regionsCondition: {
+            applicationLevel: true,
+            regions: {
+              __args: { first: 250 },
+              nodes: marketRegionCountrySummarySelection,
+              pageInfo: { hasNextPage: true, endCursor: true },
+            },
+          },
+        },
+      },
+    })
+    if (regionsResult === undefined) return
+
+    const allRegions: any[] = regionsResult.market?.conditions?.regionsCondition?.regions?.nodes ?? []
+    const matchedRegions = allRegions.filter((r) => createdCodeSet.has(String(r?.code ?? '').toUpperCase()))
+
+    if (ctx.quiet) {
+      for (const r of matchedRegions) {
+        const id = typeof r?.id === 'string' ? r.id : undefined
+        if (id) process.stdout.write(`${id}\n`)
+      }
+      return
+    }
+
+    printJson(
+      { regions: matchedRegions, userErrors: result.marketRegionsCreate?.userErrors ?? [] },
+      ctx.format !== 'raw',
+    )
     return
   }
 
@@ -273,7 +312,6 @@ export const runMarkets = async ({
       marketRegionDelete: {
         __args: { id },
         deletedId: true,
-        market: marketSummarySelection,
         userErrors: { field: true, message: true, code: true },
       },
     })

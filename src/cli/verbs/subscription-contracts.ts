@@ -102,6 +102,7 @@ const subscriptionContractFullSelection = {
 
 const subscriptionDraftSummarySelection = {
   id: true,
+  originalContract: { id: true },
   customer: { id: true, displayName: true, email: true },
   currencyCode: true,
   billingPolicy: {

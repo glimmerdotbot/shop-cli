@@ -162,6 +162,14 @@ export const runMetaobjects = async ({
 
     const where = { ...(type ? { type } : {}), ...(ids && ids.length ? { ids } : {}) }
 
+    const requestedCount =
+      ids && ids.length > 0
+        ? ids.length
+        : type
+          ? (await runQuery(ctx, { metaobjectDefinitionByType: { __args: { type }, metaobjectsCount: true } }))?.metaobjectDefinitionByType
+              ?.metaobjectsCount ?? null
+          : null
+
     const result = await runMutation(ctx, {
       metaobjectBulkDelete: {
         __args: { where },
@@ -172,7 +180,15 @@ export const runMetaobjects = async ({
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.metaobjectBulkDelete, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(result.metaobjectBulkDelete?.job?.id ?? '')
-    printJson(result.metaobjectBulkDelete, ctx.format !== 'raw')
+    printJson(
+      {
+        job: result.metaobjectBulkDelete?.job ?? null,
+        where,
+        requestedCount,
+        userErrors: result.metaobjectBulkDelete?.userErrors ?? [],
+      },
+      ctx.format !== 'raw',
+    )
     return
   }
 

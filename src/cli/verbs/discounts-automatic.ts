@@ -61,10 +61,8 @@ const automaticDiscountNodeFullSelection = {
   ...automaticDiscountNodeSummarySelection,
 } as const
 
-const automaticAppDiscountSummarySelection = {
+const automaticAppDiscountIdSelection = {
   discountId: true,
-  title: true,
-  status: true,
 } as const
 
 const automaticDiscountSummarySelection = {
@@ -313,14 +311,37 @@ export const runDiscountsAutomatic = async ({
     const result = await runMutation(ctx, {
       discountAutomaticAppCreate: {
         __args: { automaticAppDiscount: input },
-        automaticAppDiscount: automaticAppDiscountSummarySelection,
+        automaticAppDiscount: automaticAppDiscountIdSelection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.discountAutomaticAppCreate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.discountAutomaticAppCreate?.automaticAppDiscount?.discountId ?? '')
-    printJson(result.discountAutomaticAppCreate, ctx.format !== 'raw')
+    const discountId = result.discountAutomaticAppCreate?.automaticAppDiscount?.discountId ?? null
+
+    if (ctx.quiet) return console.log(discountId ?? '')
+
+    if (discountId === null) {
+      printJson(
+        { automaticDiscountNode: null, userErrors: result.discountAutomaticAppCreate?.userErrors ?? [] },
+        ctx.format !== 'raw',
+      )
+      return
+    }
+
+    const nodeResult = await runQuery(ctx, {
+      automaticDiscountNode: {
+        __args: { id: discountId },
+        ...automaticDiscountNodeSummarySelection,
+      },
+    })
+
+    if (nodeResult === undefined) return
+
+    printJson(
+      { automaticDiscountNode: nodeResult.automaticDiscountNode ?? null, userErrors: result.discountAutomaticAppCreate?.userErrors ?? [] },
+      ctx.format !== 'raw',
+    )
     return
   }
 
@@ -413,14 +434,27 @@ export const runDiscountsAutomatic = async ({
     const result = await runMutation(ctx, {
       discountAutomaticAppUpdate: {
         __args: { id, automaticAppDiscount: input },
-        automaticAppDiscount: automaticAppDiscountSummarySelection,
+        automaticAppDiscount: automaticAppDiscountIdSelection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.discountAutomaticAppUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.discountAutomaticAppUpdate?.automaticAppDiscount?.discountId ?? '')
-    printJson(result.discountAutomaticAppUpdate, ctx.format !== 'raw')
+
+    if (ctx.quiet) return console.log(id ?? '')
+
+    const nodeResult = await runQuery(ctx, {
+      automaticDiscountNode: { __args: { id }, ...automaticDiscountNodeSummarySelection },
+    })
+    if (nodeResult === undefined) return
+
+    printJson(
+      {
+        automaticDiscountNode: nodeResult.automaticDiscountNode ?? null,
+        userErrors: result.discountAutomaticAppUpdate?.userErrors ?? [],
+      },
+      ctx.format !== 'raw',
+    )
     return
   }
 

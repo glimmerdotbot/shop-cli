@@ -24,6 +24,55 @@ const draftOrderFullSelection = {
   currencyCode: true,
 } as const
 
+const calculatedDraftOrderSummarySelection = {
+  currencyCode: true,
+  presentmentCurrencyCode: true,
+  taxesIncluded: true,
+  discountCodes: true,
+  appliedDiscount: {
+    title: true,
+    description: true,
+    value: true,
+    valueType: true,
+    amountSet: { shopMoney: { amount: true, currencyCode: true } },
+  },
+  lineItemsSubtotalPrice: { shopMoney: { amount: true, currencyCode: true } },
+  subtotalPriceSet: { shopMoney: { amount: true, currencyCode: true } },
+  totalLineItemsPriceSet: { shopMoney: { amount: true, currencyCode: true } },
+  totalDiscountsSet: { shopMoney: { amount: true, currencyCode: true } },
+  totalShippingPriceSet: { shopMoney: { amount: true, currencyCode: true } },
+  totalTaxSet: { shopMoney: { amount: true, currencyCode: true } },
+  totalPriceSet: { shopMoney: { amount: true, currencyCode: true } },
+  shippingLine: {
+    title: true,
+    originalPriceSet: { shopMoney: { amount: true, currencyCode: true } },
+    discountedPriceSet: { shopMoney: { amount: true, currencyCode: true } },
+  },
+  taxLines: {
+    title: true,
+    ratePercentage: true,
+    priceSet: { shopMoney: { amount: true, currencyCode: true } },
+  },
+  lineItems: {
+    uuid: true,
+    title: true,
+    name: true,
+    quantity: true,
+    sku: true,
+    requiresShipping: true,
+    taxable: true,
+    isGiftCard: true,
+    originalUnitPriceSet: { shopMoney: { amount: true, currencyCode: true } },
+    approximateDiscountedUnitPriceSet: { shopMoney: { amount: true, currencyCode: true } },
+    originalTotalSet: { shopMoney: { amount: true, currencyCode: true } },
+    discountedTotalSet: { shopMoney: { amount: true, currencyCode: true } },
+    totalDiscountSet: { shopMoney: { amount: true, currencyCode: true } },
+    variantTitle: true,
+    variant: { id: true, title: true },
+    product: { id: true, title: true },
+  },
+} as const
+
 const getDraftOrderSelection = (view: CommandContext['view']) => {
   if (view === 'ids') return { id: true } as const
   if (view === 'full') return draftOrderFullSelection
@@ -223,9 +272,7 @@ export const runDraftOrders = async ({
     const result = await runMutation(ctx, {
       draftOrderCalculate: {
         __args: { input: built.input },
-        calculatedDraftOrder: {
-          lineItemsSubtotalPrice: { shopMoney: { amount: true, currencyCode: true } },
-        },
+        calculatedDraftOrder: calculatedDraftOrderSummarySelection,
         userErrors: { field: true, message: true },
       },
     })
