@@ -17,15 +17,39 @@ import { resolveCliCommand } from './cli/command'
 import { setGlobalCommand } from './cli/output'
 
 const helpFlags = new Set(['--help', '-h', '--help-full', '--help-all'])
+const versionFlags = new Set(['--version', '-v'])
 
 const hasHelpFlag = (args: string[]) => args.some((arg) => helpFlags.has(arg))
+const hasVersionFlag = (args: string[]) => args.some((arg) => versionFlags.has(arg))
 
 const wantsFullHelp = (args: string[]) => args.some((arg) => arg === '--help-full' || arg === '--help-all')
+
+const printVersion = async () => {
+  const fs = await import('fs')
+  const path = await import('path')
+  // Walk up from dist/cli.js to find package.json
+  let dir = __dirname
+  for (let i = 0; i < 5; i++) {
+    const pkgPath = path.join(dir, 'package.json')
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'))
+      console.log(pkg.version)
+      return
+    }
+    dir = path.dirname(dir)
+  }
+  console.log('unknown')
+}
 
 const main = async () => {
   const command = resolveCliCommand()
   setGlobalCommand(command)
   const argv = process.argv.slice(2)
+
+  if (hasVersionFlag(argv)) {
+    await printVersion()
+    return
+  }
 
   if (argv.length === 0 || argv[0] === 'help' || hasHelpFlag([argv[0]])) {
     console.log(renderTopLevelHelp(command))
