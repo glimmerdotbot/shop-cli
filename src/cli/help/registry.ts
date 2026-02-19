@@ -818,6 +818,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: 'productVariantsBulkCreate',
         requiredFlags: [flagProductId],
         flags: [flagAllowPartialUpdates],
+        output: { view: true, selection: true },
       }),
       inputVerb({
         verb: 'bulk-update',
@@ -825,6 +826,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: 'productVariantsBulkUpdate',
         requiredFlags: [flagProductId],
         flags: [flagAllowPartialUpdates],
+        output: { view: true, selection: true },
       }),
       {
         verb: 'bulk-delete',
@@ -846,6 +848,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'productVariantAppendMedia' },
         requiredFlags: [flagId],
         flags: [flagProductId, flagMediaIds, flagVariantMedia],
+        output: { view: true, selection: true },
       },
       {
         verb: 'detach-media',
@@ -853,6 +856,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'productVariantDetachMedia' },
         requiredFlags: [flagId],
         flags: [flagProductId, flagMediaIds, flagVariantMedia],
+        output: { view: true, selection: true },
       },
       {
         verb: 'join-selling-plans',
