@@ -1,50 +1,63 @@
 # CLI Return Value Audit
 
-Audit of commands that return weird, unhelpful, or mismatched values — e.g. creating a sub-resource but returning the parent. Prompted by `products media upload` (now fixed) returning the product instead of the uploaded media.
+Audit of commands that return weird, unhelpful, or mismatched values — especially cases where we mutate a sub-resource but return something that doesn’t help the caller confirm what happened.
 
 ---
 
-## Products (`products.ts`)
+## Principles (aim for least-surprise)
 
-### `products options-create`
-Returns `product` instead of the created `options`. The user just created options and has no way to see them without a follow-up query.
-- Quiet mode: returns `product.id` instead of option IDs
-- Should return: the created option objects
+### 1) Pick a “primary output” and stick to it
+Each verb should have an obvious “primary thing” it returns:
+- Create/update a resource → return that resource (or the affected sub-resource(s))
+- Delete a resource → return the deleted ID(s)
+- Kick off an async job → return the job **plus** enough context to know what’s in flight
 
-### `products options-update`
-Returns `product` instead of the updated `option`.
-- Quiet mode: returns `product.id` instead of option ID
-- Should return: the updated option object
+### 2) Sub-resource mutations: return either (a) the child or (b) the parent *with the relevant child field populated*
+Returning the parent can be great if the output includes the updated subresource state (and it’s reasonably small).
 
-### `products options-delete`
-Returns `product` in quiet mode, even though the mutation also returns `deletedOptionsIds`.
-- Quiet mode: returns `product.id` — should return `deletedOptionsIds`
+Example of a “good” pattern: `products add-tags` / `products remove-tags` returns the Product *including* `tags`, so you can immediately see the updated tags set.
 
-### `products options-reorder`
-Returns `product` instead of the reordered options.
-- Quiet mode: returns `product.id`
-- Should return: options in their new order
+Anti-pattern: returning the parent *without* the child field (or with a selection that omits the thing you just changed).
 
-### `products set-price`
-Calls `productVariantsBulkUpdate` on a variant but doesn't return the updated variant — only `userErrors`. Quiet mode returns the variant ID hard-coded from input (not from the API response).
-- Should return: the updated variant object
+Heuristic for choosing (a) vs (b):
+- If the child is “effectively a field on the parent” and callers usually want the *final set* (tags, options order, tax exemptions), return the parent with that field populated.
+- If the child is a distinct node that callers usually want to reference next (address, media, region, fulfillment event, etc.), return the child node(s) (and include the parent ID as context).
 
-### `products media add` / `products media upload`
-Without `--wait`, returns the full `product.media` connection rather than just the newly added/uploaded media. With `--wait`, correctly returns individual media IDs.
-- Default behaviour should match `--wait` behaviour
+### 3) `--view`, `--select`, `--selection`, `--include` apply to the **primary output**
+This is the simplest mental model for humans and AI agents:
+- If the verb returns a node (Product, Variant, Address, Media, …), those flags should shape that node (or list of nodes).
+- If the verb returns a wrapper payload (e.g. `{ job, …context }`), selection flags generally don’t apply (and we shouldn’t pretend they do).
 
-### `products media remove`
-Returns `fileUpdate` payload. Quiet mode returns `productId` instead of the removed media IDs.
-- Should return: removed media IDs
+### 4) `--quiet` prints the most useful identifiers for the primary output
+Rules of thumb:
+- Primary output is a node → print its `id`
+- Primary output is a list of nodes → print each `id` (one per line)
+- Primary output is a delete → print deleted ID(s) (one per line)
+- Primary output is an async job → print `job.id`
 
-### `products media reorder`
-Returns a `job` ID (async). No visibility into which media was reordered.
-- Acceptable as async, but could include the media IDs being reordered in the output
+### 5) Prefer shapes that are friendly to `--format table|markdown|jsonl`
+If we return multiple items, prefer returning them as “a list of nodes” (so `printConnection`/tables/jsonl behave naturally), rather than a single wrapper object containing many arrays.
 
-### `products bundle-create` / `products bundle-update`
-Returns `productBundleOperation` (an async operation object) instead of the product.
-- Quiet mode: returns operation ID, not product ID
-- Should return: the product or at least the product ID alongside the operation
+### 6) Deletes: return IDs, not stale parents
+For deletes (including “detach/remove” operations), aim for a small, explicit shape:
+- Single delete → `{ deletedId }` (plus context like `{ parentId }` if useful)
+- Bulk delete → `{ deletedIds: [...] }` (or `{ requestedIds: [...] }` if the API can’t confirm)
+
+---
+
+## Items worth changing (by resource)
+
+### Products (`products.ts`)
+
+#### `products media remove`
+Currently returns the `fileUpdate` payload; `--quiet` prints the product ID.
+- Proposed: treat this as “removing media references from a product” and return `{ productId, removedMediaIds: [...] }` (and in `--quiet` print the removed media IDs).
+- If we want the “updated file” perspective instead, then `--quiet` should at least print the file IDs (not the product ID), matching `products media update`.
+
+#### `products bundle-create` / `products bundle-update`
+Returns a `productBundleOperation` (async operation object).
+- Proposed: return `{ product: { id, title? }, operation: { id, status, … } }` (or make the product the primary output and include `operation.id` as context).
+- `--quiet`: prefer printing the product ID for “create/update bundle on product” (operation ID is still available in non-quiet output).
 
 ---
 
@@ -52,23 +65,24 @@ Returns `productBundleOperation` (an async operation object) instead of the prod
 
 ### `product-variants bulk-create`
 Returns a combined payload of `product` + `productVariants`. The wrapping makes it harder to extract just the created variants.
-- Should return: just the created variants
+- Proposed: return the created variants as the primary output (list of nodes), and include `productId` as context if needed.
 
 ### `product-variants bulk-update`
 Same as `bulk-create` — returns `product` + `productVariants` together.
-- Should return: just the updated variants
+- Proposed: return the updated variants as the primary output (list of nodes), and include `productId` as context if needed.
 
 ### `product-variants bulk-delete`
 Returns only `product.id`. There is no confirmation of which variant IDs were deleted.
-- Should return: array of deleted variant IDs
+- Proposed: return `{ productId, deletedVariantIds: [...] }` (ideally from API; otherwise echo the requested IDs under a clearly named field like `requestedVariantIds`).
+- `--quiet`: print the deleted variant IDs (one per line).
 
 ### `product-variants bulk-reorder`
 Returns only `product.id`. No visibility into the new variant order.
-- Should return: variants in their new order, or at least the reordered variant IDs
+- Proposed: return `{ productId, reorderedVariantIds: [...] }` (or full variants in new order if we can cheaply fetch them).
 
 ### `product-variants append-media` / `product-variants detach-media`
 Returns `product` + all `productVariants`, not just the variants that were affected.
-- Should return: only the variants that had media attached/detached
+- Proposed: return the affected variant(s) as the primary output (list of nodes), plus `productId` as context.
 
 ---
 
@@ -76,7 +90,8 @@ Returns `product` + all `productVariants`, not just the variants that were affec
 
 ### `collections add-products` / `collections remove-products` / `collections reorder-products`
 All return an async `job` object with no information about which products were affected.
-- Should return: at minimum the product IDs that were targeted, alongside the job
+- Proposed: return `{ job, collectionId, productIds: [...] }` (or `{ job, collectionId, moves: [...] }` for reorder).
+- `--quiet`: print `job.id` (since it’s async).
 
 ### `collections duplicate`
 Returns both `collection` and `job`, which is ambiguous — the collection may not be in its final state yet since the job is still running.
@@ -88,15 +103,16 @@ Returns both `collection` and `job`, which is ambiguous — the collection may n
 
 ### `orders cancel`
 Returns a `job` object instead of the updated order or any refund details. User can't see what was cancelled.
-- Should return: the cancelled order, or at minimum the order ID + updated status
+- Proposed: return `{ job, orderId, refund, restock, reason }` at minimum; ideally also include `order` summary fields if API returns them.
+- `--quiet`: print `job.id` (async).
 
 ### `orders capture`
 Returns only the `transaction` object, with no reference to the order. No context about the order's resulting financial status.
-- Should return: transaction + `orderId` + order financial status
+- Proposed: return `{ orderId, transaction, order: { displayFinancialStatus? } }` (or at least `{ orderId, transaction }`).
 
 ### `orders risk-assessment-create`
 Returns only the `orderRiskAssessment` with no order context.
-- Should return: assessment + the order ID it was attached to
+- Proposed: return `{ orderId, orderRiskAssessment }`.
 
 ### `orders create-mandate-payment`
 Returns a `job` object instead of the resulting payment transaction.
@@ -105,7 +121,7 @@ Returns a `job` object instead of the resulting payment transaction.
 
 ### `orders fulfill`
 Returns a custom-wrapped array of `{ locationId, fulfillment, userErrors }`. The `locationId` is an internal CLI tracking value, not an API field — it leaks internal state to the user.
-- Should return: just the fulfillment objects
+- Non-issue: the extra `locationId` is actually a real Location GID and is helpful context for “multi-location fulfill” cases. If we keep it, consider renaming to something explicit like `assignedLocationId` (so it’s clear it’s additional context, not an API field).
 
 ---
 
@@ -113,15 +129,15 @@ Returns a custom-wrapped array of `{ locationId, fulfillment, userErrors }`. The
 
 ### `customers update-default-address`
 Returns the `customer` summary instead of the address that was set as default.
-- Should return: the address object (with `isDefault: true`)
+- Proposed: return `{ customerId, address: { ... , isDefault: true } }` (or return the address as the primary output).
 
 ### `customers email-marketing-consent-update` / `customers sms-marketing-consent-update`
 Returns the `customer` summary instead of the updated consent state.
-- Should return: the consent object showing the new opt-in level, state, etc.
+- Proposed: return `{ customerId, consent: ... }` (and make consent the primary output if that’s more useful).
 
 ### `customers add-tax-exemptions` / `customers remove-tax-exemptions` / `customers replace-tax-exemptions`
 Returns the `customer` summary instead of the resulting exemptions list.
-- Should return: `{ taxExemptions: [...], customer: { id } }`
+- Proposed: return `{ customerId, taxExemptions: [...] }` (where possible), or at least include `taxExemptions` in the default customer selection for these verbs.
 
 ### `customers merge`
 Returns a `job` object. No visibility into the resulting merged customer.
@@ -141,7 +157,7 @@ Returns only `customerId` with no erasure request details or status.
 
 ### `inventory deactivate`
 Returns the `inventoryDeactivate` payload but it only contains `userErrors` — the deactivated inventory level is not included.
-- Should return: the deactivated inventory level
+- Proposed: return `{ inventoryLevelId, deactivated: true }` at minimum (and `--quiet` prints `inventoryLevelId`), unless the API can return the actual `inventoryLevel`.
 
 ---
 
@@ -149,7 +165,7 @@ Returns the `inventoryDeactivate` payload but it only contains `userErrors` — 
 
 ### `fulfillments create-event`
 Creates a fulfillment event but returns only the event. No reference to the parent fulfillment.
-- Should return: event + parent fulfillment ID
+- Proposed: return `{ fulfillmentId, fulfillmentEvent }`.
 
 ---
 
@@ -190,7 +206,7 @@ Returns a `calculatedDraftOrder` with only `lineItemsSubtotalPrice`. Very limite
 ### `selling-plan-groups remove-variants`
 Returns `removedProductVariantIds` (the removed IDs) instead of the updated selling plan group — inconsistent with `add-variants` which returns the group.
 - Quiet mode: returns **nothing at all**
-- Should return: the updated selling plan group (consistent with `add-variants`)
+- Proposed: return `{ sellingPlanGroup: { id, name? }, removedProductVariantIds: [...] }` and make `--quiet` print the group ID (or the removed variant IDs, but pick one and be consistent).
 
 ---
 
@@ -198,7 +214,7 @@ Returns `removedProductVariantIds` (the removed IDs) instead of the updated sell
 
 ### `subscription-contracts create` / `subscription-contracts update`
 Both return a `draft` object, not the actual subscription contract. This is an API design constraint, but confusing since the user just created/updated a contract and gets a draft back.
-- Worth documenting/noting in help text
+- Worth documenting/noting in help text (and ideally include the final contract ID whenever it’s available).
 
 ---
 
@@ -248,10 +264,10 @@ Returns only `job: { id, done }` — no indication of what was deleted or how ma
 
 ## General Patterns to Fix
 
-1. **Sub-resource operations returning parent**: When creating/updating/deleting a child resource (variant, option, region, address, etc.), return the child — not the parent.
+1. **Sub-resource operations returning “bare parent”**: Returning the parent is fine *if* the updated child field is included (e.g. tags). Otherwise: return the child, or return the parent with the relevant field selected by default.
 
 2. **Async job returns with no entity context**: When an operation kicks off a background job, include the IDs of the entities being acted on alongside the job ID so users know what's in flight.
 
-3. **Quiet mode missing or wrong**: Several commands output nothing (or the wrong ID) in `--quiet` mode. Quiet mode should always output the ID of the primary resource that was just created/modified.
+3. **Quiet mode missing or wrong**: Quiet mode should always output the most useful ID(s) for the primary output (deleted IDs for deletes; job ID for async; node IDs for node outputs).
 
 4. **Inconsistency within a resource**: When some commands in the same resource return the node wrapper (e.g. `codeDiscountNode`) and others return the inner type (e.g. `codeAppDiscount`), it makes scripting fragile.
