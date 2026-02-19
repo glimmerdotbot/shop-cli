@@ -93,6 +93,7 @@ const flagPollIntervalMs = flag('--poll-interval-ms <n>', 'Poll interval in mill
 const flagTimeoutMs = flag('--timeout-ms <n>', 'Polling timeout in milliseconds (default: 600000)')
 const flagContentType = flag('--content-type <mime>', 'Override detected content type')
 const flagMediaType = flag('--media-type <type>', 'IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO')
+const flagMediaContentType = flag('--media-content-type <type>', 'IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO')
 const flagAllowPartialUpdates = flag('--allow-partial-updates', 'Allow partial updates')
 const flagStrategy = flag('--strategy <value>', 'DEFAULT|PRESERVE_STANDALONE_VARIANT|REMOVE_STANDALONE_VARIANT')
 const flagOwnerType = flag('--owner-type <type>', 'Owner type filter')
@@ -707,14 +708,38 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'Attach remote media URLs to a product.',
         operation: { type: 'mutation', name: 'productUpdate' },
         requiredFlags: [flagId, flagUrl],
-        flags: [flagAlt, flagMediaType],
+        flags: [
+          flagAlt,
+          flagMediaContentType,
+          flagMediaType,
+          flagFilesUploadWait,
+          flagPollIntervalMs,
+          flagTimeoutMs,
+        ],
+        notes: [
+          'Use --media-content-type (or the legacy alias --media-type).',
+        ],
       },
       {
         verb: 'media upload',
         description: 'Upload local files as product media.',
         operation: { type: 'mutation', name: 'productUpdate' },
         requiredFlags: [flagId, flagFile],
-        flags: [flagAlt, flagContentType, flagMediaType],
+        flags: [
+          flagAlt,
+          flagFilesUploadMimeType,
+          flagContentType,
+          flagMediaContentType,
+          flagMediaType,
+          flagFilesUploadWait,
+          flagPollIntervalMs,
+          flagTimeoutMs,
+        ],
+        notes: [
+          'To attach by URL, use `shop products media add --url ...`.',
+          'Use --mime-type (or the legacy alias --content-type) to override MIME detection.',
+          'Use --media-content-type (or the legacy alias --media-type) to set Shopify media content type.',
+        ],
       },
       {
         verb: 'media list',

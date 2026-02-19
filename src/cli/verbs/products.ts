@@ -11,6 +11,7 @@ import {
   stagedUploadLocalFiles,
   type StagedUploadResource,
 } from '../workflows/files/stagedUploads'
+import { waitForFilesReadyOrFailed } from '../workflows/files/waitForReady'
 import { metafieldsUpsert } from '../workflows/products/metafieldsUpsert'
 import {
   parsePublishDate,
@@ -86,7 +87,50 @@ const normalizeMediaContentType = (value: string | undefined): MediaContentType 
   if (!value) return 'IMAGE'
   const v = value.toUpperCase()
   if (v === 'IMAGE' || v === 'VIDEO' || v === 'MODEL_3D' || v === 'EXTERNAL_VIDEO') return v
-  throw new CliError('--media-type must be IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO', 2)
+  throw new CliError('--media-content-type/--media-type must be IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO', 2)
+}
+
+const parsePositiveIntFlag = ({
+  value,
+  flag,
+}: {
+  value: unknown
+  flag: string
+}): number | undefined => {
+  if (value === undefined) return undefined
+  if (typeof value !== 'string') throw new CliError(`Invalid ${flag} value`, 2)
+  const trimmed = value.trim()
+  if (!trimmed) throw new CliError(`Invalid ${flag} value`, 2)
+  const n = Number(trimmed)
+  if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) {
+    throw new CliError(`${flag} must be a positive integer`, 2)
+  }
+  return n
+}
+
+const getTopProductMediaIds = async ({
+  ctx,
+  productId,
+  first = 250,
+}: {
+  ctx: CommandContext
+  productId: string
+  first?: number
+}): Promise<string[]> => {
+  const result = await runQuery(ctx, {
+    product: {
+      __args: { id: productId },
+      media: {
+        __args: { first, reverse: true, sortKey: 'POSITION' as any },
+        nodes: { id: true },
+      },
+    },
+  })
+  if (result === undefined) return []
+  const nodes = (result.product?.media?.nodes ?? []) as any[]
+  return nodes
+    .map((n) => (typeof n?.id === 'string' ? (n.id as string) : undefined))
+    .filter((id): id is string => typeof id === 'string' && id.trim() !== '')
 }
 
 const normalizeMediaId = (value: string) => {
@@ -1171,6 +1215,10 @@ export const runProducts = async ({
         url: { type: 'string', multiple: true },
         alt: { type: 'string' },
         'media-type': { type: 'string' },
+        'media-content-type': { type: 'string' },
+        wait: { type: 'boolean' },
+        'poll-interval-ms': { type: 'string' },
+        'timeout-ms': { type: 'string' },
       },
     })
     const id = requireId(args.id, 'Product')
@@ -1178,8 +1226,25 @@ export const runProducts = async ({
     const urls = (args.url as string[] | undefined) ?? []
     if (urls.length === 0) throw new CliError('Missing --url (repeatable)', 2)
 
-    const mediaContentType = normalizeMediaContentType(args['media-type'] as any)
+    const mediaContentTypeRaw = (args as any)['media-content-type'] as string | undefined
+    const mediaTypeRaw = (args as any)['media-type'] as string | undefined
+    if (mediaContentTypeRaw && mediaTypeRaw) {
+      const a = mediaContentTypeRaw.trim().toUpperCase()
+      const b = mediaTypeRaw.trim().toUpperCase()
+      if (a && b && a !== b) {
+        throw new CliError('Do not pass both --media-content-type and --media-type with different values', 2)
+      }
+    }
+
+    const mediaContentType = normalizeMediaContentType(mediaContentTypeRaw ?? mediaTypeRaw)
     const alt = args.alt as string | undefined
+    const wait = (args as any).wait === true
+    const pollIntervalMs =
+      parsePositiveIntFlag({ value: (args as any)['poll-interval-ms'], flag: '--poll-interval-ms' }) ?? 1000
+    const timeoutMs =
+      parsePositiveIntFlag({ value: (args as any)['timeout-ms'], flag: '--timeout-ms' }) ?? 10 * 60 * 1000
+    const shouldWait = wait && !ctx.dryRun
+    const beforeIds = shouldWait ? await getTopProductMediaIds({ ctx, productId: id }) : []
 
     const media = urls.map((url) => ({
       originalSource: url,
@@ -1196,8 +1261,33 @@ export const runProducts = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-    printJson(result.productUpdate)
+    if (!shouldWait) {
+      if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
+      printJson(result.productUpdate)
+      return
+    }
+
+    if (!ctx.quiet) printJson(result.productUpdate)
+
+    const afterIds = await getTopProductMediaIds({ ctx, productId: id })
+    const before = new Set(beforeIds)
+    const createdIds = afterIds.filter((mid) => !before.has(mid)).slice(0, urls.length)
+    if (createdIds.length !== urls.length) {
+      throw new CliError(
+        `Unable to determine created media IDs for waiting (expected ${urls.length}, got ${createdIds.length}).`,
+        2,
+      )
+    }
+
+    const final = await waitForFilesReadyOrFailed({ ctx, ids: createdIds, pollIntervalMs, timeoutMs })
+    if (ctx.quiet) {
+      for (const mid of createdIds) console.log(mid)
+    } else {
+      printJson(final)
+    }
+    if (final.failedIds.length > 0) {
+      throw new CliError(`One or more media files failed processing: ${final.failedIds.join(', ')}`, 2)
+    }
     return
   }
 
@@ -1208,7 +1298,12 @@ export const runProducts = async ({
         file: { type: 'string', multiple: true },
         alt: { type: 'string' },
         'content-type': { type: 'string' },
+        'mime-type': { type: 'string' },
         'media-type': { type: 'string' },
+        'media-content-type': { type: 'string' },
+        wait: { type: 'boolean' },
+        'poll-interval-ms': { type: 'string' },
+        'timeout-ms': { type: 'string' },
       },
     })
     const id = requireId(args.id, 'Product')
@@ -1216,13 +1311,42 @@ export const runProducts = async ({
     const filePaths = (args.file as string[] | undefined) ?? []
     if (filePaths.length === 0) throw new CliError('Missing --file (repeatable)', 2)
 
-    const forcedMediaType = args['media-type'] as string | undefined
+    const mediaContentTypeRaw = (args as any)['media-content-type'] as string | undefined
+    const mediaTypeRaw = (args as any)['media-type'] as string | undefined
+    if (mediaContentTypeRaw && mediaTypeRaw) {
+      const a = mediaContentTypeRaw.trim().toUpperCase()
+      const b = mediaTypeRaw.trim().toUpperCase()
+      if (a && b && a !== b) {
+        throw new CliError('Do not pass both --media-content-type and --media-type with different values', 2)
+      }
+    }
+
+    const forcedMediaType = mediaContentTypeRaw ?? mediaTypeRaw
     const forced = forcedMediaType ? normalizeMediaContentType(forcedMediaType) : undefined
     const resourceOverride = forced ? mediaTypeToStagedResource(forced) : undefined
 
+    const mimeTypeRaw = (args as any)['mime-type'] as string | undefined
+    const contentTypeRaw = (args as any)['content-type'] as string | undefined
+    if (mimeTypeRaw && contentTypeRaw) {
+      const a = mimeTypeRaw.trim()
+      const b = contentTypeRaw.trim()
+      if (a && b && a !== b) {
+        throw new CliError('Do not pass both --mime-type and --content-type with different values', 2)
+      }
+    }
+    const mimeType = mimeTypeRaw ?? contentTypeRaw
+
+    const wait = (args as any).wait === true
+    const pollIntervalMs =
+      parsePositiveIntFlag({ value: (args as any)['poll-interval-ms'], flag: '--poll-interval-ms' }) ?? 1000
+    const timeoutMs =
+      parsePositiveIntFlag({ value: (args as any)['timeout-ms'], flag: '--timeout-ms' }) ?? 10 * 60 * 1000
+    const shouldWait = wait && !ctx.dryRun
+    const beforeIds = shouldWait ? await getTopProductMediaIds({ ctx, productId: id }) : []
+
     const localFiles = await buildLocalFilesForStagedUpload({
       filePaths,
-      mimeType: args['content-type'] as any,
+      mimeType: mimeType as any,
       resource: resourceOverride,
     })
 
@@ -1249,8 +1373,33 @@ export const runProducts = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-    printJson(result.productUpdate)
+    if (!shouldWait) {
+      if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
+      printJson(result.productUpdate)
+      return
+    }
+
+    if (!ctx.quiet) printJson(result.productUpdate)
+
+    const afterIds = await getTopProductMediaIds({ ctx, productId: id })
+    const before = new Set(beforeIds)
+    const createdIds = afterIds.filter((mid) => !before.has(mid)).slice(0, filePaths.length)
+    if (createdIds.length !== filePaths.length) {
+      throw new CliError(
+        `Unable to determine created media IDs for waiting (expected ${filePaths.length}, got ${createdIds.length}).`,
+        2,
+      )
+    }
+
+    const final = await waitForFilesReadyOrFailed({ ctx, ids: createdIds, pollIntervalMs, timeoutMs })
+    if (ctx.quiet) {
+      for (const mid of createdIds) console.log(mid)
+    } else {
+      printJson(final)
+    }
+    if (final.failedIds.length > 0) {
+      throw new CliError(`One or more media files failed processing: ${final.failedIds.join(', ')}`, 2)
+    }
     return
   }
 
