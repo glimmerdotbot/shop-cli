@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs'
-import { dirname, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { existsSync, readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 
 import { parse, Kind, type DefinitionNode, type DocumentNode } from 'graphql'
 
@@ -9,8 +8,20 @@ type DeprecatedFieldMap = Map<string, Set<string>>
 let cachedDeprecatedFieldMap: DeprecatedFieldMap | undefined
 
 const schemaPath = (() => {
-  const here = dirname(fileURLToPath(import.meta.url))
-  return resolve(here, '../../generated/admin-2026-04/schema.graphql')
+  if (typeof __dirname === 'string') {
+    return resolve(__dirname, '../../generated/admin-2026-04/schema.graphql')
+  }
+
+  const packageRoot = process.env.SHOP_CLI_PACKAGE_ROOT
+  if (packageRoot) {
+    const distPath = resolve(packageRoot, 'dist', 'generated', 'admin-2026-04', 'schema.graphql')
+    if (existsSync(distPath)) return distPath
+
+    const srcPath = resolve(packageRoot, 'src', 'generated', 'admin-2026-04', 'schema.graphql')
+    if (existsSync(srcPath)) return srcPath
+  }
+
+  throw new Error('Unable to locate schema.graphql; set SHOP_CLI_PACKAGE_ROOT or run the compiled CLI')
 })()
 
 const hasDeprecatedDirective = (directives: any[] | undefined): boolean =>
@@ -63,4 +74,3 @@ const getDeprecatedFieldMap = (): DeprecatedFieldMap => {
 
 export const isDeprecatedField = (typeName: string, fieldName: string): boolean =>
   getDeprecatedFieldMap().get(typeName)?.has(fieldName) ?? false
-

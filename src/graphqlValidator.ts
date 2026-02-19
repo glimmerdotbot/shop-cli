@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { join, dirname } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
 import {
   parse,
@@ -18,11 +17,19 @@ let cachedSchema: GraphQLSchema | null = null
  * Get the path to the introspection JSON file for a given API version.
  */
 const getIntrospectionPath = (apiVersion: string): string => {
-  // __dirname equivalent for ESM
-  const __filename = fileURLToPath(import.meta.url)
-  const __dirname = dirname(__filename)
-  // From src/ go up to root, then into schema/
-  return join(__dirname, '..', 'schema', `${apiVersion}.introspection.json`)
+  const baseDir =
+    typeof __dirname === 'string'
+      ? __dirname
+      : process.env.SHOP_CLI_PACKAGE_ROOT
+        ? join(process.env.SHOP_CLI_PACKAGE_ROOT, 'src')
+        : null
+
+  if (!baseDir) {
+    throw new Error('Unable to locate schema directory; set SHOP_CLI_PACKAGE_ROOT or run the compiled CLI')
+  }
+
+  // From src/ or dist/ go up to root, then into schema/
+  return join(baseDir, '..', 'schema', `${apiVersion}.introspection.json`)
 }
 
 /**

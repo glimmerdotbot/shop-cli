@@ -2,10 +2,30 @@
   "name": "shop-cli",
   "version": "0.1.0",
   "description": "An agent-friendly command-line interface for managing Shopify stores",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
   "bin": {
     "shop-cli": "bin/shop.js",
     "shop": "bin/shop.js"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/**/*.graphql",
+    "bin",
+    "schema",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
   },
   "scripts": {
     "schema:admin": "node scripts/download-admin-schema.js",
@@ -14,7 +34,9 @@
     "codegen:admin": "genql --schema schema/2026-04.graphql --output src/generated/admin-2026-04 --sort -S ARN:string -S BigInt:string -S Color:string -S Date:string -S DateTime:string -S Decimal:string -S FormattedString:string -S HTML:string -S JSON:unknown -S Money:string -S StorefrontID:string -S URL:string -S UnsignedInt64:string -S UtcOffset:string",
     "codegen:help": "tsx scripts/extract-schema-help.ts",
     "dev:shop-name": "tsx dev/shop-name.ts",
-    "dev:shop": "tsx src/cli.ts",
+    "dev:shop": "node scripts/dev-shop.js",
+    "build": "node scripts/build-package.js",
+    "prepack": "npm run build",
     "check:help": "tsx scripts/check-help-coverage.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run typecheck && vitest run",
@@ -25,16 +47,17 @@
   "author": "Botanica Studios",
   "license": "MIT",
   "dependencies": {
-    "@apollo/rover": "^0.37.0",
     "@genql/runtime": "^2.10.0",
     "dotenv": "^17.3.1",
     "graphql": "^16.12.0",
     "mime-types": "^3.0.2"
   },
   "devDependencies": {
+    "@apollo/rover": "^0.37.0",
     "@genql/cli": "^6.3.3",
     "@types/mime-types": "^3.0.1",
     "@types/node": "^25.2.3",
+    "esbuild": "^0.25.10",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
