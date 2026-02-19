@@ -13,6 +13,8 @@ import { renderResourceHelp, renderTopLevelHelp, renderVerbHelp } from './cli/he
 import { runCommand } from './cli/router'
 import { createShopifyAdminClient } from './adminClient'
 import { resolveAdminApiVersion } from './defaults'
+import { resolveCliCommand } from './cli/command'
+import { setGlobalCommand } from './cli/output'
 
 const helpFlags = new Set(['--help', '-h', '--help-full', '--help-all'])
 
@@ -21,16 +23,18 @@ const hasHelpFlag = (args: string[]) => args.some((arg) => helpFlags.has(arg))
 const wantsFullHelp = (args: string[]) => args.some((arg) => arg === '--help-full' || arg === '--help-all')
 
 const main = async () => {
+  const command = resolveCliCommand()
+  setGlobalCommand(command)
   const argv = process.argv.slice(2)
 
   if (argv.length === 0 || argv[0] === 'help' || hasHelpFlag([argv[0]])) {
-    console.log(renderTopLevelHelp())
+    console.log(renderTopLevelHelp(command))
     return
   }
 
   const resource = argv[0]
   if (!resource) {
-    console.log(renderTopLevelHelp())
+    console.log(renderTopLevelHelp(command))
     throw new CliError('Missing <resource>', 2)
   }
 
@@ -52,13 +56,13 @@ const main = async () => {
       // Let runCommand handle it - it will show the types help
       // Fall through to runCommand below
     } else {
-      const resourceHelp = renderResourceHelp(resource)
+      const resourceHelp = renderResourceHelp(resource, command)
       if (resourceHelp) {
         console.log(resourceHelp)
         if (hasHelpFlag(afterResource)) return
         throw new CliError(`\nMissing <verb> for "${resource}"`, 2)
       } else if (!isTypesCommand) {
-        console.log(renderTopLevelHelp())
+        console.log(renderTopLevelHelp(command))
         throw new CliError(`\nUnknown resource: ${resource}`, 2)
       }
       // For `types` with no verb and no --help, fall through and let runTypes show help
@@ -70,17 +74,17 @@ const main = async () => {
     if (isTypesCommand) {
       // Fall through to runCommand which will show the types help
     } else {
-      const verbHelp = renderVerbHelp(resource, verb, { showAllFields: wantsFullHelp(rest) })
+      const verbHelp = renderVerbHelp(resource, verb, { showAllFields: wantsFullHelp(rest) }, command)
       if (verbHelp) {
         console.log(verbHelp)
         return
       }
-      const resourceHelp = renderResourceHelp(resource)
+      const resourceHelp = renderResourceHelp(resource, command)
       if (resourceHelp) {
         console.log(resourceHelp)
         return
       }
-      console.log(renderTopLevelHelp())
+      console.log(renderTopLevelHelp(command))
       return
     }
   }

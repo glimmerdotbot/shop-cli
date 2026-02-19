@@ -7,16 +7,18 @@ import {
   type InputFieldHelp,
   type EnumValueHelp,
 } from '../../generated/help/schema-help'
+import { resolveCliCommand } from '../command'
 
 const PRIMITIVES = new Set(['String', 'Int', 'Float', 'Boolean', 'ID', 'DateTime', 'Date', 'JSON', 'Decimal', 'HTML', 'URL', 'Money', 'UnsignedInt64', 'FormattedString', 'Color', 'UtcOffset', 'ARN'])
 
 const printHelp = () => {
+  const command = resolveCliCommand()
   console.log(
     [
       'Explore input types and enums from the Shopify Admin API schema.',
       '',
       'Usage:',
-      '  shop types <TypeName>',
+      `  ${command} types <TypeName>`,
       '',
       'Arguments:',
       '  TypeName    The name of an input type or enum to explore.',
@@ -25,9 +27,9 @@ const printHelp = () => {
       '  --all       Show all enum values (for large enums).',
       '',
       'Examples:',
-      '  shop types ProductBundleComponentInput',
-      '  shop types ProductStatus',
-      '  shop types CountryCode --all',
+      `  ${command} types ProductBundleComponentInput`,
+      `  ${command} types ProductStatus`,
+      `  ${command} types CountryCode --all`,
     ].join('\n'),
   )
 }

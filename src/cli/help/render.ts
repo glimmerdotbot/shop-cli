@@ -14,6 +14,7 @@ import {
   type InputFieldHelp,
 } from '../../generated/help/schema-help'
 import { DEFAULT_ADMIN_API_VERSION } from '../../defaults'
+import { formatCommandRef, resolveCliCommand } from '../command'
 
 const PRIMITIVES = new Set([
   'String', 'Int', 'Float', 'Boolean', 'ID', 'DateTime', 'Date', 'JSON',
@@ -202,17 +203,20 @@ const renderTypeShapesSection = (
 }
 
 /** Format the "Type details" footer for regular --help */
-const formatTypeDetailsFooter = (typeNames: string[]): string[] => {
+const formatTypeDetailsFooter = (typeNames: string[], command: string): string[] => {
   if (typeNames.length === 0) return []
 
   const lines = ['Type details:']
   for (const typeName of typeNames) {
-    lines.push(`  shop types ${typeName}`)
+    lines.push(`  ${command} types ${typeName}`)
   }
   return lines
 }
 
-export const renderTopLevelHelp = () => {
+const formatWithCommand = (text: string, command: string) =>
+  formatCommandRef(text, command)
+
+export const renderTopLevelHelp = (command = resolveCliCommand()) => {
   const resources = [...commandRegistry]
     .filter((r) => r.resource !== 'graphql')
     .sort((a, b) => a.resource.localeCompare(b.resource))
@@ -223,7 +227,7 @@ export const renderTopLevelHelp = () => {
 
   return [
     'Usage:',
-    '  shop <resource> <verb> [flags]',
+    `  ${command} <resource> <verb> [flags]`,
     '',
     'Resources:',
     ...resourceLines,
@@ -249,32 +253,32 @@ export const renderTopLevelHelp = () => {
     '  --no-fail-on-user-errors (do not exit non-zero on userErrors)',
     '',
     'Raw GraphQL:',
-    '  shop graphql <query>              Execute raw GraphQL query or mutation',
-    '  shop graphql @file.graphql        Execute query from file',
+    `  ${command} graphql <query>              Execute raw GraphQL query or mutation`,
+    `  ${command} graphql @file.graphql        Execute query from file`,
     '  --var <name>=<value>              Set a variable (repeatable)',
     '  --variables <json>                Variables as JSON (or @file.json)',
     '  --no-validate                     Skip local schema validation',
     '',
     'Schema introspection:',
-    '  shop types <TypeName>             Explore input types and enums',
+    `  ${command} types <TypeName>             Explore input types and enums`,
     '',
     'Examples:',
-    '  shop products list --first 5 --format table',
-    '  shop products create --set title="Hat" --set status="ACTIVE"',
-    '  shop products add-tags --id 123 --tags "summer,featured"',
-    '  shop publications resolve --publication "Online Store"',
-    '  shop products publish --id 123 --publication "Online Store" --now',
-    '  shop products metafields upsert --id 123 --set namespace=custom --set key=foo --set type=single_line_text_field --set value=bar',
+    `  ${command} products list --first 5 --format table`,
+    `  ${command} products create --set title="Hat" --set status="ACTIVE"`,
+    `  ${command} products add-tags --id 123 --tags "summer,featured"`,
+    `  ${command} publications resolve --publication "Online Store"`,
+    `  ${command} products publish --id 123 --publication "Online Store" --now`,
+    `  ${command} products metafields upsert --id 123 --set namespace=custom --set key=foo --set type=single_line_text_field --set value=bar`,
   ].join('\n')
 }
 
-export const renderResourceHelp = (resource: string) => {
+export const renderResourceHelp = (resource: string, command = resolveCliCommand()) => {
   const spec = findResource(resource)
   if (!spec) return undefined
 
   const verbs = spec.verbs.map((verb) => verb.verb).join('|')
 
-  const lines: string[] = ['Usage:', `  shop ${spec.resource} <verb> [flags]`, '']
+  const lines: string[] = ['Usage:', `  ${command} ${spec.resource} <verb> [flags]`, '']
   if (spec.description) lines.push(spec.description, '')
   lines.push('Verbs:', `  ${verbs}`, '')
 
@@ -285,13 +289,13 @@ export const renderResourceHelp = (resource: string) => {
 
   if (spec.notes && spec.notes.length > 0) {
     lines.push('Notes:')
-    for (const note of spec.notes) lines.push(`  ${note}`)
+    for (const note of spec.notes) lines.push(`  ${formatWithCommand(note, command)}`)
     lines.push('')
   }
 
   if (spec.examples && spec.examples.length > 0) {
     lines.push('Examples:')
-    for (const example of spec.examples) lines.push(`  ${example}`)
+    for (const example of spec.examples) lines.push(`  ${formatWithCommand(example, command)}`)
     lines.push('')
   }
 
@@ -307,6 +311,7 @@ export const renderVerbHelp = (
   resourceName: string,
   verbName: string,
   options: VerbHelpOptions = {},
+  command = resolveCliCommand(),
 ) => {
   const resource = findResource(resourceName)
   if (!resource) return undefined
@@ -316,7 +321,7 @@ export const renderVerbHelp = (
   const lines: string[] = []
   if (spec.description) lines.push(spec.description, '')
   lines.push('Usage:')
-  lines.push(`  shop ${resource.resource} ${spec.verb} [flags]`)
+  lines.push(`  ${command} ${resource.resource} ${spec.verb} [flags]`)
   lines.push('')
 
   const requiredFlags = spec.requiredFlags ?? []
@@ -384,19 +389,19 @@ export const renderVerbHelp = (
 
   if (spec.notes && spec.notes.length > 0) {
     lines.push('Notes:')
-    for (const note of spec.notes) lines.push(`  ${note}`)
+    for (const note of spec.notes) lines.push(`  ${formatWithCommand(note, command)}`)
     lines.push('')
   }
 
   if (spec.examples && spec.examples.length > 0) {
     lines.push('Examples:')
-    for (const example of spec.examples) lines.push(`  ${example}`)
+    for (const example of spec.examples) lines.push(`  ${formatWithCommand(example, command)}`)
     lines.push('')
   }
 
   // For regular --help: add "Type details" footer if there are referenced types
   if (!options.showAllFields && referencedTypeNames.length > 0) {
-    const footerLines = formatTypeDetailsFooter(referencedTypeNames)
+    const footerLines = formatTypeDetailsFooter(referencedTypeNames, command)
     if (footerLines.length > 0) {
       lines.push(...footerLines)
       lines.push('')

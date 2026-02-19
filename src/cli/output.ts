@@ -3,9 +3,14 @@ import { CliError } from './errors'
 export type OutputFormat = 'json' | 'jsonl' | 'table' | 'raw' | 'markdown'
 
 let globalOutputFormat: OutputFormat | undefined
+let globalCommand: string | undefined
 
 export const setGlobalOutputFormat = (format: OutputFormat) => {
   globalOutputFormat = format
+}
+
+export const setGlobalCommand = (command: string | undefined) => {
+  globalCommand = command?.trim() ? command : undefined
 }
 
 type NextPageExtraFlag = { flag: string; value?: string | number | boolean }
@@ -43,6 +48,11 @@ export const printIds = (ids: Array<string | undefined | null>) => {
 const doubleQuote = (value: string): string =>
   `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`
 
+const withEffectiveBaseCommand = (base: string): string => {
+  if (!globalCommand) return base
+  return base.replace(/^(shop|shop-cli)(?=\s|$)/, globalCommand)
+}
+
 const buildNextPageCommand = ({
   base,
   endCursor,
@@ -52,7 +62,7 @@ const buildNextPageCommand = ({
   reverse,
   extraFlags,
 }: NextPageArgs & { endCursor: string }): string => {
-  const parts: string[] = [base]
+  const parts: string[] = [withEffectiveBaseCommand(base)]
 
   for (const extra of extraFlags ?? []) {
     if (!extra?.flag) continue

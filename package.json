@@ -12,7 +12,7 @@
     }
   },
   "bin": {
-    "shop-cli": "bin/shop.js",
+    "shop-cli": "bin/shop-cli.js",
     "shop": "bin/shop.js"
   },
   "files": [

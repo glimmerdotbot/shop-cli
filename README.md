@@ -28,6 +28,14 @@ shop
 shop <resource> <verb> [flags]
 ```
 
+### Help command name
+
+The CLI’s help output (and pagination hints) uses the command that invoked it (`shop` or `shop-cli`). Override it with `SHOP_CLI_COMMAND`:
+
+```bash
+SHOP_CLI_COMMAND=shopcli shop --help
+```
+
 ## Documentation
 
 The CLI is self-documenting. Point your agent at it for context:
