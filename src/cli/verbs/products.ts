@@ -607,7 +607,7 @@ export const runProducts = async ({
     })
 
     const productId = requireId(args.id, 'Product')
-    const variantId = requireId((args as any)['variant-id'], 'ProductVariant')
+    const variantId = requireId((args as any)['variant-id'], 'ProductVariant', '--variant-id')
     const optionValues = parseVariantOptionValues((args as any)['variant-option'])
     const sku = (args as any).sku as string | undefined
     const barcode = (args as any).barcode as string | undefined
@@ -668,7 +668,7 @@ export const runProducts = async ({
     })
 
     const productId = requireId(args.id, 'Product')
-    const variantId = requireId((args as any)['variant-id'], 'ProductVariant')
+    const variantId = requireId((args as any)['variant-id'], 'ProductVariant', '--variant-id')
 
     const result = await runMutation(ctx, {
       productVariantsBulkDelete: {
@@ -708,7 +708,7 @@ export const runProducts = async ({
     })
 
     const productId = requireId(args.id, 'Product')
-    const variantId = requireId((args as any)['variant-id'], 'ProductVariant')
+    const variantId = requireId((args as any)['variant-id'], 'ProductVariant', '--variant-id')
     const position = parseIntFlag('--position', (args as any).position)
     if (position <= 0) throw new CliError('--position must be a positive integer (1-based)', 2)
 
@@ -1582,7 +1582,7 @@ export const runProducts = async ({
         'options-and-values': { type: 'string' },
       },
     })
-    const parentProductId = requireId((args as any)['parent-product-id'], 'Product')
+    const parentProductId = requireId((args as any)['parent-product-id'], 'Product', '--parent-product-id')
 
     const optionsAndValues = (args as any)['options-and-values']
       ? parseJsonArg((args as any)['options-and-values'], '--options-and-values')
@@ -2143,7 +2143,7 @@ export const runProducts = async ({
       },
     })
 
-    const variantId = requireId((args as any)['variant-id'], 'ProductVariant')
+    const variantId = requireId((args as any)['variant-id'], 'ProductVariant', '--variant-id')
     const price = args.price as string | undefined
     if (!price) throw new CliError('Missing --price', 2)
 

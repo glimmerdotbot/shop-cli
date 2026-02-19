@@ -304,7 +304,9 @@ export const runMarketingActivities = async ({
       argv,
       extraOptions: { 'activity-id': { type: 'string' }, 'channel-handle': { type: 'string' }, 'remote-id': { type: 'string' } },
     })
-    const marketingActivityId = args['activity-id'] ? requireId(args['activity-id'], 'MarketingActivity') : undefined
+    const marketingActivityId = args['activity-id']
+      ? requireId(args['activity-id'], 'MarketingActivity', '--activity-id')
+      : undefined
     const channelHandle = args['channel-handle'] as string | undefined
     const remoteId = args['remote-id'] as string | undefined
 

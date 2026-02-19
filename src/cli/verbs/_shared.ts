@@ -21,9 +21,15 @@ export const parseIntFlag = (flag: string, value: unknown) => {
   return n
 }
 
-export const requireId = (id: unknown, type: ShopifyGidType) => {
-  if (typeof id !== 'string' || !id) throw new CliError('Missing --id', 2)
-  return coerceGid(id, type)
+export const requireId = (id: unknown, type: ShopifyGidType, flag = '--id') => {
+  const normalized =
+    typeof id === 'string'
+      ? id
+      : typeof id === 'number' && Number.isFinite(id)
+        ? String(id)
+        : undefined
+  if (!normalized) throw new CliError(`Missing ${flag}`, 2)
+  return coerceGid(normalized, type)
 }
 
 export const requireGidFlag = (value: unknown, flag: string, type: ShopifyGidType) => {

@@ -110,7 +110,7 @@ export const runCatalogs = async ({
         'contexts-to-remove': { type: 'string' },
       },
     })
-    const catalogId = requireId((args as any)['catalog-id'], 'Catalog')
+    const catalogId = requireId((args as any)['catalog-id'], 'Catalog', '--catalog-id')
 
     const contextsToAdd = (args as any)['contexts-to-add']
       ? parseJsonArg((args as any)['contexts-to-add'], '--contexts-to-add')

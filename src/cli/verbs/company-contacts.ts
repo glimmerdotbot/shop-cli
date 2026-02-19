@@ -96,7 +96,7 @@ export const runCompanyContacts = async ({
 
   if (verb === 'create') {
     const args = parseStandardArgs({ argv, extraOptions: { 'company-id': { type: 'string' } } })
-    const companyId = requireId(args['company-id'], 'Company')
+    const companyId = requireId(args['company-id'], 'Company', '--company-id')
     const built = buildInput({
       inputArg: args.input as any,
       setArgs: args.set as any,
@@ -189,8 +189,8 @@ export const runCompanyContacts = async ({
       },
     })
     const id = requireId(args.id, 'CompanyContact')
-    const roleId = requireId(args['role-id'], 'CompanyContactRole')
-    const locationId = requireId(args['location-id'], 'CompanyLocation')
+    const roleId = requireId(args['role-id'], 'CompanyContactRole', '--role-id')
+    const locationId = requireId(args['location-id'], 'CompanyLocation', '--location-id')
 
     const result = await runMutation(ctx, {
       companyContactAssignRole: {
@@ -231,7 +231,11 @@ export const runCompanyContacts = async ({
   if (verb === 'revoke-role') {
     const args = parseStandardArgs({ argv, extraOptions: { 'role-assignment-id': { type: 'string' } } })
     const id = requireId(args.id, 'CompanyContact')
-    const assignmentId = requireId(args['role-assignment-id'], 'CompanyContactRoleAssignment')
+    const assignmentId = requireId(
+      args['role-assignment-id'],
+      'CompanyContactRoleAssignment',
+      '--role-assignment-id',
+    )
 
     const result = await runMutation(ctx, {
       companyContactRevokeRole: {

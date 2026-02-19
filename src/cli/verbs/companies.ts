@@ -258,7 +258,7 @@ export const runCompanies = async ({
   if (verb === 'assign-main-contact') {
     const args = parseStandardArgs({ argv, extraOptions: { 'contact-id': { type: 'string' } } })
     const companyId = requireId(args.id, 'Company')
-    const contactId = requireId(args['contact-id'], 'CompanyContact')
+    const contactId = requireId(args['contact-id'], 'CompanyContact', '--contact-id')
 
     const result = await runMutation(ctx, {
       companyAssignMainContact: {
@@ -295,7 +295,7 @@ export const runCompanies = async ({
   if (verb === 'assign-customer') {
     const args = parseStandardArgs({ argv, extraOptions: { 'customer-id': { type: 'string' } } })
     const companyId = requireId(args.id, 'Company')
-    const customerId = requireId(args['customer-id'], 'Customer')
+    const customerId = requireId(args['customer-id'], 'Customer', '--customer-id')
 
     const result = await runMutation(ctx, {
       companyAssignCustomerAsContact: {
