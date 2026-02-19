@@ -26,7 +26,14 @@ describe('did-you-mean suggestions', () => {
     expect(result.stdout.trim()).toBe('')
     expect(result.stderr).toContain('Unknown resource: product')
     expect(result.stderr).toContain('Did you mean:')
-    expect(result.stderr).toContain('  shop products')
+    const iProducts = result.stderr.indexOf('  shop products\n')
+    const iProductFeeds = result.stderr.indexOf('  shop product-feeds\n')
+    const iProductVariants = result.stderr.indexOf('  shop product-variants\n')
+    expect(iProducts).toBeGreaterThanOrEqual(0)
+    expect(iProductFeeds).toBeGreaterThanOrEqual(0)
+    expect(iProductVariants).toBeGreaterThanOrEqual(0)
+    expect(iProducts).toBeLessThan(iProductFeeds)
+    expect(iProducts).toBeLessThan(iProductVariants)
   })
 
   it('suggests corrected resource while preserving the rest', () => {
@@ -64,4 +71,3 @@ describe('validation errors include a help pointer', () => {
     expect(result.stderr).toContain('  shop products media upload --help')
   })
 })
-
