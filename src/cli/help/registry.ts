@@ -744,32 +744,6 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flagMoves, flagMove],
         notes: ['Pass either --moves or one or more --move entries.'],
       },
-      {
-        verb: 'reorder-media',
-        description: 'Reorder a product’s media.',
-        operation: { type: 'mutation', name: 'productReorderMedia' },
-        requiredFlags: [flagId],
-        flags: [flagMoves, flagMove],
-        notes: ['Alias for `shop products media reorder`.'],
-      },
-      {
-        verb: 'create-media',
-        description: 'Create media for a product (deprecated).',
-        operation: { type: 'mutation', name: 'productCreateMedia' },
-        requiredFlags: [flagProductId, flagMedia],
-      },
-      {
-        verb: 'update-media',
-        description: 'Update media for a product (deprecated).',
-        operation: { type: 'mutation', name: 'productUpdateMedia' },
-        requiredFlags: [flagProductId, flagMedia],
-      },
-      {
-        verb: 'delete-media',
-        description: 'Delete media from a product (deprecated).',
-        operation: { type: 'mutation', name: 'productDeleteMedia' },
-        requiredFlags: [flagProductId, flagMediaIds],
-      },
       inputVerb({
         verb: 'bundle-create',
         description: 'Create a product bundle.',
