@@ -86,8 +86,7 @@ const flagFile = flag('--file <path>', 'Local file path (repeatable)')
 const flagFilesUploadFilename = flag('--filename <name>', 'Override filename (only with exactly 1 --url)')
 const flagAlt = flag('--alt <string>', 'Alt text')
 const flagFilesUploadMimeType = flag('--mime-type <mime>', 'Override MIME detection')
-const flagStagedUploadResource = flag('--resource <type>', 'Staged upload resource override: FILE|IMAGE|VIDEO|MODEL_3D')
-const flagFileCreateContentType = flag('--content-type <type>', 'FileCreate contentType: FILE|IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO')
+const flagFilesUploadMediaType = flag('--media-type <type>', 'FILE|IMAGE|VIDEO|MODEL_3D')
 const flagFilesUploadWait = flag('--wait', 'Poll until fileStatus is READY or FAILED')
 const flagPollIntervalMs = flag('--poll-interval-ms <n>', 'Poll interval in milliseconds (default: 1000)')
 const flagTimeoutMs = flag('--timeout-ms <n>', 'Polling timeout in milliseconds (default: 600000)')
@@ -2165,13 +2164,15 @@ const baseCommandRegistry: ResourceSpec[] = [
           flagFilesUploadFilename,
           flagAlt,
           flagFilesUploadMimeType,
-          flagStagedUploadResource,
-          flagFileCreateContentType,
+          flagFilesUploadMediaType,
           flagFilesUploadWait,
           flagPollIntervalMs,
           flagTimeoutMs,
         ],
-        notes: ['Provide one or more --file or --url (but not both).'],
+        notes: [
+          'Provide one or more --file or --url (but not both).',
+          'Aliases: --resource and --content-type are accepted as --media-type.',
+        ],
         examples: [
           'shop files upload --file ./cat.png',
           'shop files upload --url https://example.com/cat.png --wait',

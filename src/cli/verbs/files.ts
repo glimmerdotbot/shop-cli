@@ -19,11 +19,15 @@ const fileSelection = {
   fileErrors: { code: true, message: true, details: true },
 } as const
 
-const STAGED_UPLOAD_RESOURCES = new Set(['FILE', 'IMAGE', 'VIDEO', 'MODEL_3D'] as const)
-type StagedUploadResourceFlag = 'FILE' | 'IMAGE' | 'VIDEO' | 'MODEL_3D'
+const FILES_MEDIA_TYPES = new Set(['FILE', 'IMAGE', 'VIDEO', 'MODEL_3D'] as const)
+type FilesMediaType = 'FILE' | 'IMAGE' | 'VIDEO' | 'MODEL_3D'
 
-const FILE_CONTENT_TYPES = new Set(['FILE', 'IMAGE', 'VIDEO', 'MODEL_3D', 'EXTERNAL_VIDEO'] as const)
-type FileContentTypeFlag = 'FILE' | 'IMAGE' | 'VIDEO' | 'MODEL_3D' | 'EXTERNAL_VIDEO'
+const normalizeFilesMediaType = (raw: string, flag: string): FilesMediaType => {
+  const v = raw.trim().toUpperCase()
+  if (!v) throw new CliError(`Invalid ${flag} value`, 2)
+  if (FILES_MEDIA_TYPES.has(v as any)) return v as FilesMediaType
+  throw new CliError(`${flag} must be FILE|IMAGE|VIDEO|MODEL_3D`, 2)
+}
 
 const parsePositiveIntFlag = ({
   value,
@@ -67,8 +71,8 @@ export const runFiles = async ({
         '  --url <url>                   (repeatable)',
         '  --filename <name>             (only with exactly 1 --url)',
         '  --mime-type <mime>            (override MIME detection)',
-        '  --resource FILE|IMAGE|VIDEO|MODEL_3D',
-        '  --content-type FILE|IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO  (FileCreate contentType)',
+        '  --media-type FILE|IMAGE|VIDEO|MODEL_3D',
+        '  (aliases: --resource, --content-type)',
         '  --alt <text>',
         '  --wait',
         '  --poll-interval-ms <n>        (default: 1000)',
@@ -228,6 +232,7 @@ export const runFiles = async ({
       filename: { type: 'string' },
       alt: { type: 'string' },
       'mime-type': { type: 'string' },
+      'media-type': { type: 'string' },
       resource: { type: 'string' },
       'content-type': { type: 'string' },
       wait: { type: 'boolean' },
@@ -252,25 +257,22 @@ export const runFiles = async ({
     throw new CliError('Missing --file (repeatable) or --url (repeatable)', 2)
   }
 
-  const forcedResourceRaw = args.resource as string | undefined
-  const resource = forcedResourceRaw
-    ? (() => {
-        if (!STAGED_UPLOAD_RESOURCES.has(forcedResourceRaw as any)) {
-          throw new CliError('--resource must be one of FILE|IMAGE|VIDEO|MODEL_3D', 2)
-        }
-        return forcedResourceRaw as StagedUploadResourceFlag
-      })()
+  const mediaTypeRaw = (args as any)['media-type'] as string | undefined
+  const resourceAliasRaw = args.resource as string | undefined
+  const contentTypeAliasRaw = args['content-type'] as string | undefined
+
+  const parsedMediaType = mediaTypeRaw ? normalizeFilesMediaType(mediaTypeRaw, '--media-type') : undefined
+  const parsedResourceAlias = resourceAliasRaw ? normalizeFilesMediaType(resourceAliasRaw, '--resource') : undefined
+  const parsedContentTypeAlias = contentTypeAliasRaw
+    ? normalizeFilesMediaType(contentTypeAliasRaw, '--content-type')
     : undefined
 
-  const forcedFileContentTypeRaw = args['content-type'] as string | undefined
-  const contentType = forcedFileContentTypeRaw
-    ? (() => {
-        if (!FILE_CONTENT_TYPES.has(forcedFileContentTypeRaw as any)) {
-          throw new CliError('--content-type must be one of FILE|IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO', 2)
-        }
-        return forcedFileContentTypeRaw as FileContentTypeFlag
-      })()
-    : undefined
+  const distinct = new Set([parsedMediaType, parsedResourceAlias, parsedContentTypeAlias].filter(Boolean) as string[])
+  if (distinct.size > 1) {
+    throw new CliError('Do not pass conflicting values for --media-type/--resource/--content-type', 2)
+  }
+
+  const mediaType = parsedMediaType ?? parsedResourceAlias ?? parsedContentTypeAlias
 
   const wait = args.wait === true
   const pollIntervalMs = parsePositiveIntFlag({
@@ -294,7 +296,7 @@ export const runFiles = async ({
     const localFiles = await buildLocalFilesForStagedUpload({
       filePaths: effectiveFilePaths,
       mimeType: args['mime-type'] as any,
-      resource: resource as any,
+      resource: mediaType as any,
     })
 
     const targets = await stagedUploadLocalFiles(ctx, localFiles)
@@ -307,7 +309,8 @@ export const runFiles = async ({
       return {
         originalSource: t.resourceUrl,
         filename: local.filename,
-        ...(contentType ? { contentType } : {}),
+        // Keep fileCreate contentType consistent with staged upload resource.
+        contentType: mediaType ?? local.resource,
         ...(alt ? { alt } : {}),
       }
     })
