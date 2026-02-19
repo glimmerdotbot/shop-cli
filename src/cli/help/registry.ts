@@ -711,13 +711,12 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [
           flagAlt,
           flagMediaContentType,
-          flagMediaType,
           flagFilesUploadWait,
           flagPollIntervalMs,
           flagTimeoutMs,
         ],
         notes: [
-          'Use --media-content-type (or the legacy alias --media-type).',
+          'Alias: --media-type is accepted as --media-content-type.',
         ],
       },
       {
@@ -728,17 +727,14 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [
           flagAlt,
           flagFilesUploadMimeType,
-          flagContentType,
           flagMediaContentType,
-          flagMediaType,
           flagFilesUploadWait,
           flagPollIntervalMs,
           flagTimeoutMs,
         ],
         notes: [
           'To attach by URL, use `shop products media add --url ...`.',
-          'Use --mime-type (or the legacy alias --content-type) to override MIME detection.',
-          'Use --media-content-type (or the legacy alias --media-type) to set Shopify media content type.',
+          'Aliases: --content-type is accepted as --mime-type; --media-type is accepted as --media-content-type.',
         ],
       },
       {
