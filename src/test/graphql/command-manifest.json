@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-18T21:37:27.156Z",
+  "generatedAt": "2026-02-19T12:45:08.790Z",
   "schemaVersion": "2026-04",
   "entries": [
     {
@@ -5475,6 +5475,52 @@
         "--input",
         "{}"
       ]
+    },
+    {
+      "resource": "products",
+      "verb": "variants create",
+      "argv": [
+        "--id",
+        "1",
+        "--variant-option",
+        "test"
+      ],
+      "skipReason": "--variant-option must be in the form OptionName=Value. Got: test"
+    },
+    {
+      "resource": "products",
+      "verb": "variants delete",
+      "argv": [
+        "--id",
+        "1"
+      ],
+      "skipReason": "exceeded retry budget while auto-generating args"
+    },
+    {
+      "resource": "products",
+      "verb": "variants list",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "products",
+      "verb": "variants reorder",
+      "argv": [
+        "--id",
+        "1"
+      ],
+      "skipReason": "exceeded retry budget while auto-generating args"
+    },
+    {
+      "resource": "products",
+      "verb": "variants update",
+      "argv": [
+        "--id",
+        "1"
+      ],
+      "skipReason": "exceeded retry budget while auto-generating args"
     },
     {
       "resource": "products",

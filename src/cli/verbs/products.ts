@@ -22,7 +22,15 @@ import {
 } from '../workflows/products/publishablePublish'
 import { listPublications } from '../workflows/publications/resolvePublicationId'
 
-import { buildListNextPageArgs, parseFirst, parseIds, parseJsonArg, parseStringList, requireId } from './_shared'
+import {
+  buildListNextPageArgs,
+  parseFirst,
+  parseIds,
+  parseIntFlag,
+  parseJsonArg,
+  parseStringList,
+  requireId,
+} from './_shared'
 
 type MediaContentType = 'IMAGE' | 'VIDEO' | 'MODEL_3D' | 'EXTERNAL_VIDEO'
 
@@ -236,6 +244,38 @@ const stagedResourceToMediaType = (resource: StagedUploadResource): MediaContent
   throw new CliError('Only IMAGE|VIDEO|MODEL_3D can be uploaded as product media', 2)
 }
 
+const parseVariantOptionValues = (value: unknown) => {
+  if (value === undefined || value === null) return [] as Array<{ optionName: string; name: string }>
+  const raw = Array.isArray(value) ? value : [value]
+  const optionValues: Array<{ optionName: string; name: string }> = []
+
+  for (const entry of raw) {
+    if (typeof entry !== 'string') throw new CliError('--variant-option must be a string', 2)
+    const trimmed = entry.trim()
+    if (!trimmed) continue
+    const eq = trimmed.indexOf('=')
+    if (eq <= 0 || eq === trimmed.length - 1) {
+      throw new CliError(`--variant-option must be in the form OptionName=Value. Got: ${entry}`, 2)
+    }
+    const optionName = trimmed.slice(0, eq).trim()
+    const name = trimmed.slice(eq + 1).trim()
+    if (!optionName || !name) {
+      throw new CliError(`--variant-option must be in the form OptionName=Value. Got: ${entry}`, 2)
+    }
+    optionValues.push({ optionName, name })
+  }
+
+  return optionValues
+}
+
+const parseInventoryPolicy = (value: unknown) => {
+  if (value === undefined || value === null || value === '') return undefined
+  if (typeof value !== 'string') throw new CliError('--inventory-policy must be a string', 2)
+  const normalized = value.trim().toUpperCase()
+  if (normalized === 'DENY' || normalized === 'CONTINUE') return normalized
+  throw new CliError(`--inventory-policy must be DENY|CONTINUE. Got: ${value}`, 2)
+}
+
 export const runProducts = async ({
   ctx,
   verb,
@@ -258,6 +298,7 @@ export const runProducts = async ({
         '  change-status|set',
         '  join-selling-plan-groups|leave-selling-plan-groups',
         '  option-update|options-create|options-delete|options-reorder',
+        '  variants list|variants create|variants update|variants delete|variants reorder',
         '  combined-listing-update',
         '  add-tags|remove-tags|set-price',
         '  publish|unpublish|publish-all',
@@ -271,6 +312,284 @@ export const runProducts = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
       ].join('\n'),
     )
+    return
+  }
+
+  if (verb === 'variants list') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {},
+    })
+
+    if (args.query) {
+      throw new CliError(
+        '--query is not supported for `shop products variants list` (product-scoped variants). Use `shop product-variants list --query ...` for global variant search.',
+        2,
+      )
+    }
+
+    const productId = requireId(args.id, 'Product')
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const reverse = args.reverse as any
+    const sortKey = args.sort as any
+
+    const nodeSelection = resolveSelection({
+      typeName: 'ProductVariant',
+      view: ctx.view,
+      baseSelection: getProductVariantSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
+    const result = await runQuery(ctx, {
+      product: {
+        __args: { id: productId },
+        variants: {
+          __args: { first, after, reverse, sortKey },
+          pageInfo: { hasNextPage: true, endCursor: true },
+          nodes: nodeSelection,
+        },
+      },
+    })
+    if (result === undefined) return
+    const connection = result.product?.variants
+    if (!connection) throw new CliError('Product not found', 2)
+
+    printConnection({
+      connection,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base: 'shop products variants list',
+        first,
+        sort: typeof sortKey === 'string' ? sortKey : undefined,
+        reverse: reverse === true,
+        extraFlags: [{ flag: '--id', value: productId }],
+      },
+    })
+    return
+  }
+
+  if (verb === 'variants create') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'variant-option': { type: 'string', multiple: true },
+        sku: { type: 'string' },
+        barcode: { type: 'string' },
+        price: { type: 'string' },
+        'compare-at-price': { type: 'string' },
+        'inventory-policy': { type: 'string' },
+        strategy: { type: 'string' },
+      },
+    })
+
+    const productId = requireId(args.id, 'Product')
+    const optionValues = parseVariantOptionValues((args as any)['variant-option'])
+    if (optionValues.length === 0) {
+      throw new CliError('Missing --variant-option OptionName=Value (repeatable)', 2)
+    }
+
+    const sku = (args as any).sku as string | undefined
+    const barcode = (args as any).barcode as string | undefined
+    const price = (args as any).price as string | undefined
+    const compareAtPrice = (args as any)['compare-at-price'] as string | undefined
+    const inventoryPolicy = parseInventoryPolicy((args as any)['inventory-policy'])
+
+    const strategy = (args as any).strategy as string | undefined
+    if (
+      strategy &&
+      !['DEFAULT', 'PRESERVE_STANDALONE_VARIANT', 'REMOVE_STANDALONE_VARIANT'].includes(
+        strategy.trim().toUpperCase(),
+      )
+    ) {
+      throw new CliError(
+        `--strategy must be DEFAULT|PRESERVE_STANDALONE_VARIANT|REMOVE_STANDALONE_VARIANT. Got: ${strategy}`,
+        2,
+      )
+    }
+    const normalizedStrategy = strategy ? strategy.trim().toUpperCase() : undefined
+
+    const variantSelection = resolveSelection({
+      typeName: 'ProductVariant',
+      view: ctx.view,
+      baseSelection: getProductVariantSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
+    const variantInput: any = {
+      optionValues,
+      ...(barcode ? { barcode } : {}),
+      ...(price ? { price } : {}),
+      ...(compareAtPrice ? { compareAtPrice } : {}),
+      ...(inventoryPolicy ? { inventoryPolicy } : {}),
+      ...(sku ? { inventoryItem: { sku } } : {}),
+    }
+
+    const result = await runMutation(ctx, {
+      productVariantsBulkCreate: {
+        __args: {
+          productId,
+          variants: [variantInput],
+          ...(normalizedStrategy ? { strategy: normalizedStrategy } : {}),
+        },
+        userErrors: { field: true, message: true },
+        productVariants: variantSelection,
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.productVariantsBulkCreate,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    const created = result.productVariantsBulkCreate?.productVariants?.[0]
+    printNode({ node: created, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'variants update') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'variant-id': { type: 'string' },
+        'variant-option': { type: 'string', multiple: true },
+        sku: { type: 'string' },
+        barcode: { type: 'string' },
+        price: { type: 'string' },
+        'compare-at-price': { type: 'string' },
+        'inventory-policy': { type: 'string' },
+        'allow-partial-updates': { type: 'boolean' },
+      },
+    })
+
+    const productId = requireId(args.id, 'Product')
+    const variantId = requireId((args as any)['variant-id'], 'ProductVariant')
+    const optionValues = parseVariantOptionValues((args as any)['variant-option'])
+    const sku = (args as any).sku as string | undefined
+    const barcode = (args as any).barcode as string | undefined
+    const price = (args as any).price as string | undefined
+    const compareAtPrice = (args as any)['compare-at-price'] as string | undefined
+    const inventoryPolicy = parseInventoryPolicy((args as any)['inventory-policy'])
+
+    const allowPartialUpdates = (args as any)['allow-partial-updates'] === true
+
+    const variantSelection = resolveSelection({
+      typeName: 'ProductVariant',
+      view: ctx.view,
+      baseSelection: getProductVariantSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
+    const variantInput: any = {
+      id: variantId,
+      ...(optionValues.length ? { optionValues } : {}),
+      ...(barcode ? { barcode } : {}),
+      ...(price ? { price } : {}),
+      ...(compareAtPrice ? { compareAtPrice } : {}),
+      ...(inventoryPolicy ? { inventoryPolicy } : {}),
+      ...(sku ? { inventoryItem: { sku } } : {}),
+    }
+
+    const result = await runMutation(ctx, {
+      productVariantsBulkUpdate: {
+        __args: {
+          productId,
+          allowPartialUpdates,
+          variants: [variantInput],
+        },
+        userErrors: { field: true, message: true },
+        productVariants: variantSelection,
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.productVariantsBulkUpdate,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    const updated = result.productVariantsBulkUpdate?.productVariants?.[0]
+    printNode({ node: updated, format: ctx.format, quiet: ctx.quiet })
+    return
+  }
+
+  if (verb === 'variants delete') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'variant-id': { type: 'string' },
+      },
+    })
+
+    const productId = requireId(args.id, 'Product')
+    const variantId = requireId((args as any)['variant-id'], 'ProductVariant')
+
+    const result = await runMutation(ctx, {
+      productVariantsBulkDelete: {
+        __args: { productId, variantsIds: [variantId] },
+        product: { id: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.productVariantsBulkDelete,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+
+    const verify = await runQuery(ctx, {
+      nodes: {
+        __args: { ids: [variantId] },
+        id: true,
+      },
+    })
+    if (verify === undefined) return
+    const stillThere = (verify.nodes?.[0] as any) !== null && (verify.nodes?.[0] as any) !== undefined
+    const deletedVariantId = stillThere ? undefined : variantId
+
+    if (ctx.quiet) return printIds([deletedVariantId])
+    printJson({ productId, deletedVariantId }, ctx.format !== 'raw')
+    return
+  }
+
+  if (verb === 'variants reorder') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        'variant-id': { type: 'string' },
+        position: { type: 'string' },
+      },
+    })
+
+    const productId = requireId(args.id, 'Product')
+    const variantId = requireId((args as any)['variant-id'], 'ProductVariant')
+    const position = parseIntFlag('--position', (args as any).position)
+    if (position <= 0) throw new CliError('--position must be a positive integer (1-based)', 2)
+
+    const result = await runMutation(ctx, {
+      productVariantsBulkReorder: {
+        __args: { productId, positions: [{ id: variantId, position }] },
+        product: { id: true },
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    maybeFailOnUserErrors({
+      payload: result.productVariantsBulkReorder,
+      failOnUserErrors: ctx.failOnUserErrors,
+    })
+    if (ctx.quiet) return printIds([variantId])
+    printJson({ productId, variantId, position }, ctx.format !== 'raw')
     return
   }
 
