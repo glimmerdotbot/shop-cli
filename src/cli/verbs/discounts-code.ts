@@ -55,10 +55,8 @@ const codeDiscountNodeFullSelection = {
   ...codeDiscountNodeSummarySelection,
 } as const
 
-const codeAppDiscountSummarySelection = {
+const codeAppDiscountIdSelection = {
   discountId: true,
-  title: true,
-  status: true,
 } as const
 
 const getCodeDiscountSelection = (view: CommandContext['view']) => {
@@ -282,14 +280,30 @@ export const runDiscountsCode = async ({
     const result = await runMutation(ctx, {
       discountCodeAppCreate: {
         __args: { codeAppDiscount: input },
-        codeAppDiscount: codeAppDiscountSummarySelection,
+        codeAppDiscount: codeAppDiscountIdSelection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.discountCodeAppCreate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.discountCodeAppCreate?.codeAppDiscount?.discountId ?? '')
-    printJson(result.discountCodeAppCreate, ctx.format !== 'raw')
+    const discountId = result.discountCodeAppCreate?.codeAppDiscount?.discountId ?? null
+
+    if (ctx.quiet) return console.log(discountId ?? '')
+
+    if (discountId === null) {
+      printJson({ codeDiscountNode: null, userErrors: result.discountCodeAppCreate?.userErrors ?? [] }, ctx.format !== 'raw')
+      return
+    }
+
+    const nodeResult = await runQuery(ctx, {
+      codeDiscountNode: { __args: { id: discountId }, ...codeDiscountNodeSummarySelection },
+    })
+    if (nodeResult === undefined) return
+
+    printJson(
+      { codeDiscountNode: nodeResult.codeDiscountNode ?? null, userErrors: result.discountCodeAppCreate?.userErrors ?? [] },
+      ctx.format !== 'raw',
+    )
     return
   }
 
@@ -379,14 +393,23 @@ export const runDiscountsCode = async ({
     const result = await runMutation(ctx, {
       discountCodeAppUpdate: {
         __args: { id, codeAppDiscount: input },
-        codeAppDiscount: codeAppDiscountSummarySelection,
+        codeAppDiscount: codeAppDiscountIdSelection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.discountCodeAppUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.discountCodeAppUpdate?.codeAppDiscount?.discountId ?? '')
-    printJson(result.discountCodeAppUpdate, ctx.format !== 'raw')
+    if (ctx.quiet) return console.log(id ?? '')
+
+    const nodeResult = await runQuery(ctx, {
+      codeDiscountNode: { __args: { id }, ...codeDiscountNodeSummarySelection },
+    })
+    if (nodeResult === undefined) return
+
+    printJson(
+      { codeDiscountNode: nodeResult.codeDiscountNode ?? null, userErrors: result.discountCodeAppUpdate?.userErrors ?? [] },
+      ctx.format !== 'raw',
+    )
     return
   }
 

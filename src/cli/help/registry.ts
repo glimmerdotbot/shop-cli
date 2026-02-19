@@ -2917,6 +2917,11 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'Create a subscription contract draft.',
         operation: 'subscriptionContractCreate',
         flags: [flagCustomerId],
+        notes: [
+          'Returns a SubscriptionDraft (not a live contract).',
+          'Commit the draft with `shop subscription-drafts commit --id <draftId>` to apply changes.',
+          'If you want to create a live contract immediately, use `shop subscription-contracts atomic-create`.',
+        ],
       }),
       inputVerb({
         verb: 'atomic-create',
@@ -2929,7 +2934,11 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: 'subscriptionContractUpdate',
         requiredFlags: [flagId],
         inputRequired: false,
-        notes: ['If no input is provided, returns a draft ID.'],
+        notes: [
+          'Returns a SubscriptionDraft (not the live contract).',
+          'Changes remain in draft state until you commit with `shop subscription-drafts commit --id <draftId>`.',
+          'If no input is provided, returns a draft ID.',
+        ],
       }),
       {
         verb: 'activate',

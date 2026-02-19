@@ -278,6 +278,14 @@ export const runThemes = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.themeFilesDelete, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) {
+      const deleted = result.themeFilesDelete?.deletedThemeFiles ?? []
+      for (const f of deleted) {
+        const name = typeof (f as any)?.filename === 'string' ? (f as any).filename : ''
+        if (name) process.stdout.write(`${name}\n`)
+      }
+      return
+    }
     printJson(result.themeFilesDelete, ctx.format !== 'raw')
     return
   }
@@ -296,6 +304,14 @@ export const runThemes = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.themeFilesCopy, failOnUserErrors: ctx.failOnUserErrors })
+    if (ctx.quiet) {
+      const copied = result.themeFilesCopy?.copiedThemeFiles ?? []
+      for (const f of copied) {
+        const name = typeof (f as any)?.filename === 'string' ? (f as any).filename : ''
+        if (name) process.stdout.write(`${name}\n`)
+      }
+      return
+    }
     printJson(result.themeFilesCopy, ctx.format !== 'raw')
     return
   }

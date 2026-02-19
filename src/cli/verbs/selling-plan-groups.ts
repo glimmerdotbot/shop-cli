@@ -179,30 +179,48 @@ export const runSellingPlanGroups = async ({
     const id = requireId(args.id, 'SellingPlanGroup')
     const variantIds = parseIds((args as any)['variant-ids'], 'ProductVariant')
 
-    const mutationField =
-      verb === 'add-variants'
-        ? 'sellingPlanGroupAddProductVariants'
-        : 'sellingPlanGroupRemoveProductVariants'
-
-    const selection =
-      verb === 'add-variants'
-        ? { sellingPlanGroup: sellingPlanGroupSummarySelection, userErrors: { field: true, message: true } }
-        : { removedProductVariantIds: true, userErrors: { field: true, message: true } }
-
-    const result = await runMutation(ctx, {
-      [mutationField]: {
-        __args: { id, productVariantIds: variantIds },
-        ...(selection as any),
-      },
-    } as any)
-    if (result === undefined) return
-    const payload = (result as any)[mutationField]
-    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) {
-      if (verb === 'add-variants') return console.log(payload?.sellingPlanGroup?.id ?? '')
+    if (verb === 'add-variants') {
+      const result = await runMutation(ctx, {
+        sellingPlanGroupAddProductVariants: {
+          __args: { id, productVariantIds: variantIds },
+          sellingPlanGroup: sellingPlanGroupSummarySelection,
+          userErrors: { field: true, message: true },
+        },
+      })
+      if (result === undefined) return
+      const payload = (result as any).sellingPlanGroupAddProductVariants
+      maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
+      if (ctx.quiet) return console.log(payload?.sellingPlanGroup?.id ?? '')
+      printJson(payload, ctx.format !== 'raw')
       return
     }
-    printJson(payload, ctx.format !== 'raw')
+
+    const result = await runMutation(ctx, {
+      sellingPlanGroupRemoveProductVariants: {
+        __args: { id, productVariantIds: variantIds },
+        removedProductVariantIds: true,
+        userErrors: { field: true, message: true },
+      },
+    })
+    if (result === undefined) return
+    const payload = (result as any).sellingPlanGroupRemoveProductVariants
+    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
+
+    if (ctx.quiet) return console.log(id ?? '')
+
+    const groupResult = await runQuery(ctx, {
+      sellingPlanGroup: { __args: { id }, ...sellingPlanGroupSummarySelection },
+    })
+    if (groupResult === undefined) return
+
+    printJson(
+      {
+        sellingPlanGroup: groupResult.sellingPlanGroup ?? null,
+        removedProductVariantIds: payload?.removedProductVariantIds ?? [],
+        userErrors: payload?.userErrors ?? [],
+      },
+      ctx.format !== 'raw',
+    )
     return
   }
 

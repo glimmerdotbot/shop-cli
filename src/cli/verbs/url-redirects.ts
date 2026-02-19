@@ -202,8 +202,29 @@ export const runUrlRedirects = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.urlRedirectImportSubmit, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.urlRedirectImportSubmit?.job?.id ?? '')
-    printJson(result.urlRedirectImportSubmit, ctx.format !== 'raw')
+    if (ctx.quiet) return console.log(id ?? '')
+
+    const selection = resolveSelection({
+      typeName: 'UrlRedirectImport',
+      view: ctx.view,
+      baseSelection: getUrlRedirectImportSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: true,
+    })
+
+    const importResult = await runQuery(ctx, { urlRedirectImport: { __args: { id }, ...selection } })
+    if (importResult === undefined) return
+
+    printJson(
+      {
+        urlRedirectImport: importResult.urlRedirectImport ?? null,
+        job: result.urlRedirectImportSubmit?.job ?? null,
+        userErrors: result.urlRedirectImportSubmit?.userErrors ?? [],
+      },
+      ctx.format !== 'raw',
+    )
     return
   }
 
@@ -239,6 +260,9 @@ export const runUrlRedirects = async ({
     if (!args.yes) throw new CliError('Refusing to delete without --yes', 2)
 
     if (verb === 'bulk-delete-all') {
+      const countResult = await runQuery(ctx, {
+        urlRedirectsCount: { count: true, precision: true },
+      })
       const result = await runMutation(ctx, {
         urlRedirectBulkDeleteAll: {
           job: { id: true, done: true },
@@ -248,7 +272,14 @@ export const runUrlRedirects = async ({
       if (result === undefined) return
       maybeFailOnUserErrors({ payload: result.urlRedirectBulkDeleteAll, failOnUserErrors: ctx.failOnUserErrors })
       if (ctx.quiet) return console.log(result.urlRedirectBulkDeleteAll?.job?.id ?? '')
-      printJson(result.urlRedirectBulkDeleteAll, ctx.format !== 'raw')
+      printJson(
+        {
+          job: result.urlRedirectBulkDeleteAll?.job ?? null,
+          count: countResult?.urlRedirectsCount ?? null,
+          userErrors: result.urlRedirectBulkDeleteAll?.userErrors ?? [],
+        },
+        ctx.format !== 'raw',
+      )
       return
     }
 
@@ -264,7 +295,15 @@ export const runUrlRedirects = async ({
       if (result === undefined) return
       maybeFailOnUserErrors({ payload: result.urlRedirectBulkDeleteByIds, failOnUserErrors: ctx.failOnUserErrors })
       if (ctx.quiet) return console.log(result.urlRedirectBulkDeleteByIds?.job?.id ?? '')
-      printJson(result.urlRedirectBulkDeleteByIds, ctx.format !== 'raw')
+      printJson(
+        {
+          job: result.urlRedirectBulkDeleteByIds?.job ?? null,
+          requestedIds: ids,
+          requestedCount: ids.length,
+          userErrors: result.urlRedirectBulkDeleteByIds?.userErrors ?? [],
+        },
+        ctx.format !== 'raw',
+      )
       return
     }
 
@@ -273,6 +312,9 @@ export const runUrlRedirects = async ({
       if (!raw) throw new CliError('Missing --saved-search-id', 2)
       const savedSearchId = coerceGid(raw, 'SavedSearch')
 
+      const countResult = await runQuery(ctx, {
+        urlRedirectsCount: { __args: { savedSearchId }, count: true, precision: true },
+      })
       const result = await runMutation(ctx, {
         urlRedirectBulkDeleteBySavedSearch: {
           __args: { savedSearchId },
@@ -286,13 +328,24 @@ export const runUrlRedirects = async ({
         failOnUserErrors: ctx.failOnUserErrors,
       })
       if (ctx.quiet) return console.log(result.urlRedirectBulkDeleteBySavedSearch?.job?.id ?? '')
-      printJson(result.urlRedirectBulkDeleteBySavedSearch, ctx.format !== 'raw')
+      printJson(
+        {
+          job: result.urlRedirectBulkDeleteBySavedSearch?.job ?? null,
+          count: countResult?.urlRedirectsCount ?? null,
+          savedSearchId,
+          userErrors: result.urlRedirectBulkDeleteBySavedSearch?.userErrors ?? [],
+        },
+        ctx.format !== 'raw',
+      )
       return
     }
 
     const search = (args as any).search as string | undefined
     if (!search) throw new CliError('Missing --search', 2)
 
+    const countResult = await runQuery(ctx, {
+      urlRedirectsCount: { __args: { query: search }, count: true, precision: true },
+    })
     const result = await runMutation(ctx, {
       urlRedirectBulkDeleteBySearch: {
         __args: { search },
@@ -306,7 +359,15 @@ export const runUrlRedirects = async ({
       failOnUserErrors: ctx.failOnUserErrors,
     })
     if (ctx.quiet) return console.log(result.urlRedirectBulkDeleteBySearch?.job?.id ?? '')
-    printJson(result.urlRedirectBulkDeleteBySearch, ctx.format !== 'raw')
+    printJson(
+      {
+        job: result.urlRedirectBulkDeleteBySearch?.job ?? null,
+        count: countResult?.urlRedirectsCount ?? null,
+        search,
+        userErrors: result.urlRedirectBulkDeleteBySearch?.userErrors ?? [],
+      },
+      ctx.format !== 'raw',
+    )
     return
   }
 
