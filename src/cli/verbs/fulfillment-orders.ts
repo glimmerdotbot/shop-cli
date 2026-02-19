@@ -1,6 +1,6 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
-import { printConnection, printJson, printNode } from '../output'
+import { printConnection, printIds, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
@@ -674,8 +674,20 @@ export const runFulfillmentOrders = async ({
       payload: result.fulfillmentOrderLineItemsPreparedForPickup,
       failOnUserErrors: ctx.failOnUserErrors,
     })
-    if (ctx.quiet) return
-    printJson(result.fulfillmentOrderLineItemsPreparedForPickup, ctx.format !== 'raw')
+    const requestedIds = Array.from(
+      new Set(
+        ((input?.lineItemsByFulfillmentOrder ?? []) as any[])
+          .map((x) => x?.fulfillmentOrderId)
+          .filter((x) => typeof x === 'string' && x.length > 0),
+      ),
+    )
+
+    if (ctx.quiet || ctx.view === 'ids') {
+      printIds(requestedIds)
+      return
+    }
+
+    printNode({ node: { fulfillmentOrderIds: requestedIds }, format: ctx.format, quiet: false })
     return
   }
 
@@ -696,8 +708,16 @@ export const runFulfillmentOrders = async ({
       payload: result.fulfillmentOrdersSetFulfillmentDeadline,
       failOnUserErrors: ctx.failOnUserErrors,
     })
-    if (ctx.quiet) return
-    printJson(result.fulfillmentOrdersSetFulfillmentDeadline, ctx.format !== 'raw')
+    if (ctx.quiet || ctx.view === 'ids') {
+      printIds(fulfillmentOrderIds)
+      return
+    }
+
+    const out = {
+      success: result.fulfillmentOrdersSetFulfillmentDeadline?.success === true,
+      fulfillmentOrderIds,
+    }
+    printNode({ node: out, format: ctx.format, quiet: false })
     return
   }
 

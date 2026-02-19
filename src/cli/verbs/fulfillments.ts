@@ -265,8 +265,13 @@ export const runFulfillments = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.fulfillmentEventCreate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.fulfillmentEventCreate?.fulfillmentEvent?.id ?? '')
-    printJson(result.fulfillmentEventCreate, ctx.format !== 'raw')
+    const event = result.fulfillmentEventCreate?.fulfillmentEvent
+    if (ctx.quiet) {
+      if (event?.id) process.stdout.write(`${event.id}\n`)
+      return
+    }
+    const out = { fulfillmentId: id, fulfillmentEvent: event }
+    printNode({ node: out, format: ctx.format, quiet: false })
     return
   }
 

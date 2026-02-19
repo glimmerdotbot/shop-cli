@@ -57,6 +57,47 @@ const getCustomerSelection = (view: CommandContext['view']) => {
   return customerSummarySelection
 }
 
+const mailingAddressSummarySelection = {
+  id: true,
+  address1: true,
+  address2: true,
+  city: true,
+  provinceCode: true,
+  countryCode: true,
+  zip: true,
+} as const
+
+const mailingAddressFullSelection = {
+  ...mailingAddressSummarySelection,
+  company: true,
+  firstName: true,
+  lastName: true,
+  name: true,
+  phone: true,
+  province: true,
+  country: true,
+} as const
+
+const getMailingAddressSelection = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'full') return mailingAddressFullSelection
+  if (view === 'raw') return {} as const
+  return mailingAddressSummarySelection
+}
+
+const customerTaxExemptionsSummarySelection = {
+  id: true,
+  taxExempt: true,
+  taxExemptions: true,
+} as const
+
+const getCustomerSelectionForTaxExemptions = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'full') return { ...customerFullSelection, taxExempt: true, taxExemptions: true } as const
+  if (view === 'raw') return {} as const
+  return customerTaxExemptionsSummarySelection
+}
+
 export const runCustomers = async ({
   ctx,
   verb,
@@ -292,17 +333,46 @@ export const runCustomers = async ({
     const customerId = requireId(args.id as any, 'Customer')
     const addressId = requireGidFlag((args as any)['address-id'], '--address-id', 'MailingAddress')
 
+    const addressSelection = resolveSelection({
+      typeName: 'MailingAddress',
+      view: ctx.view,
+      baseSelection: getMailingAddressSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
     const result = await runMutation(ctx, {
       customerUpdateDefaultAddress: {
         __args: { customerId, addressId },
-        customer: customerSummarySelection,
+        customer: { id: true, defaultAddress: addressSelection },
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.customerUpdateDefaultAddress, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.customerUpdateDefaultAddress?.customer?.id ?? '')
-    printJson(result.customerUpdateDefaultAddress, ctx.format !== 'raw')
+    const customer = result.customerUpdateDefaultAddress?.customer
+    const address = customer?.defaultAddress
+
+    if (!address) {
+      if (ctx.quiet) return
+      printJson({ customerId: customer?.id ?? customerId, address: null }, ctx.format !== 'raw')
+      return
+    }
+
+    if (ctx.quiet) {
+      printIds([address.id])
+      return
+    }
+
+    if (ctx.view === 'ids') {
+      printNode({ node: { id: address.id }, format: ctx.format, quiet: false })
+      return
+    }
+
+    const out = { ...address, customerId: customer?.id ?? customerId, isDefault: true }
+    printNode({ node: out, format: ctx.format, quiet: false })
     return
   }
 
@@ -314,14 +384,39 @@ export const runCustomers = async ({
     const result = await runMutation(ctx, {
       customerEmailMarketingConsentUpdate: {
         __args: { input: { customerId, emailMarketingConsent } },
-        customer: customerSummarySelection,
+        customer: {
+          id: true,
+          defaultEmailAddress: {
+            emailAddress: true,
+            marketingState: true,
+            marketingOptInLevel: true,
+            marketingUpdatedAt: true,
+            sourceLocation: { id: true, name: true },
+          },
+        },
         userErrors: { field: true, message: true, code: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.customerEmailMarketingConsentUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.customerEmailMarketingConsentUpdate?.customer?.id ?? '')
-    printJson(result.customerEmailMarketingConsentUpdate, ctx.format !== 'raw')
+    const customer = result.customerEmailMarketingConsentUpdate?.customer
+    const email = customer?.defaultEmailAddress
+    const out = {
+      customerId: customer?.id ?? customerId,
+      emailAddress: email?.emailAddress,
+      marketingState: email?.marketingState,
+      marketingOptInLevel: email?.marketingOptInLevel,
+      marketingUpdatedAt: email?.marketingUpdatedAt,
+      sourceLocationId: email?.sourceLocation?.id,
+      sourceLocationName: email?.sourceLocation?.name,
+    }
+
+    if (ctx.quiet || ctx.view === 'ids') {
+      printIds([out.customerId])
+      return
+    }
+
+    printNode({ node: out, format: ctx.format, quiet: false })
     return
   }
 
@@ -333,14 +428,41 @@ export const runCustomers = async ({
     const result = await runMutation(ctx, {
       customerSmsMarketingConsentUpdate: {
         __args: { input: { customerId, smsMarketingConsent } },
-        customer: customerSummarySelection,
+        customer: {
+          id: true,
+          defaultPhoneNumber: {
+            phoneNumber: true,
+            marketingState: true,
+            marketingOptInLevel: true,
+            marketingUpdatedAt: true,
+            marketingCollectedFrom: true,
+            sourceLocation: { id: true, name: true },
+          },
+        },
         userErrors: { field: true, message: true, code: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.customerSmsMarketingConsentUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.customerSmsMarketingConsentUpdate?.customer?.id ?? '')
-    printJson(result.customerSmsMarketingConsentUpdate, ctx.format !== 'raw')
+    const customer = result.customerSmsMarketingConsentUpdate?.customer
+    const sms = customer?.defaultPhoneNumber
+    const out = {
+      customerId: customer?.id ?? customerId,
+      phoneNumber: sms?.phoneNumber,
+      marketingState: sms?.marketingState,
+      marketingOptInLevel: sms?.marketingOptInLevel,
+      marketingUpdatedAt: sms?.marketingUpdatedAt,
+      marketingCollectedFrom: sms?.marketingCollectedFrom,
+      sourceLocationId: sms?.sourceLocation?.id,
+      sourceLocationName: sms?.sourceLocation?.name,
+    }
+
+    if (ctx.quiet || ctx.view === 'ids') {
+      printIds([out.customerId])
+      return
+    }
+
+    printNode({ node: out, format: ctx.format, quiet: false })
     return
   }
 
@@ -356,10 +478,21 @@ export const runCustomers = async ({
           ? 'customerRemoveTaxExemptions'
           : 'customerReplaceTaxExemptions'
 
+    const customerSelection = resolveSelection({
+      resource: 'customers',
+      view: ctx.view,
+      baseSelection: getCustomerSelectionForTaxExemptions(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: ctx.view === 'all' ? 50 : 10,
+    })
+
     const request: any = {
       [op]: {
         __args: { customerId, taxExemptions: taxExemptions as any },
-        customer: customerSummarySelection,
+        customer: customerSelection,
         userErrors: { field: true, message: true },
       },
     }
@@ -368,8 +501,7 @@ export const runCustomers = async ({
     if (result === undefined) return
     const payload = result[op]
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(payload?.customer?.id ?? '')
-    printJson(payload, ctx.format !== 'raw')
+    printNode({ node: payload?.customer, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -412,8 +544,18 @@ export const runCustomers = async ({
     if (result === undefined) return
     const payload = result[op]
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(payload?.customerId ?? '')
-    printJson(payload, ctx.format !== 'raw')
+    const now = new Date().toISOString()
+    const out =
+      verb === 'request-data-erasure'
+        ? { customerId: payload?.customerId ?? customerId, status: 'REQUESTED', requestedAt: now }
+        : { customerId: payload?.customerId ?? customerId, status: 'CANCELLED', cancelledAt: now }
+
+    if (ctx.quiet || ctx.view === 'ids') {
+      printIds([out.customerId])
+      return
+    }
+
+    printNode({ node: out, format: ctx.format, quiet: false })
     return
   }
 
@@ -640,13 +782,21 @@ export const runCustomers = async ({
           ...(overrideFields ? { overrideFields } : {}),
         },
         job: { id: true, done: true },
+        resultingCustomerId: true,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.customerMerge, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.customerMerge?.job?.id ?? '')
-    printJson(result.customerMerge, ctx.format !== 'raw')
+    const job = result.customerMerge?.job
+    const out = { job, resultingCustomerId: result.customerMerge?.resultingCustomerId }
+
+    if (ctx.quiet) {
+      printIds([job?.id])
+      return
+    }
+
+    printNode({ node: out, format: ctx.format, quiet: false })
     return
   }
 
@@ -668,7 +818,7 @@ export const runCustomers = async ({
           customerId,
           ...(email ? { email } : {}),
         },
-        customer: { id: true },
+        customer: { id: true, defaultEmailAddress: { emailAddress: true } },
         userErrors: { field: true, message: true, code: true },
       },
     })
@@ -677,8 +827,19 @@ export const runCustomers = async ({
       payload: result.customerSendAccountInviteEmail,
       failOnUserErrors: ctx.failOnUserErrors,
     })
-    if (ctx.quiet) return console.log(result.customerSendAccountInviteEmail?.customer?.id ?? '')
-    printJson(result.customerSendAccountInviteEmail, ctx.format !== 'raw')
+    const customer = result.customerSendAccountInviteEmail?.customer
+    const out = {
+      customerId: customer?.id ?? customerId,
+      emailAddress: customer?.defaultEmailAddress?.emailAddress,
+      requestedAt: new Date().toISOString(),
+    }
+
+    if (ctx.quiet || ctx.view === 'ids') {
+      printIds([out.customerId])
+      return
+    }
+
+    printNode({ node: out, format: ctx.format, quiet: false })
     return
   }
 

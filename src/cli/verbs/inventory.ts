@@ -183,7 +183,13 @@ export const runInventory = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.inventoryDeactivate, failOnUserErrors: ctx.failOnUserErrors })
-    printJson(result.inventoryDeactivate, ctx.format !== 'raw')
+    if (ctx.quiet || ctx.view === 'ids') {
+      process.stdout.write(`${inventoryLevelId}\n`)
+      return
+    }
+
+    const out = { inventoryLevelId, deactivated: true }
+    printNode({ node: out, format: ctx.format, quiet: false })
     return
   }
 
