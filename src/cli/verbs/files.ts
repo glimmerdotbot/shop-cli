@@ -2,6 +2,7 @@ import { CliError } from '../errors'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { maybeFailOnUserErrors } from '../userErrors'
 import { buildLocalFilesForStagedUpload, stagedUploadLocalFiles } from '../workflows/files/stagedUploads'
+import { writeStdinToTempFile } from '../workflows/files/stdinFile'
 import { downloadUrlsToTempDir } from '../workflows/files/urlDownloads'
 import { waitForFilesReadyOrFailed } from '../workflows/files/waitForReady'
 import { printConnection, printIds, printJson, printNode } from '../output'
@@ -68,8 +69,9 @@ export const runFiles = async ({
         '',
         'Upload flags:',
         '  --file <path>                 (repeatable)',
+        '  --file -                      (read from stdin; requires --filename)',
         '  --url <url>                   (repeatable)',
-        '  --filename <name>             (only with exactly 1 --url)',
+        '  --filename <name>             (only with exactly 1 --url, or with --file -)',
         '  --mime-type <mime>            (override MIME detection)',
         '  --media-type FILE|IMAGE|VIDEO|MODEL_3D',
         '  (aliases: --resource, --content-type)',
@@ -245,8 +247,13 @@ export const runFiles = async ({
   const urls = (args.url as string[] | undefined) ?? []
   const filenameOverride = args.filename as string | undefined
 
-  if (filenameOverride && urls.length === 0) {
-    throw new CliError('--filename is only valid with --url', 2)
+  const usesStdin = filePaths.includes('-')
+  if (usesStdin && filePaths.length !== 1) {
+    throw new CliError('When using --file -, provide exactly one --file', 2)
+  }
+
+  if (filenameOverride && urls.length === 0 && !usesStdin) {
+    throw new CliError('--filename is only valid with --url or --file -', 2)
   }
 
   if (filePaths.length > 0 && urls.length > 0) {
@@ -285,12 +292,19 @@ export const runFiles = async ({
   }) ?? 10 * 60 * 1000
 
   let cleanupDownloads: (() => Promise<void>) | undefined
+  let cleanupStdin: (() => Promise<void>) | undefined
   let effectiveFilePaths = filePaths
   try {
     if (urls.length > 0) {
       const downloaded = await downloadUrlsToTempDir({ urls, filenameOverride })
       cleanupDownloads = downloaded.cleanup
       effectiveFilePaths = downloaded.files.map((f) => f.filePath)
+    }
+
+    if (usesStdin) {
+      const stdinFile = await writeStdinToTempFile({ filename: filenameOverride ?? '' })
+      cleanupStdin = stdinFile.cleanup
+      effectiveFilePaths = [stdinFile.filePath]
     }
 
     const localFiles = await buildLocalFilesForStagedUpload({
@@ -353,6 +367,7 @@ export const runFiles = async ({
       throw new CliError(`One or more files failed processing: ${final.failedIds.join(', ')}`, 2)
     }
   } finally {
+    if (cleanupStdin) await cleanupStdin()
     if (cleanupDownloads) await cleanupDownloads()
   }
 }

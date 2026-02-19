@@ -12,6 +12,7 @@ import {
   type StagedUploadResource,
 } from '../workflows/files/stagedUploads'
 import { waitForFilesReadyOrFailed } from '../workflows/files/waitForReady'
+import { writeStdinToTempFile } from '../workflows/files/stdinFile'
 import { metafieldsUpsert } from '../workflows/products/metafieldsUpsert'
 import {
   parsePublishDate,
@@ -1326,6 +1327,7 @@ export const runProducts = async ({
       argv,
       extraOptions: {
         file: { type: 'string', multiple: true },
+        filename: { type: 'string' },
         alt: { type: 'string' },
         'content-type': { type: 'string' },
         'mime-type': { type: 'string' },
@@ -1341,116 +1343,134 @@ export const runProducts = async ({
     const filePaths = (args.file as string[] | undefined) ?? []
     if (filePaths.length === 0) throw new CliError('Missing --file (repeatable)', 2)
 
-    const mediaContentTypeRaw = (args as any)['media-content-type'] as string | undefined
-    const mediaTypeRaw = (args as any)['media-type'] as string | undefined
-    if (mediaContentTypeRaw && mediaTypeRaw) {
-      const a = mediaContentTypeRaw.trim().toUpperCase()
-      const b = mediaTypeRaw.trim().toUpperCase()
-      if (a && b && a !== b) {
-        throw new CliError('Do not pass both --media-content-type and --media-type with different values', 2)
+    const usesStdin = filePaths.includes('-')
+    if (usesStdin && filePaths.length !== 1) {
+      throw new CliError('When using --file -, provide exactly one --file', 2)
+    }
+
+    let cleanupStdin: (() => Promise<void>) | undefined
+    try {
+      let effectiveFilePaths = filePaths
+      if (usesStdin) {
+        const stdinFile = await writeStdinToTempFile({ filename: (args as any).filename ?? '' })
+        cleanupStdin = stdinFile.cleanup
+        effectiveFilePaths = [stdinFile.filePath]
       }
-    }
 
-    const forcedMediaType = mediaContentTypeRaw ?? mediaTypeRaw
-    const forced = forcedMediaType ? normalizeMediaContentType(forcedMediaType) : undefined
-    const resourceOverride = forced ? mediaTypeToStagedResource(forced) : undefined
-
-    const mimeTypeRaw = (args as any)['mime-type'] as string | undefined
-    const contentTypeRaw = (args as any)['content-type'] as string | undefined
-    if (mimeTypeRaw && contentTypeRaw) {
-      const a = mimeTypeRaw.trim()
-      const b = contentTypeRaw.trim()
-      if (a && b && a !== b) {
-        throw new CliError('Do not pass both --mime-type and --content-type with different values', 2)
+      const mediaContentTypeRaw = (args as any)['media-content-type'] as string | undefined
+      const mediaTypeRaw = (args as any)['media-type'] as string | undefined
+      if (mediaContentTypeRaw && mediaTypeRaw) {
+        const a = mediaContentTypeRaw.trim().toUpperCase()
+        const b = mediaTypeRaw.trim().toUpperCase()
+        if (a && b && a !== b) {
+          throw new CliError('Do not pass both --media-content-type and --media-type with different values', 2)
+        }
       }
-    }
-    const mimeType = mimeTypeRaw ?? contentTypeRaw
+      const forcedMediaType = mediaContentTypeRaw ?? mediaTypeRaw
+      const forced = forcedMediaType ? normalizeMediaContentType(forcedMediaType) : undefined
+      const resourceOverride = forced ? mediaTypeToStagedResource(forced) : undefined
 
-    const wait = (args as any).wait === true
-    const pollIntervalMs =
-      parsePositiveIntFlag({ value: (args as any)['poll-interval-ms'], flag: '--poll-interval-ms' }) ?? 1000
-    const timeoutMs =
-      parsePositiveIntFlag({ value: (args as any)['timeout-ms'], flag: '--timeout-ms' }) ?? 10 * 60 * 1000
-    const shouldWait = wait && !ctx.dryRun
-    const beforeIds = shouldWait ? await getTopProductMediaIds({ ctx, productId: id }) : []
-
-    const localFiles = await buildLocalFilesForStagedUpload({
-      filePaths,
-      mimeType: mimeType as any,
-      resource: resourceOverride,
-    })
-
-    const targets = await stagedUploadLocalFiles(ctx, localFiles)
-    if (targets === undefined) return
-
-    const alt = args.alt as string | undefined
-    const media = targets.map((t, i) => {
-      const local = localFiles[i]!
-      if (!t.resourceUrl) throw new CliError(`Missing staged target resourceUrl for ${local.filename}`, 2)
-      return {
-        originalSource: t.resourceUrl,
-        mediaContentType: forced ?? stagedResourceToMediaType(local.resource),
-        ...(alt ? { alt } : {}),
+      const mimeTypeRaw = (args as any)['mime-type'] as string | undefined
+      const contentTypeRaw = (args as any)['content-type'] as string | undefined
+      if (mimeTypeRaw && contentTypeRaw) {
+        const a = mimeTypeRaw.trim()
+        const b = contentTypeRaw.trim()
+        if (a && b && a !== b) {
+          throw new CliError('Do not pass both --mime-type and --content-type with different values', 2)
+        }
       }
-    })
+      const mimeType = mimeTypeRaw ?? contentTypeRaw
 
-    const viewForSelection = ctx.view === 'all' ? 'full' : ctx.view
-    const nodeSelection = resolveSelection({
-      typeName: 'Media',
-      view: viewForSelection,
-      baseSelection: getProductMediaSelection(viewForSelection) as any,
-      select: args.select,
-      selection: (args as any).selection,
-      include: args.include,
-      ensureId: ctx.quiet,
-      defaultConnectionFirst: 10,
-    })
+      const wait = (args as any).wait === true
+      const pollIntervalMs =
+        parsePositiveIntFlag({ value: (args as any)['poll-interval-ms'], flag: '--poll-interval-ms' }) ?? 1000
+      const timeoutMs =
+        parsePositiveIntFlag({ value: (args as any)['timeout-ms'], flag: '--timeout-ms' }) ?? 10 * 60 * 1000
+      const shouldWait = wait && !ctx.dryRun
+      const beforeIds = shouldWait ? await getTopProductMediaIds({ ctx, productId: id }) : []
 
-    const result = await runMutation(ctx, {
-      productUpdate: {
-        __args: { product: { id }, media },
-        product: {
-          id: true,
-          media: {
-            __args: { last: media.length, sortKey: 'POSITION' as any },
-            nodes: nodeSelection,
-          },
-        },
-        userErrors: { field: true, message: true },
-      },
-    })
-    if (result === undefined) return
-    maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (!shouldWait) {
-      const connection = result.productUpdate?.product?.media ?? { nodes: [], pageInfo: undefined }
-      printConnection({ connection, format: ctx.format, quiet: ctx.quiet })
-      return
-    }
-
-    const afterIds = await getTopProductMediaIds({ ctx, productId: id })
-    const before = new Set(beforeIds)
-    const createdIds = afterIds.filter((mid) => !before.has(mid)).slice(0, filePaths.length)
-    if (createdIds.length !== filePaths.length) {
-      throw new CliError(
-        `Unable to determine created media IDs for waiting (expected ${filePaths.length}, got ${createdIds.length}).`,
-        2,
-      )
-    }
-
-    const final = await waitForFilesReadyOrFailed({ ctx, ids: createdIds, pollIntervalMs, timeoutMs })
-    if (ctx.quiet) {
-      for (const mid of createdIds) console.log(mid)
-    } else {
-      printConnection({
-        connection: { nodes: final.nodes, pageInfo: undefined },
-        format: ctx.format,
-        quiet: false,
+      const localFiles = await buildLocalFilesForStagedUpload({
+        filePaths: effectiveFilePaths,
+        mimeType: mimeType as any,
+        resource: resourceOverride,
       })
+
+      const targets = await stagedUploadLocalFiles(ctx, localFiles)
+      if (targets === undefined) return
+
+      const alt = args.alt as string | undefined
+      const media = targets.map((t, i) => {
+        const local = localFiles[i]!
+        if (!t.resourceUrl) throw new CliError(`Missing staged target resourceUrl for ${local.filename}`, 2)
+        return {
+          originalSource: t.resourceUrl,
+          mediaContentType: forced ?? stagedResourceToMediaType(local.resource),
+          ...(alt ? { alt } : {}),
+        }
+      })
+
+      const viewForSelection = ctx.view === 'all' ? 'full' : ctx.view
+      const nodeSelection = resolveSelection({
+        typeName: 'Media',
+        view: viewForSelection,
+        baseSelection: getProductMediaSelection(viewForSelection) as any,
+        select: args.select,
+        selection: (args as any).selection,
+        include: args.include,
+        ensureId: ctx.quiet,
+        defaultConnectionFirst: 10,
+      })
+
+      const result = await runMutation(ctx, {
+        productUpdate: {
+          __args: { product: { id }, media },
+          product: {
+            id: true,
+            media: {
+              __args: { last: media.length, sortKey: 'POSITION' as any },
+              nodes: nodeSelection,
+            },
+          },
+          userErrors: { field: true, message: true },
+        },
+      })
+      if (result === undefined) return
+      maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
+
+      const connection = result.productUpdate?.product?.media ?? { nodes: [], pageInfo: undefined }
+      if (!shouldWait) {
+        printConnection({ connection, format: ctx.format, quiet: ctx.quiet })
+        return
+      }
+
+      const afterIds = await getTopProductMediaIds({ ctx, productId: id })
+      const before = new Set(beforeIds)
+      const expectedCount = localFiles.length
+      const createdIds = afterIds.filter((mid) => !before.has(mid)).slice(0, expectedCount)
+      if (createdIds.length !== expectedCount) {
+        throw new CliError(
+          `Unable to determine created media IDs for waiting (expected ${expectedCount}, got ${createdIds.length}).`,
+          2,
+        )
+      }
+
+      const final = await waitForFilesReadyOrFailed({ ctx, ids: createdIds, pollIntervalMs, timeoutMs })
+      if (ctx.quiet) {
+        for (const mid of createdIds) console.log(mid)
+      } else {
+        printConnection({
+          connection: { nodes: final.nodes, pageInfo: undefined },
+          format: ctx.format,
+          quiet: false,
+        })
+      }
+      if (final.failedIds.length > 0) {
+        throw new CliError(`One or more media files failed processing: ${final.failedIds.join(', ')}`, 2)
+      }
+      return
+    } finally {
+      if (cleanupStdin) await cleanupStdin()
     }
-    if (final.failedIds.length > 0) {
-      throw new CliError(`One or more media files failed processing: ${final.failedIds.join(', ')}`, 2)
-    }
-    return
   }
 
   if (verb === 'media list') {

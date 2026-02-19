@@ -83,7 +83,10 @@ const flagAt = flag('--at <iso>', 'Publish at a specific ISO timestamp')
 const flagNow = flag('--now', 'Publish immediately')
 const flagUrl = flag('--url <url>', 'URL (repeatable)')
 const flagFile = flag('--file <path>', 'Local file path (repeatable)')
-const flagFilesUploadFilename = flag('--filename <name>', 'Override filename (only with exactly 1 --url)')
+const flagFilesUploadFilename = flag(
+  '--filename <name>',
+  'Override filename (only with exactly 1 --url, or with --file -)',
+)
 const flagAlt = flag('--alt <string>', 'Alt text')
 const flagFilesUploadMimeType = flag('--mime-type <mime>', 'Override MIME detection')
 const flagFilesUploadMediaType = flag('--media-type <type>', 'FILE|IMAGE|VIDEO|MODEL_3D')
@@ -725,6 +728,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId, flagFile],
         flags: [
           flagAlt,
+          flagFilesUploadFilename,
           flagFilesUploadMimeType,
           flagMediaType,
           flagFilesUploadWait,
@@ -733,6 +737,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         ],
         notes: [
           'To attach by URL, use `shop products media add --url ...`.',
+          'Use --file - to read from stdin; requires --filename.',
           'Aliases: --content-type is accepted as --mime-type; --media-content-type is accepted as --media-type.',
         ],
       },
@@ -2171,12 +2176,14 @@ const baseCommandRegistry: ResourceSpec[] = [
         ],
         notes: [
           'Provide one or more --file or --url (but not both).',
+          'Use --file - to read from stdin; requires --filename.',
           'Aliases: --resource and --content-type are accepted as --media-type.',
         ],
         examples: [
           'shop files upload --file ./cat.png',
           'shop files upload --url https://example.com/cat.png --wait',
           'shop files upload --url https://example.com/cat.png --filename kitten.png --mime-type image/png',
+          'cat ./cat.png | shop files upload --file - --filename cat.png --mime-type image/png',
         ],
       },
       {
