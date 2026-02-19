@@ -3,6 +3,7 @@ import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '.
 import { maybeFailOnUserErrors } from '../userErrors'
 import { buildLocalFilesForStagedUpload, stagedUploadLocalFiles } from '../workflows/files/stagedUploads'
 import { downloadUrlsToTempDir } from '../workflows/files/urlDownloads'
+import { waitForFilesReadyOrFailed } from '../workflows/files/waitForReady'
 import { printConnection, printIds, printJson, printNode } from '../output'
 import { resolveCliCommand } from '../command'
 
@@ -334,9 +335,7 @@ export const runFiles = async ({
 
     if (!wait) return
 
-    // Wait/polling is implemented in a separate workflow; imported lazily to keep this file small.
-    const mod = await import('../workflows/files/waitForReady')
-    const final = await mod.waitForFilesReadyOrFailed({
+    const final = await waitForFilesReadyOrFailed({
       ctx,
       ids: createdIds,
       pollIntervalMs,
