@@ -64,6 +64,13 @@ describe('help command rendering', () => {
     expect(logged).toContain('  shopcli types <TypeName>')
   })
 
+  it('adds a metafield type hint for metafield commands', () => {
+    process.env.SHOP_CLI_COMMAND = 'shopcli'
+    const help = renderVerbHelp('products', 'metafields upsert', {}, undefined)
+    expect(help).toContain('Use this command to list valid types:')
+    expect(help).toContain('  shopcli metafield-definition-tools types')
+  })
+
   it('re-writes next-page hint command when global command is set', () => {
     setGlobalOutputFormat('jsonl')
     setGlobalCommand('shopcli')

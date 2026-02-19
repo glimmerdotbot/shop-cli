@@ -216,6 +216,10 @@ const formatTypeDetailsFooter = (typeNames: string[], command: string): string[]
 const formatWithCommand = (text: string, command: string) =>
   formatCommandRef(text, command)
 
+const METAFIELD_TYPES_URL = 'shopify.dev/apps/metafields/types'
+const isMetafieldTypeField = (field: InputFieldHelp) =>
+  field.name === 'type' && typeof field.description === 'string' && field.description.includes(METAFIELD_TYPES_URL)
+
 export const renderTopLevelHelp = (command = resolveCliCommand()) => {
   const resources = [...commandRegistry]
     .filter((r) => r.resource !== 'graphql')
@@ -358,6 +362,15 @@ export const renderVerbHelp = (
       )
     } else {
       lines.push('')
+    }
+
+    if (ordered.some(isMetafieldTypeField)) {
+      lines.push(
+        'Metafield types:',
+        '  Use this command to list valid types:',
+        `  ${command} metafield-definition-tools types`,
+        '',
+      )
     }
 
     // Collect all referenced types (including nested, 2 levels deep)
