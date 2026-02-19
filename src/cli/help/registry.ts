@@ -83,7 +83,14 @@ const flagAt = flag('--at <iso>', 'Publish at a specific ISO timestamp')
 const flagNow = flag('--now', 'Publish immediately')
 const flagUrl = flag('--url <url>', 'URL (repeatable)')
 const flagFile = flag('--file <path>', 'Local file path (repeatable)')
+const flagFilesUploadFilename = flag('--filename <name>', 'Override filename (only with exactly 1 --url)')
 const flagAlt = flag('--alt <string>', 'Alt text')
+const flagFilesUploadMimeType = flag('--mime-type <mime>', 'Override MIME detection')
+const flagStagedUploadResource = flag('--resource <type>', 'Staged upload resource override: FILE|IMAGE|VIDEO|MODEL_3D')
+const flagFileCreateContentType = flag('--content-type <type>', 'FileCreate contentType: FILE|IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO')
+const flagFilesUploadWait = flag('--wait', 'Poll until fileStatus is READY or FAILED')
+const flagPollIntervalMs = flag('--poll-interval-ms <n>', 'Poll interval in milliseconds (default: 1000)')
+const flagTimeoutMs = flag('--timeout-ms <n>', 'Polling timeout in milliseconds (default: 600000)')
 const flagContentType = flag('--content-type <mime>', 'Override detected content type')
 const flagMediaType = flag('--media-type <type>', 'IMAGE|VIDEO|MODEL_3D|EXTERNAL_VIDEO')
 const flagAllowPartialUpdates = flag('--allow-partial-updates', 'Allow partial updates')
@@ -2154,10 +2161,27 @@ const baseCommandRegistry: ResourceSpec[] = [
       },
       {
         verb: 'upload',
-        description: 'Upload local files to Shopify.',
+        description: 'Upload local files or URLs to Shopify.',
         operation: { type: 'mutation', name: 'fileCreate' },
-        requiredFlags: [flagFile],
-        flags: [flagAlt, flagContentType],
+        requiredFlags: [],
+        flags: [
+          flagFile,
+          flagUrl,
+          flagFilesUploadFilename,
+          flagAlt,
+          flagFilesUploadMimeType,
+          flagStagedUploadResource,
+          flagFileCreateContentType,
+          flagFilesUploadWait,
+          flagPollIntervalMs,
+          flagTimeoutMs,
+        ],
+        notes: ['Provide one or more --file or --url (but not both).'],
+        examples: [
+          'shop files upload --file ./cat.png',
+          'shop files upload --url https://example.com/cat.png --wait',
+          'shop files upload --url https://example.com/cat.png --filename kitten.png --mime-type image/png',
+        ],
       },
       {
         verb: 'update',
