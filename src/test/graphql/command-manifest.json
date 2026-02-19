@@ -768,6 +768,14 @@
     },
     {
       "resource": "collections",
+      "verb": "list-products",
+      "argv": [
+        "--id",
+        "1"
+      ]
+    },
+    {
+      "resource": "collections",
       "verb": "publish",
       "argv": [
         "--id",
