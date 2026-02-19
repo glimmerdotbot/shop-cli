@@ -5188,31 +5188,11 @@
     },
     {
       "resource": "products",
-      "verb": "create-media",
-      "argv": [
-        "--product-id",
-        "1",
-        "--media",
-        "[]"
-      ]
-    },
-    {
-      "resource": "products",
       "verb": "delete",
       "argv": [
         "--id",
         "1",
         "--yes"
-      ]
-    },
-    {
-      "resource": "products",
-      "verb": "delete-media",
-      "argv": [
-        "--product-id",
-        "1",
-        "--media-ids",
-        "gid://shopify/MediaImage/1,gid://shopify/MediaImage/2"
       ]
     },
     {
@@ -5417,16 +5397,6 @@
     },
     {
       "resource": "products",
-      "verb": "reorder-media",
-      "argv": [
-        "--id",
-        "1",
-        "--moves",
-        "[{\"id\":\"gid://shopify/MediaImage/1\",\"newPosition\":0}]"
-      ]
-    },
-    {
-      "resource": "products",
       "verb": "set",
       "argv": [
         "--id",
@@ -5496,16 +5466,6 @@
         "1",
         "--input",
         "{}"
-      ]
-    },
-    {
-      "resource": "products",
-      "verb": "update-media",
-      "argv": [
-        "--product-id",
-        "1",
-        "--media",
-        "[]"
       ]
     },
     {

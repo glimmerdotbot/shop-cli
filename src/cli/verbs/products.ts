@@ -143,7 +143,6 @@ export const runProducts = async ({
         '  bundle-create|bundle-update',
         '  metafields upsert',
         '  media add|media upload|media list|media remove|media reorder|media update',
-        '  create-media|update-media|delete-media|reorder-media',
         '',
         'Common output flags:',
         '  --view summary|ids|full|raw',
@@ -153,8 +152,6 @@ export const runProducts = async ({
     )
     return
   }
-
-  if (verb === 'reorder-media') verb = 'media reorder'
 
   if (verb === 'by-handle') {
     const args = parseStandardArgs({ argv, extraOptions: { handle: { type: 'string' } } })
@@ -477,62 +474,6 @@ export const runProducts = async ({
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
     if (ctx.quiet) return console.log(payload?.product?.id ?? '')
     printJson(payload, ctx.format !== 'raw')
-    return
-  }
-
-  if (verb === 'create-media' || verb === 'update-media') {
-    const args = parseStandardArgs({
-      argv,
-      extraOptions: {
-        'product-id': { type: 'string' },
-        media: { type: 'string' },
-      },
-    })
-    const productId = requireId((args as any)['product-id'], 'Product')
-    const media = parseJsonArg((args as any).media, '--media')
-    if (!Array.isArray(media)) throw new CliError('--media must be a JSON array', 2)
-
-    const mutation = verb === 'create-media' ? 'productCreateMedia' : 'productUpdateMedia'
-    const result = await runMutation(ctx, {
-      [mutation]: {
-        __args: { productId, media },
-        media: productMediaSelection,
-        mediaUserErrors: { code: true, field: true, message: true },
-        product: { id: true, title: true },
-      },
-    } as any)
-    if (result === undefined) return
-    const payload = (result as any)[mutation]
-    maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(payload?.product?.id ?? '')
-    printJson(payload, ctx.format !== 'raw')
-    return
-  }
-
-  if (verb === 'delete-media') {
-    const args = parseStandardArgs({
-      argv,
-      extraOptions: {
-        'product-id': { type: 'string' },
-        'media-ids': { type: 'string', multiple: true },
-      },
-    })
-    const productId = requireId((args as any)['product-id'], 'Product')
-    const mediaIds = parseStringList((args as any)['media-ids'], '--media-ids')
-
-    const result = await runMutation(ctx, {
-      productDeleteMedia: {
-        __args: { productId, mediaIds },
-        deletedMediaIds: true,
-        deletedProductImageIds: true,
-        mediaUserErrors: { code: true, field: true, message: true },
-        product: { id: true, title: true },
-      },
-    })
-    if (result === undefined) return
-    maybeFailOnUserErrors({ payload: result.productDeleteMedia, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(result.productDeleteMedia?.product?.id ?? '')
-    printJson(result.productDeleteMedia, ctx.format !== 'raw')
     return
   }
 
