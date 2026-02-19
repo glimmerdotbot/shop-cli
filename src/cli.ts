@@ -14,7 +14,7 @@ import { runCommand } from './cli/router'
 import { createShopifyAdminClient } from './adminClient'
 import { resolveAdminApiVersion } from './defaults'
 import { resolveCliCommand } from './cli/command'
-import { buildMissingIdHint, buildUnexpectedPositionalHint, parseVerbAndRest } from './cli/parse-command'
+import { buildUnexpectedPositionalHint, parseVerbAndRest, rewritePositionalIdAsFlag } from './cli/parse-command'
 import { setGlobalCommand } from './cli/output'
 
 const helpFlags = new Set(['--help', '-h', '--help-full', '--help-all'])
@@ -65,6 +65,7 @@ const main = async () => {
 
   const afterResource = argv.slice(1)
   const { verb, rest } = parseVerbAndRest({ resource, afterResource })
+  const rewrittenRest = rewritePositionalIdAsFlag({ resource, verb, rest })
 
   // Special handling for `types` command (no verb required for --help)
   const isTypesCommand = resource === 'types'
@@ -88,12 +89,12 @@ const main = async () => {
     }
   }
 
-  if (hasHelpFlag(rest)) {
+  if (hasHelpFlag(rewrittenRest)) {
     // Special case: `shop types --help` should show types help
     if (isTypesCommand) {
       // Fall through to runCommand which will show the types help
     } else {
-      const verbHelp = renderVerbHelp(resource, verb, { showAllFields: wantsFullHelp(rest) }, command)
+      const verbHelp = renderVerbHelp(resource, verb, { showAllFields: wantsFullHelp(rewrittenRest) }, command)
       if (verbHelp) {
         console.log(verbHelp)
         return
@@ -108,17 +109,12 @@ const main = async () => {
     }
   }
 
-  const missingIdHint = buildMissingIdHint({ command, resource, verb, rest })
-  if (missingIdHint) {
-    throw new CliError(missingIdHint, 2)
-  }
-
-  const unexpectedPositionalHint = buildUnexpectedPositionalHint({ command, resource, verb, rest })
+  const unexpectedPositionalHint = buildUnexpectedPositionalHint({ command, resource, verb, rest: rewrittenRest })
   if (unexpectedPositionalHint) {
     throw new CliError(unexpectedPositionalHint, 2)
   }
 
-  const parsed = parseGlobalFlags(rest)
+  const parsed = parseGlobalFlags(rewrittenRest)
 
   const dryRun = parsed.dryRun ?? false
   const isOfflineCommand = verb === 'fields' || isTypesCommand
