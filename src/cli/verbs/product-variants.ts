@@ -1,6 +1,6 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
-import { printConnection, printJson, printNode } from '../output'
+import { printConnection, printIds, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
 import { maybeFailOnUserErrors } from '../userErrors'
@@ -252,6 +252,17 @@ export const runProductVariants = async ({
       extraOptions: { 'product-id': { type: 'string' }, 'allow-partial-updates': { type: 'boolean' } },
     })
     const productId = requireId(args['product-id'], 'Product')
+
+    const nodeSelection = resolveSelection({
+      resource: 'product-variants',
+      view: ctx.view,
+      baseSelection: getProductVariantSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
     const built = buildInput({
       inputArg: args.input as any,
       setArgs: args.set as any,
@@ -265,14 +276,16 @@ export const runProductVariants = async ({
       const result = await runMutation(ctx, {
         productVariantsBulkCreate: {
           __args: { productId, ...(media ? { media } : {}), ...(strategy ? { strategy } : {}), variants },
-          product: { id: true },
-          productVariants: { id: true },
+          productVariants: nodeSelection,
           userErrors: { field: true, message: true },
         },
       })
       if (result === undefined) return
       maybeFailOnUserErrors({ payload: result.productVariantsBulkCreate, failOnUserErrors: ctx.failOnUserErrors })
-      printJson(result.productVariantsBulkCreate, ctx.format !== 'raw')
+      const nodes = ((result.productVariantsBulkCreate?.productVariants ?? []) as any[]).map((v) =>
+        v && typeof v === 'object' ? { ...v, productId } : v,
+      )
+      printConnection({ connection: { nodes, pageInfo: undefined }, format: ctx.format, quiet: ctx.quiet })
       return
     }
 
@@ -288,14 +301,16 @@ export const runProductVariants = async ({
           ...(media ? { media } : {}),
           variants,
         },
-        product: { id: true },
-        productVariants: { id: true },
+        productVariants: nodeSelection,
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productVariantsBulkUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    printJson(result.productVariantsBulkUpdate, ctx.format !== 'raw')
+    const nodes = ((result.productVariantsBulkUpdate?.productVariants ?? []) as any[]).map((v) =>
+      v && typeof v === 'object' ? { ...v, productId } : v,
+    )
+    printConnection({ connection: { nodes, pageInfo: undefined }, format: ctx.format, quiet: ctx.quiet })
     return
   }
 
@@ -313,7 +328,30 @@ export const runProductVariants = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productVariantsBulkDelete, failOnUserErrors: ctx.failOnUserErrors })
-    printJson(result.productVariantsBulkDelete, ctx.format !== 'raw')
+
+    const verify = await runQuery(ctx, {
+      nodes: {
+        __args: { ids: variantsIds },
+        id: true,
+      },
+    })
+    const afterNodes = (verify?.nodes ?? []) as Array<any | null | undefined>
+    const deletedVariantIds: string[] = []
+    for (let i = 0; i < variantsIds.length; i++) {
+      const id = variantsIds[i]!
+      const node = afterNodes[i]
+      if (node === null || node === undefined) deletedVariantIds.push(id)
+    }
+
+    if (ctx.quiet) return printIds(deletedVariantIds)
+
+    printJson(
+      {
+        productId,
+        deletedVariantIds,
+      },
+      ctx.format !== 'raw',
+    )
     return
   }
 
@@ -331,7 +369,25 @@ export const runProductVariants = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productVariantsBulkReorder, failOnUserErrors: ctx.failOnUserErrors })
-    printJson(result.productVariantsBulkReorder, ctx.format !== 'raw')
+
+    const reorderedVariantIds = Array.isArray(positions)
+      ? positions
+          .filter((p) => p && typeof p === 'object')
+          .slice()
+          .sort((a: any, b: any) => Number(a?.position ?? 0) - Number(b?.position ?? 0))
+          .map((p: any) => p?.id)
+          .filter((id): id is string => typeof id === 'string' && id.trim() !== '')
+      : []
+
+    if (ctx.quiet) return printIds(reorderedVariantIds)
+
+    printJson(
+      {
+        productId,
+        reorderedVariantIds,
+      },
+      ctx.format !== 'raw',
+    )
     return
   }
 
@@ -361,15 +417,26 @@ export const runProductVariants = async ({
     const result = await runMutation(ctx, {
       [mutation]: {
         __args: { productId, variantMedia },
-        product: { id: true },
-        productVariants: { id: true },
+        productVariants: resolveSelection({
+          resource: 'product-variants',
+          view: ctx.view,
+          baseSelection: getProductVariantSelection(ctx.view) as any,
+          select: args.select,
+          selection: (args as any).selection,
+          include: args.include,
+          ensureId: ctx.quiet,
+        }),
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     const payload = (result as any)[mutation]
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
-    printJson(payload, ctx.format !== 'raw')
+
+    const nodes = ((payload?.productVariants ?? []) as any[]).map((v) =>
+      v && typeof v === 'object' ? { ...v, productId } : v,
+    )
+    printConnection({ connection: { nodes, pageInfo: undefined }, format: ctx.format, quiet: ctx.quiet })
     return
   }
 

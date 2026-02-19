@@ -1,7 +1,7 @@
 import { CliError } from '../errors'
 import { coerceGid } from '../gid'
 import { buildInput } from '../input'
-import { printConnection, printJson, printNode } from '../output'
+import { printConnection, printIds, printJson, printNode } from '../output'
 import { applyComputedFieldsToNode, computedPublicationsSelection } from '../output/computedFields'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
@@ -852,6 +852,16 @@ export const runProducts = async ({
     })
     if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
 
+    const productSelection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
     const mutation = verb === 'bundle-create' ? 'productBundleCreate' : 'productBundleUpdate'
     const result = await runMutation(ctx, {
       [mutation]: {
@@ -859,8 +869,7 @@ export const runProducts = async ({
         productBundleOperation: {
           id: true,
           status: true,
-          product: { id: true, title: true },
-          userErrors: { field: true, message: true },
+          product: productSelection,
         },
         userErrors: { field: true, message: true },
       },
@@ -868,8 +877,33 @@ export const runProducts = async ({
     if (result === undefined) return
     const payload = (result as any)[mutation]
     maybeFailOnUserErrors({ payload, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(payload?.productBundleOperation?.id ?? '')
-    printJson(payload, ctx.format !== 'raw')
+
+    const operation = payload?.productBundleOperation
+      ? {
+          id: payload.productBundleOperation.id,
+          status: payload.productBundleOperation.status,
+        }
+      : undefined
+
+    const product = payload?.productBundleOperation?.product
+    if (product && typeof product === 'object') {
+      printNode({
+        node: { ...product, ...(operation ? { operation } : {}) },
+        format: ctx.format,
+        quiet: ctx.quiet,
+      })
+      return
+    }
+
+    if (ctx.quiet) return
+    printJson(
+      {
+        product: product ?? null,
+        ...(operation ? { operation } : {}),
+        userErrors: payload?.userErrors ?? [],
+      },
+      ctx.format !== 'raw',
+    )
     return
   }
 
@@ -1729,8 +1763,20 @@ export const runProducts = async ({
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.fileUpdate, failOnUserErrors: ctx.failOnUserErrors })
-    if (ctx.quiet) return console.log(productId)
-    printJson(result.fileUpdate, ctx.format !== 'raw')
+
+    const removedMediaIds = ((result.fileUpdate?.files ?? []) as any[])
+      .map((f) => (typeof f?.id === 'string' ? (f.id as string) : undefined))
+      .filter((id): id is string => typeof id === 'string' && id.trim() !== '')
+
+    if (ctx.quiet) return printIds(removedMediaIds)
+
+    printJson(
+      {
+        productId,
+        removedMediaIds,
+      },
+      ctx.format !== 'raw',
+    )
     return
   }
 
