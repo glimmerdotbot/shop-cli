@@ -32,6 +32,9 @@ const findResource = (resource: string): ResourceSpec | undefined =>
 const findVerb = (resource: ResourceSpec, verb: string): VerbSpec | undefined =>
   resource.verbs.find((entry) => entry.verb === verb)
 
+const findVerbGroup = (resource: ResourceSpec, group: string): VerbSpec[] =>
+  resource.verbs.filter((entry) => entry.verb.startsWith(`${group} `))
+
 const formatEnumValues = (enumName: string) => {
   const values = enumTypeHelp[enumName]
   if (!values) return undefined
@@ -420,6 +423,54 @@ export const renderVerbHelp = (
       lines.push(...footerLines)
       lines.push('')
     }
+  }
+
+  return lines.join('\n').trimEnd()
+}
+
+export const renderVerbGroupHelp = (
+  resourceName: string,
+  groupName: string,
+  command = resolveCliCommand(),
+) => {
+  const resource = findResource(resourceName)
+  if (!resource) return undefined
+
+  const verbSpecs = findVerbGroup(resource, groupName)
+  if (verbSpecs.length === 0) return undefined
+
+  const maxVerbLength = Math.max(...verbSpecs.map((v) => v.verb.length), 4)
+
+  const lines: string[] = []
+  lines.push('Usage:')
+  lines.push(`  ${command} ${resource.resource} ${groupName} <verb> [flags]`)
+  lines.push('')
+  lines.push('Verbs:')
+
+  for (const spec of verbSpecs) {
+    lines.push('')
+
+    const verbLabel = spec.verb.padEnd(maxVerbLength)
+    const desc = spec.description ?? ''
+    lines.push(`  ${verbLabel}  ${desc}`.trimEnd())
+
+    lines.push('    Usage:')
+    lines.push(`      ${command} ${resource.resource} ${spec.verb} [flags]`)
+
+    const requiredFlags = spec.requiredFlags ?? []
+    if (requiredFlags.length > 0) {
+      lines.push('    Required flags:')
+      lines.push(...formatFlags({ flags: requiredFlags, indent: '      ' }))
+    }
+
+    const firstExample = spec.examples?.[0]
+    if (firstExample) {
+      lines.push('    Example:')
+      lines.push(`      ${formatWithCommand(firstExample, command)}`)
+    }
+
+    lines.push('    For optional flags, notes, and more examples:')
+    lines.push(`      ${command} ${resource.resource} ${spec.verb} --help`)
   }
 
   return lines.join('\n').trimEnd()
