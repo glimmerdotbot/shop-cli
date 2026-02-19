@@ -91,7 +91,7 @@ export const runCheckoutBranding = async ({
 
   if (verb === 'get') {
     const args = parseStandardArgs({ argv, extraOptions: { 'profile-id': { type: 'string' } } })
-    const profileId = requireId(args['profile-id'], 'CheckoutProfile')
+    const profileId = requireId(args['profile-id'], 'CheckoutProfile', '--profile-id')
 
     const result = await runQuery(ctx, {
       checkoutBranding: { __args: { checkoutProfileId: profileId }, ...checkoutBrandingSelection },
@@ -103,7 +103,7 @@ export const runCheckoutBranding = async ({
 
   if (verb === 'upsert') {
     const args = parseStandardArgs({ argv, extraOptions: { 'profile-id': { type: 'string' } } })
-    const profileId = requireId(args['profile-id'], 'CheckoutProfile')
+    const profileId = requireId(args['profile-id'], 'CheckoutProfile', '--profile-id')
 
     const built = buildInput({
       inputArg: args.input as any,

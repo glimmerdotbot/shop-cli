@@ -177,7 +177,7 @@ export const runProductVariants = async ({
 
     let identifier = built.used ? (built.input as any) : undefined
     if (!identifier) {
-      const productId = requireId(args['product-id'], 'Product')
+      const productId = requireId(args['product-id'], 'Product', '--product-id')
       const sku = args.sku as string | undefined
       const barcode = args.barcode as string | undefined
       if (!sku && !barcode) throw new CliError('Missing --sku or --barcode', 2)
@@ -251,7 +251,7 @@ export const runProductVariants = async ({
       argv,
       extraOptions: { 'product-id': { type: 'string' }, 'allow-partial-updates': { type: 'boolean' } },
     })
-    const productId = requireId(args['product-id'], 'Product')
+    const productId = requireId(args['product-id'], 'Product', '--product-id')
 
     const nodeSelection = resolveSelection({
       resource: 'product-variants',
@@ -316,7 +316,7 @@ export const runProductVariants = async ({
 
   if (verb === 'bulk-delete') {
     const args = parseStandardArgs({ argv, extraOptions: { 'product-id': { type: 'string' } } })
-    const productId = requireId(args['product-id'], 'Product')
+    const productId = requireId(args['product-id'], 'Product', '--product-id')
     const variantsIds = parseIds(args['variant-ids'] ?? args.ids, 'ProductVariant')
 
     const result = await runMutation(ctx, {
@@ -357,7 +357,7 @@ export const runProductVariants = async ({
 
   if (verb === 'bulk-reorder') {
     const args = parseStandardArgs({ argv, extraOptions: { 'product-id': { type: 'string' }, positions: { type: 'string' } } })
-    const productId = requireId(args['product-id'], 'Product')
+    const productId = requireId(args['product-id'], 'Product', '--product-id')
     const positions = parseJsonArg(args.positions, '--positions')
 
     const result = await runMutation(ctx, {
@@ -402,7 +402,7 @@ export const runProductVariants = async ({
     })
     const variantId = requireId(args.id, 'ProductVariant')
     const productId = args['product-id']
-      ? requireId(args['product-id'], 'Product')
+      ? requireId(args['product-id'], 'Product', '--product-id')
       : await resolveProductIdForVariant({ ctx, variantId })
 
     let variantMedia = undefined as any

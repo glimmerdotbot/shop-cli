@@ -172,7 +172,7 @@ export const runCompanyLocations = async ({
 
   if (verb === 'create') {
     const args = parseStandardArgs({ argv, extraOptions: { 'company-id': { type: 'string' } } })
-    const companyId = requireId(args['company-id'], 'Company')
+    const companyId = requireId(args['company-id'], 'Company', '--company-id')
     const built = buildInput({
       inputArg: args.input as any,
       setArgs: args.set as any,
