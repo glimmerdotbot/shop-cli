@@ -487,9 +487,18 @@ const baseCommandRegistry: ResourceSpec[] = [
   {
     resource: 'products',
     description: 'Manage products.',
+    notes: [
+      'To list products in a collection, use `shop collections list-products --id <collectionId>` or `shop collections list-products --handle <handle>`.',
+    ],
     verbs: [
       createVerb({ operation: 'productCreate', description: 'Create a new product.' }),
-      getVerb({ operation: 'product', description: 'Fetch a product by ID.' }),
+      getVerb({
+        operation: 'product',
+        description: 'Fetch a product by ID.',
+        notes: [
+          'To list products in a collection, use `shop collections list-products --id <collectionId>` or `shop collections list-products --handle <handle>`.',
+        ],
+      }),
       {
         verb: 'by-handle',
         description: 'Fetch a product by handle.',
@@ -508,6 +517,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: 'products',
         description: 'List products.',
         flags: [flagPublished],
+        notes: [
+          'To list products in a collection, use `shop collections list-products --id <collectionId>` or `shop collections list-products --handle <handle>`.',
+        ],
       }),
       countVerb({
         operation: 'productsCount',
@@ -994,6 +1006,21 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagMoves, flagMove],
         notes: ['Pass either --moves or one or more --move entries.'],
+      },
+      {
+        verb: 'list-products',
+        description: 'List products in a collection.',
+        operation: { type: 'query', name: 'products' },
+        flags: [flagId, flagHandle, flagPublished],
+        notes: [
+          'Pass exactly one of --id or --handle.',
+          'Supports the same flags as `shop products list`.',
+        ],
+        output: { view: true, selection: true, pagination: true },
+        examples: [
+          'shop collections list-products --id 123',
+          'shop collections list-products --handle frontpage --published --format table',
+        ],
       },
       {
         verb: 'publish',

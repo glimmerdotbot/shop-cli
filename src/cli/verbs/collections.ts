@@ -17,6 +17,20 @@ const collectionSummarySelection = {
   updatedAt: true,
 } as const
 
+const productSummarySelection = {
+  id: true,
+  title: true,
+  handle: true,
+  status: true,
+  updatedAt: true,
+} as const
+
+const productFullSelection = {
+  ...productSummarySelection,
+  createdAt: true,
+  tags: true,
+} as const
+
 const collectionFullSelection = {
   ...collectionSummarySelection,
   description: true,
@@ -48,6 +62,13 @@ const getCollectionSelectionForGet = (view: CommandContext['view']) => {
   return collectionSummarySelectionForGet
 }
 
+const getProductSelection = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'full') return productFullSelection
+  if (view === 'raw') return {} as const
+  return productSummarySelection
+}
+
 const getListNodeSelection = (view: CommandContext['view']) => getCollectionSelection(view)
 
 export const runCollections = async ({
@@ -68,7 +89,7 @@ export const runCollections = async ({
         'Verbs:',
         '  create|get|by-handle|by-identifier|list|count|update|delete|duplicate',
         '  rules-conditions',
-        '  add-products|remove-products|reorder-products',
+        '  add-products|remove-products|reorder-products|list-products',
         '  publish|unpublish',
         '',
         'Common output flags:',
@@ -311,6 +332,107 @@ export const runCollections = async ({
       format: ctx.format,
       quiet: ctx.quiet,
       nextPageArgs: buildListNextPageArgs('collections', { first, query, sort: sortKey, reverse }),
+    })
+    return
+  }
+
+  if (verb === 'list-products') {
+    const args = parseStandardArgs({
+      argv,
+      extraOptions: {
+        handle: { type: 'string' },
+        published: { type: 'boolean' },
+      },
+    })
+
+    const rawId = args.id as unknown
+    const rawHandle = (args as any).handle as unknown
+    const handle = typeof rawHandle === 'string' && rawHandle.trim() ? rawHandle.trim() : undefined
+
+    if (typeof rawId === 'string' && rawId && handle) {
+      throw new CliError('Pass exactly one of --id or --handle', 2)
+    }
+
+    if (!(typeof rawId === 'string' && rawId) && !handle) {
+      throw new CliError('Missing --id or --handle', 2)
+    }
+
+    const id = typeof rawId === 'string' && rawId ? requireId(rawId, 'Collection') : undefined
+
+    const toNumericId = (gid: string, typeLabel: string) => {
+      const match = /\/(\d+)$/.exec(gid)
+      if (!match) throw new CliError(`Invalid ${typeLabel} ID`, 2)
+      return match[1]!
+    }
+
+    const first = parseFirst(args.first)
+    const after = args.after as any
+    const userQuery =
+      typeof args.query === 'string' && args.query.trim() ? (args.query.trim() as any) : undefined
+    const published = (args as any).published === true
+    const publishedFilter = 'published_status:published'
+    const reverse = args.reverse as any
+    const sortKey = args.sort as any
+
+    const nodeSelection = resolveSelection({
+      resource: 'products',
+      view: ctx.view,
+      baseSelection: getProductSelection(ctx.view) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+    })
+
+    let numericId = typeof id === 'string' && id ? toNumericId(id, 'Collection') : undefined
+    if (!numericId && handle) {
+      const resolveResult = await runQuery(ctx, {
+        collectionByHandle: { __args: { handle }, id: true },
+      })
+      if (resolveResult === undefined) return
+      const resolvedId = (resolveResult as any)?.collectionByHandle?.id
+      if (typeof resolvedId !== 'string' || !resolvedId) throw new CliError('Collection not found', 2)
+      numericId = toNumericId(resolvedId, 'Collection')
+    }
+
+    if (!numericId) throw new CliError('Collection not found', 2)
+
+    const collectionFilter = `collection_id:${numericId}`
+    const parts: string[] = []
+    if (typeof userQuery === 'string' && userQuery) parts.push(userQuery)
+    if (published && !(typeof userQuery === 'string' && userQuery.includes(publishedFilter))) {
+      parts.push(publishedFilter)
+    }
+    if (!(typeof userQuery === 'string' && userQuery.includes(collectionFilter))) {
+      parts.push(collectionFilter)
+    }
+    const query = parts.length > 0 ? (parts.join(' ') as any) : undefined
+
+    const base = id
+      ? `shop collections list-products --id ${id}`
+      : `shop collections list-products --handle ${handle}`
+
+    const result = await runQuery(ctx, {
+      products: {
+        __args: { first, after, query, reverse, sortKey },
+        pageInfo: { hasNextPage: true, endCursor: true },
+        nodes: nodeSelection,
+      },
+    })
+    if (result === undefined) return
+
+    printConnection({
+      connection: result.products,
+      format: ctx.format,
+      quiet: ctx.quiet,
+      nextPageArgs: {
+        base,
+        first,
+        query: typeof userQuery === 'string' ? userQuery : undefined,
+        sort: typeof sortKey === 'string' ? sortKey : undefined,
+        reverse: reverse === true,
+        extraFlags: published ? [{ flag: '--published', value: true }] : undefined,
+      },
     })
     return
   }
