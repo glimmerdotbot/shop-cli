@@ -1,8 +1,6 @@
 import { CliError } from '../../errors'
 import { runQuery, type CommandContext } from '../../router'
 
-type FileTerminalStatus = 'READY' | 'FAILED'
-
 export type WaitForFilesResult = {
   nodes: any[]
   readyIds: string[]
@@ -79,15 +77,22 @@ export const waitForFilesReadyOrFailed = async ({
 }): Promise<WaitForFilesResult> => {
   if (ids.length === 0) return { nodes: [], readyIds: [], failedIds: [] }
 
+  const fileFields = {
+    id: true,
+    fileStatus: true,
+    fileErrors: { code: true, message: true, details: true },
+    preview: { status: true, image: { url: true } },
+  } as const
+
   const nodeSelection = {
     __typename: true,
-    on_File: {
-      id: true,
-      fileStatus: true,
-      fileErrors: { code: true, message: true, details: true },
-      preview: { status: true, image: { url: true } },
-    },
-    on_GenericFile: { url: true },
+    // `nodes` returns `[Node]`. GenQL only allows inline fragments on concrete object types
+    // (not interfaces like `File`), so we select the known File implementations.
+    on_GenericFile: { ...fileFields, url: true },
+    on_MediaImage: fileFields,
+    on_Video: fileFields,
+    on_Model3d: fileFields,
+    on_ExternalVideo: fileFields,
   } as const
 
   return pollFilesReadyOrFailed({
@@ -107,4 +112,3 @@ export const waitForFilesReadyOrFailed = async ({
     },
   })
 }
-
