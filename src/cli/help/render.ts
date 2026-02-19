@@ -264,6 +264,7 @@ export const renderTopLevelHelp = (command = resolveCliCommand()) => {
     '',
     'Examples:',
     `  ${command} products list --first 5 --format table`,
+    `  ${command} products get --id gid://shopify/Product/123 --format markdown`,
     `  ${command} products create --set title="Hat" --set status="ACTIVE"`,
     `  ${command} products add-tags --id 123 --tags "summer,featured"`,
     `  ${command} publications resolve --publication "Online Store"`,
