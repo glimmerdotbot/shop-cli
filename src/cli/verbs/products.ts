@@ -1279,9 +1279,9 @@ export const runProducts = async ({
     const forced = forcedMediaType ? normalizeMediaContentType(forcedMediaType) : undefined
     const resourceOverride = forced ? mediaTypeToStagedResource(forced) : undefined
 
-    const localFiles = buildLocalFilesForStagedUpload({
+    const localFiles = await buildLocalFilesForStagedUpload({
       filePaths,
-      contentType: args['content-type'] as any,
+      mimeType: args['content-type'] as any,
       resource: resourceOverride,
     })
 

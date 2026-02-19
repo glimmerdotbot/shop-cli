@@ -1,5 +1,6 @@
-import { readFileSync, statSync } from 'node:fs'
+import { statSync } from 'node:fs'
 import path from 'node:path'
+import { spawn } from 'node:child_process'
 
 import { lookup } from 'mime-types'
 
@@ -23,10 +24,10 @@ export type StagedUploadTarget = {
   parameters: Array<{ name: string; value: string }>
 }
 
-const guessMimeTypeFromFilename = (filename: string): string => {
+const mimeTypeFromFilename = (filename: string): string | undefined => {
   const mimeType = lookup(filename)
   if (typeof mimeType === 'string') return mimeType
-  return 'application/octet-stream'
+  return undefined
 }
 
 const inferStagedUploadResource = ({
@@ -47,33 +48,67 @@ const inferStagedUploadResource = ({
   return 'FILE'
 }
 
-export const buildLocalFilesForStagedUpload = ({
+const sniffMimeTypeFromFile = async (filePath: string): Promise<string | undefined> => {
+  try {
+    const mod = await import('file-type')
+    const result = await mod.fileTypeFromFile(filePath)
+    return result?.mime
+  } catch {
+    return undefined
+  }
+}
+
+const resolveMimeType = async ({
+  filePath,
+  filename,
+  forcedMimeType,
+}: {
+  filePath: string
+  filename: string
+  forcedMimeType?: string
+}): Promise<string> => {
+  const forced = typeof forcedMimeType === 'string' ? forcedMimeType.trim() : ''
+  if (forced) return forced
+
+  const sniffed = await sniffMimeTypeFromFile(filePath)
+  if (sniffed) return sniffed
+
+  const byExt = mimeTypeFromFilename(filename)
+  if (byExt) return byExt
+
+  throw new CliError(
+    `Unable to determine MIME type for ${filename}. Pass --mime-type <mime>.`,
+    2,
+  )
+}
+
+export const buildLocalFilesForStagedUpload = async ({
   filePaths,
-  contentType,
+  mimeType,
   resource,
 }: {
   filePaths: string[]
-  contentType?: string
+  mimeType?: string
   resource?: StagedUploadResource
-}): LocalFileForStagedUpload[] => {
+}): Promise<LocalFileForStagedUpload[]> => {
   if (filePaths.length === 0) return []
 
-  return filePaths.map((filePath) => {
+  return Promise.all(filePaths.map(async (filePath) => {
     const stats = statSync(filePath)
     if (!stats.isFile()) throw new CliError(`Not a file: ${filePath}`, 2)
 
     const filename = path.basename(filePath)
-    const mimeType = contentType ?? guessMimeTypeFromFilename(filename)
-    const inferredResource = inferStagedUploadResource({ filename, mimeType })
+    const resolvedMimeType = await resolveMimeType({ filePath, filename, forcedMimeType: mimeType })
+    const inferredResource = inferStagedUploadResource({ filename, mimeType: resolvedMimeType })
 
     return {
       filePath,
       filename,
-      mimeType,
+      mimeType: resolvedMimeType,
       resource: resource ?? inferredResource,
       fileSize: stats.size,
     }
-  })
+  }))
 }
 
 export const stagedUploadsCreate = async (
@@ -148,23 +183,53 @@ export const uploadToStagedTarget = async ({
   target: StagedUploadTarget
   localFile: LocalFileForStagedUpload
 }) => {
-  const body = readFileSync(localFile.filePath)
+  const args: string[] = ['--fail-with-body', '--silent', '--show-error', '-X', 'POST']
 
-  const form = new FormData()
-  for (const p of target.parameters) form.set(p.name, p.value)
-  form.set('file', new Blob([body], { type: localFile.mimeType }), localFile.filename)
-
-  const res = await fetch(target.url, { method: 'POST', body: form })
-  if (res.ok) return
-
-  let details = ''
-  try {
-    details = await res.text()
-  } catch {
-    // ignore
+  for (const p of target.parameters) {
+    args.push('--form-string', `${p.name}=${p.value}`)
   }
+
+  // Stream file from disk, forcing MIME type for the file part
+  args.push(
+    '--form',
+    `file=@${localFile.filePath};type=${localFile.mimeType};filename=${localFile.filename}`,
+    target.url,
+  )
+
+  let child: ReturnType<typeof spawn>
+  try {
+    child = spawn('curl', args, { stdio: ['ignore', 'pipe', 'pipe'] })
+  } catch (err: any) {
+    throw err
+  }
+
+  let stdout = ''
+  let stderr = ''
+  child.stdout?.on('data', (chunk) => {
+    stdout += typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8')
+  })
+  child.stderr?.on('data', (chunk) => {
+    stderr += typeof chunk === 'string' ? chunk : Buffer.from(chunk).toString('utf8')
+  })
+
+  const code = await new Promise<number>((resolve, reject) => {
+    child.on('error', (err: any) => {
+      if (err && err.code === 'ENOENT') {
+        reject(new CliError('curl is required for streaming staged uploads (curl not found on PATH)', 2))
+        return
+      }
+      reject(err)
+    })
+    child.on('close', (c) => resolve(c ?? 1))
+  })
+
+  if (code === 0) return
+
+  const trimmedErr = stderr.trim()
+  const trimmedOut = stdout.trim()
+  const details = trimmedErr || trimmedOut
   throw new CliError(
-    `Staged upload failed for ${localFile.filename}: ${res.status} ${res.statusText}${details ? `\n${details}` : ''}`,
+    `Staged upload failed for ${localFile.filename}: curl exited with code ${code}${details ? `\n${details}` : ''}`,
     2,
   )
 }
