@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { renderTopLevelHelp, renderVerbHelp } from '../cli/help/render'
+import { renderTopLevelHelp, renderVerbGroupHelp, renderVerbHelp } from '../cli/help/render'
 import { printConnection, setGlobalCommand, setGlobalOutputFormat } from '../cli/output'
 import { runTypes } from '../cli/verbs/types'
 
@@ -69,6 +69,19 @@ describe('help command rendering', () => {
     const help = renderVerbHelp('products', 'metafields upsert', {}, undefined)
     expect(help).toContain('Use this command to list valid types:')
     expect(help).toContain('  shopcli metafield-definition-tools types')
+  })
+
+  it('renders grouped help for multi-verbs (e.g. products media)', () => {
+    process.env.SHOP_CLI_COMMAND = 'shopcli'
+    const help = renderVerbGroupHelp('products', 'media', undefined)
+    expect(help).toContain('  shopcli products media <verb> [flags]')
+    expect(help).toContain('  media list')
+    expect(help).toContain('  media upload')
+    expect(help).toContain('shopcli products media list --help')
+    expect(help).toContain('--id <gid>')
+    // Should not include unrelated verbs
+    expect(help).not.toContain('options list')
+    expect(help).not.toContain('Create a new product.')
   })
 
   it('re-writes next-page hint command when global command is set', () => {

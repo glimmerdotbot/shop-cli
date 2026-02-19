@@ -9,7 +9,7 @@ import { createCliClientFromEnv } from './cli/client'
 import { CliError } from './cli/errors'
 import { parseGlobalFlags } from './cli/globalFlags'
 import { parseHeadersFromEnv, parseHeaderValues } from './cli/headers'
-import { renderResourceHelp, renderTopLevelHelp, renderVerbHelp } from './cli/help/render'
+import { renderResourceHelp, renderTopLevelHelp, renderVerbGroupHelp, renderVerbHelp } from './cli/help/render'
 import { runCommand } from './cli/router'
 import { createShopifyAdminClient } from './adminClient'
 import { resolveAdminApiVersion } from './defaults'
@@ -97,6 +97,11 @@ const main = async () => {
       const verbHelp = renderVerbHelp(resource, verb, { showAllFields: wantsFullHelp(rewrittenRest) }, command)
       if (verbHelp) {
         console.log(verbHelp)
+        return
+      }
+      const verbGroupHelp = renderVerbGroupHelp(resource, verb, command)
+      if (verbGroupHelp) {
+        console.log(verbGroupHelp)
         return
       }
       const resourceHelp = renderResourceHelp(resource, command)
