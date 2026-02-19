@@ -1057,8 +1057,19 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagProductId],
         flags: [flagAllowPartialUpdates, flagStrategy],
         notes: ['Input can be an array or { variants: [...] }.'],
+        examples: [
+          'shop product-variants upsert --product-id 123 --input @variants.json',
+          'shop product-variants upsert --product-id 123 --input @variants.json --allow-partial-updates --strategy PRESERVE_STANDALONE_VARIANT',
+        ],
       },
-      getVerb({ operation: 'productVariant', description: 'Fetch a variant by ID.' }),
+      getVerb({
+        operation: 'productVariant',
+        description: 'Fetch a variant by ID.',
+        examples: [
+          'shop product-variants get --id 123',
+          'shop product-variants get --id 123 --view full',
+        ],
+      }),
       {
         verb: 'get-by-identifier',
         description: 'Fetch a variant by identifier (product + sku/barcode).',
@@ -1066,6 +1077,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flagProductId, flag('--sku <string>', 'SKU'), flag('--barcode <string>', 'Barcode')],
         output: { view: true, selection: true },
         notes: ['Provide --product-id plus --sku or --barcode, or pass --input.'],
+        examples: [
+          'shop product-variants get-by-identifier --product-id 123 --sku "SKU-123"',
+          'shop product-variants get-by-identifier --input @variant-identifier.json',
+        ],
       },
       {
         verb: 'by-identifier',
@@ -1074,9 +1089,27 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flagProductId, flag('--sku <string>', 'SKU'), flag('--barcode <string>', 'Barcode')],
         output: { view: true, selection: true },
         notes: ['Alias for `shop product-variants get-by-identifier`.'],
+        examples: [
+          'shop product-variants by-identifier --product-id 123 --barcode "0123456789012"',
+        ],
       },
-      listVerb({ operation: 'productVariants', description: 'List product variants.' }),
-      countVerb({ operation: 'productVariantsCount', description: 'Count product variants.', flags: [flagQuery] }),
+      listVerb({
+        operation: 'productVariants',
+        description: 'List product variants.',
+        examples: [
+          'shop product-variants list --first 10 --format table',
+          'shop product-variants list --query "sku:SKU-*" --first 50',
+        ],
+      }),
+      countVerb({
+        operation: 'productVariantsCount',
+        description: 'Count product variants.',
+        flags: [flagQuery],
+        examples: [
+          'shop product-variants count',
+          'shop product-variants count --query "sku:SKU-*"',
+        ],
+      }),
       inputVerb({
         verb: 'bulk-create',
         description: 'Bulk create variants for a product.',
@@ -1084,6 +1117,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagProductId],
         flags: [flagAllowPartialUpdates],
         output: { view: true, selection: true },
+        examples: [
+          'shop product-variants bulk-create --product-id 123 --input @variants.json',
+        ],
       }),
       inputVerb({
         verb: 'bulk-update',
@@ -1092,6 +1128,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagProductId],
         flags: [flagAllowPartialUpdates],
         output: { view: true, selection: true },
+        examples: [
+          'shop product-variants bulk-update --product-id 123 --input @variants.json',
+        ],
       }),
       {
         verb: 'bulk-delete',
@@ -1100,6 +1139,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagProductId, flagVariantIds],
         flags: [flagIds],
         notes: ['Use --variant-ids or --ids.'],
+        examples: [
+          'shop product-variants bulk-delete --product-id 123 --variant-ids 456,789',
+          'shop product-variants bulk-delete --product-id 123 --ids 456,789',
+        ],
       },
       {
         verb: 'bulk-reorder',
@@ -1119,6 +1162,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagProductId, flagMediaIds, flagVariantMedia],
         output: { view: true, selection: true },
+        examples: [
+          'shop product-variants append-media --id 123 --media-ids gid://shopify/MediaImage/1',
+          'shop product-variants append-media --id 123 --product-id 456 --variant-media @variant-media.json',
+        ],
       },
       {
         verb: 'detach-media',
@@ -1127,23 +1174,36 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagProductId, flagMediaIds, flagVariantMedia],
         output: { view: true, selection: true },
+        examples: [
+          'shop product-variants detach-media --id 123 --media-ids gid://shopify/MediaImage/1',
+          'shop product-variants detach-media --id 123 --product-id 456 --variant-media @variant-media.json',
+        ],
       },
       {
         verb: 'join-selling-plans',
         description: 'Join selling plan groups.',
         operation: { type: 'mutation', name: 'productVariantJoinSellingPlanGroups' },
         requiredFlags: [flagId, flagGroupIds],
+        examples: [
+          'shop product-variants join-selling-plans --id 123 --group-ids 456,789',
+        ],
       },
       {
         verb: 'leave-selling-plans',
         description: 'Leave selling plan groups.',
         operation: { type: 'mutation', name: 'productVariantLeaveSellingPlanGroups' },
         requiredFlags: [flagId, flagGroupIds],
+        examples: [
+          'shop product-variants leave-selling-plans --id 123 --group-ids 456,789',
+        ],
       },
       inputVerb({
         verb: 'update-relationships',
         description: 'Bulk update variant relationships.',
         operation: 'productVariantRelationshipBulkUpdate',
+        examples: [
+          'shop product-variants update-relationships --input @variant-relationships.json',
+        ],
       }),
     ],
   },
@@ -1214,14 +1274,29 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'collections',
     description: 'Manage collections.',
     verbs: [
-      createVerb({ operation: 'collectionCreate', description: 'Create a collection.' }),
-      getVerb({ operation: 'collection', description: 'Fetch a collection by ID.' }),
+      createVerb({
+        operation: 'collectionCreate',
+        description: 'Create a collection.',
+        examples: [
+          'shop collections create --set title="Summer collection"',
+          'shop collections create --input @collection.json',
+        ],
+      }),
+      getVerb({
+        operation: 'collection',
+        description: 'Fetch a collection by ID.',
+        examples: [
+          'shop collections get --id 123',
+          'shop collections get --id 123 --view full',
+        ],
+      }),
       {
         verb: 'by-handle',
         description: 'Fetch a collection by handle.',
         operation: { type: 'query', name: 'collectionByHandle' },
         requiredFlags: [flagHandle],
         output: { view: true, selection: true },
+        examples: ['shop collections by-handle --handle frontpage'],
       },
       {
         verb: 'by-identifier',
@@ -1229,37 +1304,72 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'collectionByIdentifier' },
         requiredFlags: [flagIdentifierJsonFile],
         output: { view: true, selection: true },
+        examples: [`shop collections by-identifier --identifier '{"handle":"frontpage"}'`],
       },
       {
         verb: 'rules-conditions',
         description: 'List available smart collection rule conditions.',
         operation: { type: 'query', name: 'collectionRulesConditions' },
         output: { view: true, selection: true },
+        examples: ['shop collections rules-conditions'],
       },
-      listVerb({ operation: 'collections', description: 'List collections.' }),
+      listVerb({
+        operation: 'collections',
+        description: 'List collections.',
+        examples: [
+          'shop collections list --first 10 --format table',
+          'shop collections list --query "title:Summer"',
+        ],
+      }),
       countVerb({
         operation: 'collectionsCount',
         description: 'Count collections.',
         flags: [flagQuery, flagLimit],
+        examples: [
+          'shop collections count',
+          'shop collections count --query "title:Summer"',
+        ],
       }),
-      updateVerb({ operation: 'collectionUpdate', description: 'Update a collection.' }),
-      deleteVerb({ operation: 'collectionDelete', description: 'Delete a collection.' }),
+      updateVerb({
+        operation: 'collectionUpdate',
+        description: 'Update a collection.',
+        examples: [
+          'shop collections update --id 123 --set title="Updated collection title"',
+          'shop collections update --id 123 --input @collection-update.json',
+        ],
+      }),
+      deleteVerb({
+        operation: 'collectionDelete',
+        description: 'Delete a collection.',
+        examples: ['shop collections delete --id 123 --yes'],
+      }),
       duplicateVerb({
         operation: 'collectionDuplicate',
         description: 'Duplicate a collection.',
         flags: [flag('--copy-publications', 'Copy publication settings to the duplicate')],
+        examples: [
+          'shop collections duplicate --id 123',
+          'shop collections duplicate --id 123 --copy-publications',
+        ],
       }),
       {
         verb: 'add-products',
         description: 'Add products to a collection.',
         operation: { type: 'mutation', name: 'collectionAddProductsV2' },
         requiredFlags: [flagId, flag('--product-id <gid>', 'Product IDs (repeatable or comma-separated)')],
+        examples: [
+          'shop collections add-products --id 123 --product-id 456 --product-id 789',
+          'shop collections add-products --id 123 --product-id 456,789',
+        ],
       },
       {
         verb: 'remove-products',
         description: 'Remove products from a collection.',
         operation: { type: 'mutation', name: 'collectionRemoveProducts' },
         requiredFlags: [flagId, flag('--product-id <gid>', 'Product IDs (repeatable or comma-separated)')],
+        examples: [
+          'shop collections remove-products --id 123 --product-id 456,789',
+        ],
       },
       {
         verb: 'reorder-products',
@@ -1268,6 +1378,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagMoves, flagMove],
         notes: ['Pass either --moves or one or more --move entries.'],
+        examples: [
+          'shop collections reorder-products --id 123 --move 456:0 --move 789:1',
+          `shop collections reorder-products --id 123 --moves '[{"id":"gid://shopify/Product/456","newPosition":0}]'`,
+        ],
       },
       {
         verb: 'list-products',
@@ -1291,6 +1405,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagPublicationId, flagPublication],
         notes: ['Pass either --publication-id or --publication (name).'],
+        examples: [
+          'shop collections publish --id 123 --publication "Online Store"',
+          'shop collections publish --id 123 --publication-id gid://shopify/Publication/1',
+        ],
       },
       {
         verb: 'unpublish',
@@ -1299,6 +1417,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagPublicationId, flagPublication],
         notes: ['Pass either --publication-id or --publication (name).'],
+        examples: [
+          'shop collections unpublish --id 123 --publication "Online Store"',
+          'shop collections unpublish --id 123 --publication-id gid://shopify/Publication/1',
+        ],
       },
     ],
   },
@@ -1306,8 +1428,22 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'customers',
     description: 'Manage customers.',
     verbs: [
-      createVerb({ operation: 'customerCreate', description: 'Create a customer.' }),
-      getVerb({ operation: 'customer', description: 'Fetch a customer by ID.' }),
+      createVerb({
+        operation: 'customerCreate',
+        description: 'Create a customer.',
+        examples: [
+          'shop customers create --set email="jane.doe@example.com" --set firstName=Jane --set lastName=Doe',
+          'shop customers create --input @customer.json',
+        ],
+      }),
+      getVerb({
+        operation: 'customer',
+        description: 'Fetch a customer by ID.',
+        examples: [
+          'shop customers get --id 123',
+          'shop customers get --id 123 --view full',
+        ],
+      }),
       {
         verb: 'by-identifier',
         description: 'Fetch a customer by identifier.',
@@ -1315,12 +1451,27 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flagEmailAddress, flagPhoneNumber, flagIdentifierId, flagCustomId],
         notes: ['Pass exactly one of --email-address, --phone-number, --identifier-id, --custom-id.'],
         output: { view: true, selection: true },
+        examples: [
+          'shop customers by-identifier --email-address "jane.doe@example.com"',
+          'shop customers by-identifier --phone-number "+14155550123"',
+        ],
       },
-      listVerb({ operation: 'customers', description: 'List customers.' }),
+      listVerb({
+        operation: 'customers',
+        description: 'List customers.',
+        examples: [
+          'shop customers list --first 10 --format table',
+          'shop customers list --query "email:jane.doe@example.com"',
+        ],
+      }),
       countVerb({
         operation: 'customersCount',
         description: 'Count customers.',
         flags: [flagQuery, flagLimit],
+        examples: [
+          'shop customers count',
+          'shop customers count --query "tag:vip" --limit 10000',
+        ],
       }),
       {
         verb: 'set',
@@ -1329,15 +1480,33 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [],
         flags: [...inputFlags, flagIdentifier],
         notes: ['Input is CustomerSetInput JSON. Optionally pass --identifier (CustomerSetIdentifiers JSON).'],
+        examples: [
+          'shop customers set --input @customer-set.json',
+          'shop customers set --input @customer-set.json --identifier @customer-identifiers.json',
+        ],
       },
-      updateVerb({ operation: 'customerUpdate', description: 'Update a customer.' }),
-      deleteVerb({ operation: 'customerDelete', description: 'Delete a customer.' }),
+      updateVerb({
+        operation: 'customerUpdate',
+        description: 'Update a customer.',
+        examples: [
+          'shop customers update --id 123 --set note="VIP customer"',
+          'shop customers update --id 123 --input @customer-update.json',
+        ],
+      }),
+      deleteVerb({
+        operation: 'customerDelete',
+        description: 'Delete a customer.',
+        examples: ['shop customers delete --id 123 --yes'],
+      }),
       {
         verb: 'address-create',
         description: 'Create a customer address.',
         operation: { type: 'mutation', name: 'customerAddressCreate' },
         requiredFlags: [flagId, flagAddress],
         flags: [flagSetAsDefault],
+        examples: [
+          'shop customers address-create --id 123 --address @address.json --set-as-default true',
+        ],
       },
       {
         verb: 'address-update',
@@ -1345,66 +1514,93 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'customerAddressUpdate' },
         requiredFlags: [flagId, flagAddressId, flagAddress],
         flags: [flagSetAsDefault],
+        examples: [
+          'shop customers address-update --id 123 --address-id 456 --address @address.json',
+        ],
       },
       {
         verb: 'address-delete',
         description: 'Delete a customer address.',
         operation: { type: 'mutation', name: 'customerAddressDelete' },
         requiredFlags: [flagId, flagAddressId],
+        examples: [
+          'shop customers address-delete --id 123 --address-id 456',
+        ],
       },
       {
         verb: 'update-default-address',
         description: 'Update a customer’s default address.',
         operation: { type: 'mutation', name: 'customerUpdateDefaultAddress' },
         requiredFlags: [flagId, flagAddressId],
+        examples: [
+          'shop customers update-default-address --id 123 --address-id 456',
+        ],
       },
       {
         verb: 'email-marketing-consent-update',
         description: 'Update a customer’s email marketing consent.',
         operation: { type: 'mutation', name: 'customerEmailMarketingConsentUpdate' },
         requiredFlags: [flagId, flagEmailMarketingConsent],
+        examples: [
+          'shop customers email-marketing-consent-update --id 123 --email-marketing-consent @email-consent.json',
+        ],
       },
       {
         verb: 'sms-marketing-consent-update',
         description: 'Update a customer’s SMS marketing consent.',
         operation: { type: 'mutation', name: 'customerSmsMarketingConsentUpdate' },
         requiredFlags: [flagId, flagSmsMarketingConsent],
+        examples: [
+          'shop customers sms-marketing-consent-update --id 123 --sms-marketing-consent @sms-consent.json',
+        ],
       },
       {
         verb: 'add-tax-exemptions',
         description: 'Add tax exemptions to a customer.',
         operation: { type: 'mutation', name: 'customerAddTaxExemptions' },
         requiredFlags: [flagId, flagExemptions],
+        examples: [
+          'shop customers add-tax-exemptions --id 123 --exemptions CA_STATUS_CARD',
+        ],
       },
       {
         verb: 'remove-tax-exemptions',
         description: 'Remove tax exemptions from a customer.',
         operation: { type: 'mutation', name: 'customerRemoveTaxExemptions' },
         requiredFlags: [flagId, flagExemptions],
+        examples: [
+          'shop customers remove-tax-exemptions --id 123 --exemptions CA_STATUS_CARD',
+        ],
       },
       {
         verb: 'replace-tax-exemptions',
         description: 'Replace tax exemptions on a customer.',
         operation: { type: 'mutation', name: 'customerReplaceTaxExemptions' },
         requiredFlags: [flagId, flagExemptions],
+        examples: [
+          'shop customers replace-tax-exemptions --id 123 --exemptions CA_STATUS_CARD,CA_BC_RESELLER',
+        ],
       },
       {
         verb: 'generate-account-activation-url',
         description: 'Generate a one-time account activation URL (legacy accounts).',
         operation: { type: 'mutation', name: 'customerGenerateAccountActivationUrl' },
         requiredFlags: [flagId],
+        examples: ['shop customers generate-account-activation-url --id 123'],
       },
       {
         verb: 'request-data-erasure',
         description: 'Request erasure of a customer’s data.',
         operation: { type: 'mutation', name: 'customerRequestDataErasure' },
         requiredFlags: [flagId],
+        examples: ['shop customers request-data-erasure --id 123'],
       },
       {
         verb: 'cancel-data-erasure',
         description: 'Cancel a pending customer data erasure request.',
         operation: { type: 'mutation', name: 'customerCancelDataErasure' },
         requiredFlags: [flagId],
+        examples: ['shop customers cancel-data-erasure --id 123'],
       },
       {
         verb: 'metafields upsert',
@@ -1413,18 +1609,24 @@ const baseCommandRegistry: ResourceSpec[] = [
         input: { mode: 'set', arg: 'metafields', required: true },
         requiredFlags: [flagId],
         notes: ['Input can be a single object or { metafields: [...] }.'],
+        examples: [
+          'shop customers metafields upsert --id 123 --set namespace=custom --set key=vip --set type=single_line_text_field --set value=yes',
+          'shop customers metafields upsert --id 123 --input @metafields.json',
+        ],
       },
       {
         verb: 'add-tags',
         description: 'Add tags to a customer.',
         operation: { type: 'mutation', name: 'tagsAdd' },
         requiredFlags: [flagId, flagTags],
+        examples: ['shop customers add-tags --id 123 --tags "vip,wholesale"'],
       },
       {
         verb: 'remove-tags',
         description: 'Remove tags from a customer.',
         operation: { type: 'mutation', name: 'tagsRemove' },
         requiredFlags: [flagId, flagTags],
+        examples: ['shop customers remove-tags --id 123 --tags "vip,wholesale"'],
       },
       {
         verb: 'merge',
@@ -1432,6 +1634,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'customerMerge' },
         requiredFlags: [flagId, flag('--other-id <gid>', 'Other customer ID to merge into --id')],
         flags: [flag('--override-fields <json>', 'Override fields JSON (optional)')],
+        examples: [
+          'shop customers merge --id 123 --other-id 456',
+          'shop customers merge --id 123 --other-id 456 --override-fields @override-fields.json',
+        ],
       },
       {
         verb: 'merge-preview',
@@ -1439,12 +1645,17 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'customerMergePreview' },
         requiredFlags: [flagId, flag('--other-id <gid>', 'Other customer ID to merge into --id')],
         flags: [flag('--override-fields <json>', 'Override fields JSON (optional)')],
+        examples: [
+          'shop customers merge-preview --id 123 --other-id 456',
+          'shop customers merge-preview --id 123 --other-id 456 --override-fields @override-fields.json',
+        ],
       },
       {
         verb: 'merge-job-status',
         description: 'Fetch customer merge job status.',
         operation: { type: 'query', name: 'customerMergeJobStatus' },
         requiredFlags: [flagJobId],
+        examples: ['shop customers merge-job-status --job-id 123'],
       },
       {
         verb: 'send-invite',
@@ -1452,6 +1663,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'customerSendAccountInviteEmail' },
         requiredFlags: [flagId],
         flags: [flag('--email <json>', 'Email input JSON (optional)')],
+        examples: [
+          'shop customers send-invite --id 123',
+          'shop customers send-invite --id 123 --email @invite-email.json',
+        ],
       },
     ],
   },
@@ -1606,27 +1821,65 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'orders',
     description: 'Manage orders.',
     verbs: [
-      createVerb({ operation: 'orderCreate', description: 'Create an order.', inputArg: 'order' }),
-      getVerb({ operation: 'order', description: 'Fetch an order by ID.' }),
-      listVerb({ operation: 'orders', description: 'List orders.' }),
+      createVerb({
+        operation: 'orderCreate',
+        description: 'Create an order.',
+        inputArg: 'order',
+        examples: [
+          'shop orders create --input @order.json',
+        ],
+      }),
+      getVerb({
+        operation: 'order',
+        description: 'Fetch an order by ID.',
+        examples: [
+          'shop orders get --id 123',
+          'shop orders get --id 123 --view full',
+        ],
+      }),
+      listVerb({
+        operation: 'orders',
+        description: 'List orders.',
+        examples: [
+          'shop orders list --first 10 --format table',
+          'shop orders list --query "financial_status:paid"',
+        ],
+      }),
       countVerb({
         operation: 'ordersCount',
         description: 'Count orders.',
         flags: [flagQuery, flagLimit],
+        examples: [
+          'shop orders count',
+          'shop orders count --query "status:open"',
+        ],
       }),
-      updateVerb({ operation: 'orderUpdate', description: 'Update an order.' }),
-      deleteVerb({ operation: 'orderDelete', description: 'Delete an order.' }),
+      updateVerb({
+        operation: 'orderUpdate',
+        description: 'Update an order.',
+        examples: [
+          'shop orders update --id 123 --set note="Internal note"',
+          'shop orders update --id 123 --input @order-update.json',
+        ],
+      }),
+      deleteVerb({
+        operation: 'orderDelete',
+        description: 'Delete an order.',
+        examples: ['shop orders delete --id 123 --yes'],
+      }),
       {
         verb: 'add-tags',
         description: 'Add tags to an order.',
         operation: { type: 'mutation', name: 'tagsAdd' },
         requiredFlags: [flagId, flagTags],
+        examples: ['shop orders add-tags --id 123 --tags "priority,wholesale"'],
       },
       {
         verb: 'remove-tags',
         description: 'Remove tags from an order.',
         operation: { type: 'mutation', name: 'tagsRemove' },
         requiredFlags: [flagId, flagTags],
+        examples: ['shop orders remove-tags --id 123 --tags "priority,wholesale"'],
       },
       {
         verb: 'cancel',
@@ -1641,24 +1894,34 @@ const baseCommandRegistry: ResourceSpec[] = [
           flagNotifyCustomer,
           flagStaffNote,
         ],
+        examples: [
+          'shop orders cancel --id 123',
+          'shop orders cancel --id 123 --refund --notify-customer --reason CUSTOMER',
+        ],
       },
       {
         verb: 'close',
         description: 'Close an order.',
         operation: { type: 'mutation', name: 'orderClose' },
         requiredFlags: [flagId],
+        examples: ['shop orders close --id 123'],
       },
       {
         verb: 'mark-paid',
         description: 'Mark an order as paid.',
         operation: { type: 'mutation', name: 'orderMarkAsPaid' },
         requiredFlags: [flagId],
+        examples: ['shop orders mark-paid --id 123'],
       },
       {
         verb: 'add-note',
         description: 'Add a note to an order.',
         operation: { type: 'mutation', name: 'orderUpdate' },
         requiredFlags: [flagId, flag('--note <string|@file>', 'Order note text')],
+        examples: [
+          'shop orders add-note --id 123 --note "Packed and shipped"',
+          'shop orders add-note --id 123 --note @note.txt',
+        ],
       },
       {
         verb: 'fulfill',
@@ -1673,6 +1936,9 @@ const baseCommandRegistry: ResourceSpec[] = [
           flagTrackingUrl,
           flagNotifyCustomer,
         ],
+        examples: [
+          'shop orders fulfill --id 123 --tracking-company UPS --tracking-number 1Z999AA10123456784 --notify-customer',
+        ],
       },
       {
         verb: 'create-mandate-payment',
@@ -1684,12 +1950,17 @@ const baseCommandRegistry: ResourceSpec[] = [
           flag('--amount <json>', 'MoneyInput JSON (optional)'),
           flagAutoCapture,
         ],
+        examples: [
+          'shop orders create-mandate-payment --id 123 --mandate-id gid://shopify/PaymentMandate/1 --idempotency-key "order-123-payment-1"',
+          'shop orders create-mandate-payment --id 123 --mandate-id gid://shopify/PaymentMandate/1 --idempotency-key "order-123-payment-1" --amount @money.json',
+        ],
       },
       {
         verb: 'transaction-void',
         description: 'Void an uncaptured authorization transaction.',
         operation: { type: 'mutation', name: 'transactionVoid' },
         requiredFlags: [flagParentTransactionId],
+        examples: ['shop orders transaction-void --parent-transaction-id gid://shopify/OrderTransaction/1'],
       },
       {
         verb: 'by-identifier',
@@ -1698,11 +1969,16 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flagId, flagCustomIdNamespace, flagCustomIdKey, flagCustomIdValue],
         notes: ['Provide either --id or --custom-id-key/--custom-id-value (optionally with --custom-id-namespace).'],
         output: { view: true, selection: true },
+        examples: [
+          'shop orders by-identifier --id 123',
+          'shop orders by-identifier --custom-id-namespace external --custom-id-key erp_id --custom-id-value 10001',
+        ],
       },
       {
         verb: 'pending-count',
         description: 'Get the count of pending orders.',
         operation: { type: 'query', name: 'pendingOrdersCount' },
+        examples: ['shop orders pending-count'],
       },
       {
         verb: 'payment-status',
@@ -1711,6 +1987,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagPaymentReferenceId],
         flags: [flagId, flagOrderId],
         notes: ['Use --order-id to specify the order; otherwise uses --id.'],
+        examples: [
+          'shop orders payment-status --payment-reference-id "pi_123" --order-id 456',
+        ],
       },
       {
         verb: 'capture',
@@ -1718,6 +1997,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'orderCapture' },
         requiredFlags: [flagId, flagParentTransactionId, flagAmount, flagCurrency],
         flags: [flagFinalCapture],
+        examples: [
+          'shop orders capture --id 123 --parent-transaction-id gid://shopify/OrderTransaction/1 --amount 10.00 --currency USD',
+          'shop orders capture --id 123 --parent-transaction-id gid://shopify/OrderTransaction/1 --amount 10.00 --currency USD --final-capture true',
+        ],
       },
       {
         verb: 'create-manual-payment',
@@ -1726,6 +2009,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagAmount, flagCurrency, flagPaymentMethodName, flagProcessedAt],
         notes: ['If you pass --amount, you must also pass --currency.'],
+        examples: [
+          'shop orders create-manual-payment --id 123 --amount 10.00 --currency USD --payment-method-name "Cash"',
+        ],
       },
       {
         verb: 'invoice-send',
@@ -1733,30 +2019,40 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'orderInvoiceSend' },
         requiredFlags: [flagId],
         flags: [flag('--email <json|@file>', 'Email input JSON (optional)')],
+        examples: [
+          'shop orders invoice-send --id 123',
+          'shop orders invoice-send --id 123 --email @invoice-email.json',
+        ],
       },
       {
         verb: 'open',
         description: 'Open an order.',
         operation: { type: 'mutation', name: 'orderOpen' },
         requiredFlags: [flagId],
+        examples: ['shop orders open --id 123'],
       },
       {
         verb: 'customer-set',
         description: 'Set a customer on an order.',
         operation: { type: 'mutation', name: 'orderCustomerSet' },
         requiredFlags: [flagId, flagCustomerId],
+        examples: ['shop orders customer-set --id 123 --customer-id 456'],
       },
       {
         verb: 'customer-remove',
         description: 'Remove the customer from an order.',
         operation: { type: 'mutation', name: 'orderCustomerRemove' },
         requiredFlags: [flagId],
+        examples: ['shop orders customer-remove --id 123'],
       },
       {
         verb: 'risk-assessment-create',
         description: 'Create a risk assessment for an order.',
         operation: { type: 'mutation', name: 'orderRiskAssessmentCreate' },
         requiredFlags: [flagId, flagRiskLevel, flagFacts],
+        examples: [
+          'shop orders risk-assessment-create --id 123 --risk-level HIGH --facts @facts.json',
+        ],
       },
     ],
   },
@@ -2440,12 +2736,20 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'Fetch a file by ID.',
         operation: { type: 'query', name: 'files' },
         requiredFlags: [flagId],
+        examples: [
+          'shop files get --id 123',
+          'shop files get --id gid://shopify/File/123 --view full',
+        ],
       },
       {
         verb: 'list',
         description: 'List files.',
         operation: { type: 'query', name: 'files' },
         output: { pagination: true },
+        examples: [
+          'shop files list --first 10 --format table',
+          'shop files list --query "file_status:ready"',
+        ],
       },
       {
         verb: 'upload',
@@ -2480,6 +2784,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'Update a file (alt text).',
         operation: { type: 'mutation', name: 'fileUpdate' },
         requiredFlags: [flagId, flagAlt],
+        examples: [
+          'shop files update --id 123 --alt "Hero image"',
+        ],
       },
       {
         verb: 'acknowledge-update-failed',
@@ -2488,6 +2795,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagId, flagIds],
         notes: ['Provide --id or --ids.'],
+        examples: [
+          'shop files acknowledge-update-failed --id 123',
+          'shop files acknowledge-update-failed --ids 123,456',
+        ],
       },
       {
         verb: 'delete',
@@ -2496,6 +2807,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagYes],
         flags: [flagId, flagIds],
         notes: ['Provide --id or --ids.'],
+        examples: [
+          'shop files delete --id 123 --yes',
+          'shop files delete --ids 123,456 --yes',
+        ],
       },
     ],
   },
@@ -2537,6 +2852,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'List article authors.',
         operation: { type: 'query', name: 'articleAuthors' },
         output: { pagination: true },
+        examples: [
+          'shop articles authors --first 25 --format table',
+        ],
       },
       {
         verb: 'tags',
@@ -2544,41 +2862,116 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'articleTags' },
         requiredFlags: [flagLimit],
         flags: [flagSort, flagLimit],
+        examples: [
+          'shop articles tags --limit 50',
+          'shop articles tags --limit 100 --sort ALPHABETICAL',
+        ],
       },
-      createVerb({ operation: 'articleCreate', description: 'Create an article.' }),
-      getVerb({ operation: 'article', description: 'Fetch an article by ID.' }),
-      listVerb({ operation: 'articles', description: 'List articles.' }),
-      updateVerb({ operation: 'articleUpdate', description: 'Update an article.' }),
+      createVerb({
+        operation: 'articleCreate',
+        description: 'Create an article.',
+        examples: [
+          'shop articles create --set title="Hello world" --set author.name="Shop Admin"',
+          'shop articles create --input @article.json',
+        ],
+      }),
+      getVerb({
+        operation: 'article',
+        description: 'Fetch an article by ID.',
+        examples: [
+          'shop articles get --id 123',
+          'shop articles get --id 123 --view full',
+        ],
+      }),
+      listVerb({
+        operation: 'articles',
+        description: 'List articles.',
+        examples: [
+          'shop articles list --first 10 --format table',
+          'shop articles list --query "published_status:published"',
+        ],
+      }),
+      updateVerb({
+        operation: 'articleUpdate',
+        description: 'Update an article.',
+        examples: [
+          'shop articles update --id 123 --set title="Updated title"',
+          'shop articles update --id 123 --input @article-update.json',
+        ],
+      }),
       {
         verb: 'publish',
         description: 'Publish an article.',
         operation: { type: 'mutation', name: 'articleUpdate' },
         requiredFlags: [flagId],
         flags: [flagAt, flagNow],
+        examples: [
+          'shop articles publish --id 123 --now',
+          'shop articles publish --id 123 --at 2026-01-15T12:00:00Z',
+        ],
       },
       {
         verb: 'unpublish',
         description: 'Unpublish an article.',
         operation: { type: 'mutation', name: 'articleUpdate' },
         requiredFlags: [flagId],
+        examples: [
+          'shop articles unpublish --id 123',
+        ],
       },
-      deleteVerb({ operation: 'articleDelete', description: 'Delete an article.' }),
+      deleteVerb({
+        operation: 'articleDelete',
+        description: 'Delete an article.',
+        examples: ['shop articles delete --id 123 --yes'],
+      }),
     ],
   },
   {
     resource: 'blogs',
     description: 'Manage blogs.',
     verbs: [
-      createVerb({ operation: 'blogCreate', description: 'Create a blog.' }),
-      getVerb({ operation: 'blog', description: 'Fetch a blog by ID.' }),
-      listVerb({ operation: 'blogs', description: 'List blogs.' }),
+      createVerb({
+        operation: 'blogCreate',
+        description: 'Create a blog.',
+        examples: [
+          'shop blogs create --set title="News"',
+          'shop blogs create --input @blog.json',
+        ],
+      }),
+      getVerb({
+        operation: 'blog',
+        description: 'Fetch a blog by ID.',
+        examples: [
+          'shop blogs get --id 123',
+          'shop blogs get --id 123 --view full',
+        ],
+      }),
+      listVerb({
+        operation: 'blogs',
+        description: 'List blogs.',
+        examples: [
+          'shop blogs list --format table',
+          'shop blogs list --first 25',
+        ],
+      }),
       {
         verb: 'count',
         description: 'Count blogs.',
         operation: { type: 'query', name: 'blogsCount' },
         flags: [flagQuery, flagLimit],
+        examples: [
+          'shop blogs count',
+          'shop blogs count --query "title:News"',
+        ],
       },
-      updateVerb({ operation: 'blogUpdate', description: 'Update a blog.' }),
+      updateVerb({
+        operation: 'blogUpdate',
+        description: 'Update a blog.',
+        examples: [
+          'shop blogs update --id 123 --set title="Updated blog title"',
+          'shop blogs update --id 123 --input @blog-update.json',
+        ],
+      }),
       {
         verb: 'publish',
         description: 'Publish all articles in a blog.',
@@ -2586,6 +2979,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagAt, flagNow],
         notes: ['Not supported in --dry-run mode (requires pagination).'],
+        examples: [
+          'shop blogs publish --id 123 --now',
+          'shop blogs publish --id 123 --at 2026-01-15T12:00:00Z',
+        ],
       },
       {
         verb: 'unpublish',
@@ -2593,38 +2990,88 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'articleUpdate' },
         requiredFlags: [flagId],
         notes: ['Not supported in --dry-run mode (requires pagination).'],
+        examples: [
+          'shop blogs unpublish --id 123',
+        ],
       },
-      deleteVerb({ operation: 'blogDelete', description: 'Delete a blog.' }),
+      deleteVerb({
+        operation: 'blogDelete',
+        description: 'Delete a blog.',
+        examples: ['shop blogs delete --id 123 --yes'],
+      }),
     ],
   },
   {
     resource: 'pages',
     description: 'Manage pages.',
     verbs: [
-      createVerb({ operation: 'pageCreate', description: 'Create a page.' }),
-      getVerb({ operation: 'page', description: 'Fetch a page by ID.' }),
-      listVerb({ operation: 'pages', description: 'List pages.' }),
+      createVerb({
+        operation: 'pageCreate',
+        description: 'Create a page.',
+        examples: [
+          'shop pages create --set title="About us" --set body="<p>Welcome!</p>"',
+          'shop pages create --input @page.json',
+        ],
+      }),
+      getVerb({
+        operation: 'page',
+        description: 'Fetch a page by ID.',
+        examples: [
+          'shop pages get --id 123',
+          'shop pages get --id 123 --view full',
+        ],
+      }),
+      listVerb({
+        operation: 'pages',
+        description: 'List pages.',
+        examples: [
+          'shop pages list --first 10 --format table',
+          'shop pages list --query "title:About"',
+        ],
+      }),
       {
         verb: 'count',
         description: 'Count pages.',
         operation: { type: 'query', name: 'pagesCount' },
         flags: [flagLimit],
+        examples: [
+          'shop pages count',
+          'shop pages count --limit 1000',
+        ],
       },
-      updateVerb({ operation: 'pageUpdate', description: 'Update a page.' }),
+      updateVerb({
+        operation: 'pageUpdate',
+        description: 'Update a page.',
+        examples: [
+          'shop pages update --id 123 --set title="Updated page title"',
+          'shop pages update --id 123 --input @page-update.json',
+        ],
+      }),
       {
         verb: 'publish',
         description: 'Publish a page.',
         operation: { type: 'mutation', name: 'pageUpdate' },
         requiredFlags: [flagId],
         flags: [flagAt, flagNow],
+        examples: [
+          'shop pages publish --id 123 --now',
+          'shop pages publish --id 123 --at 2026-01-15T12:00:00Z',
+        ],
       },
       {
         verb: 'unpublish',
         description: 'Unpublish a page.',
         operation: { type: 'mutation', name: 'pageUpdate' },
         requiredFlags: [flagId],
+        examples: [
+          'shop pages unpublish --id 123',
+        ],
       },
-      deleteVerb({ operation: 'pageDelete', description: 'Delete a page.' }),
+      deleteVerb({
+        operation: 'pageDelete',
+        description: 'Delete a page.',
+        examples: ['shop pages delete --id 123 --yes'],
+      }),
     ],
   },
   {
@@ -6009,7 +6456,7 @@ const baseCommandRegistry: ResourceSpec[] = [
 export const commandRegistry: ResourceSpec[] = baseCommandRegistry.map((spec) => {
   if (!resourcesWithFields.has(spec.resource)) return spec
   if (spec.verbs.some((v) => v.verb === fieldsVerb.verb)) return spec
-  return { ...spec, verbs: [...spec.verbs, fieldsVerb] }
+  return { ...spec, verbs: [...spec.verbs, { ...fieldsVerb, examples: [`shop ${spec.resource} fields`] }] }
 })
 
 export const commonOutputFlags = [flagFormat, flagView, flagSelect, flagInclude, flagSelection, flagQuiet]
