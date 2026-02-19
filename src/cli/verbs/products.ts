@@ -25,14 +25,18 @@ import { buildListNextPageArgs, parseFirst, parseIds, parseJsonArg, parseStringL
 
 type MediaContentType = 'IMAGE' | 'VIDEO' | 'MODEL_3D' | 'EXTERNAL_VIDEO'
 
-const productMediaSelection = {
+const productMediaSummarySelection = {
   id: true,
   mediaContentType: true,
   status: true,
   alt: true,
   preview: { status: true, image: { url: true } },
+} as const
+
+const productMediaSelection = {
   mediaErrors: { code: true, message: true },
   mediaWarnings: { code: true, message: true },
+  ...productMediaSummarySelection,
 } as const
 
 const productSummarySelection = {
@@ -71,6 +75,12 @@ const getProductSelectionForGet = (view: CommandContext['view']) => {
   if (view === 'full') return productFullSelectionForGet
   if (view === 'raw') return {} as const
   return productSummarySelectionForGet
+}
+
+const getProductMediaSelection = (view: CommandContext['view']) => {
+  if (view === 'ids') return { id: true } as const
+  if (view === 'summary') return productMediaSummarySelection
+  return productMediaSelection
 }
 
 const parseTags = (tags: string | undefined) => {
@@ -1252,22 +1262,38 @@ export const runProducts = async ({
       ...(alt ? { alt } : {}),
     }))
 
+    const viewForSelection = ctx.view === 'all' ? 'full' : ctx.view
+    const nodeSelection = resolveSelection({
+      typeName: 'Media',
+      view: viewForSelection,
+      baseSelection: getProductMediaSelection(viewForSelection) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: 10,
+    })
+
     const result = await runMutation(ctx, {
       productUpdate: {
         __args: { product: { id }, media },
-        product: productSummarySelection,
+        product: {
+          id: true,
+          media: {
+            __args: { last: media.length, sortKey: 'POSITION' as any },
+            nodes: nodeSelection,
+          },
+        },
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (!shouldWait) {
-      if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-      printJson(result.productUpdate)
+      const connection = result.productUpdate?.product?.media ?? { nodes: [], pageInfo: undefined }
+      printConnection({ connection, format: ctx.format, quiet: ctx.quiet })
       return
     }
-
-    if (!ctx.quiet) printJson(result.productUpdate)
 
     const afterIds = await getTopProductMediaIds({ ctx, productId: id })
     const before = new Set(beforeIds)
@@ -1283,7 +1309,11 @@ export const runProducts = async ({
     if (ctx.quiet) {
       for (const mid of createdIds) console.log(mid)
     } else {
-      printJson(final)
+      printConnection({
+        connection: { nodes: final.nodes, pageInfo: undefined },
+        format: ctx.format,
+        quiet: false,
+      })
     }
     if (final.failedIds.length > 0) {
       throw new CliError(`One or more media files failed processing: ${final.failedIds.join(', ')}`, 2)
@@ -1364,22 +1394,38 @@ export const runProducts = async ({
       }
     })
 
+    const viewForSelection = ctx.view === 'all' ? 'full' : ctx.view
+    const nodeSelection = resolveSelection({
+      typeName: 'Media',
+      view: viewForSelection,
+      baseSelection: getProductMediaSelection(viewForSelection) as any,
+      select: args.select,
+      selection: (args as any).selection,
+      include: args.include,
+      ensureId: ctx.quiet,
+      defaultConnectionFirst: 10,
+    })
+
     const result = await runMutation(ctx, {
       productUpdate: {
         __args: { product: { id }, media },
-        product: productSummarySelection,
+        product: {
+          id: true,
+          media: {
+            __args: { last: media.length, sortKey: 'POSITION' as any },
+            nodes: nodeSelection,
+          },
+        },
         userErrors: { field: true, message: true },
       },
     })
     if (result === undefined) return
     maybeFailOnUserErrors({ payload: result.productUpdate, failOnUserErrors: ctx.failOnUserErrors })
     if (!shouldWait) {
-      if (ctx.quiet) return console.log(result.productUpdate?.product?.id ?? '')
-      printJson(result.productUpdate)
+      const connection = result.productUpdate?.product?.media ?? { nodes: [], pageInfo: undefined }
+      printConnection({ connection, format: ctx.format, quiet: ctx.quiet })
       return
     }
-
-    if (!ctx.quiet) printJson(result.productUpdate)
 
     const afterIds = await getTopProductMediaIds({ ctx, productId: id })
     const before = new Set(beforeIds)
@@ -1395,7 +1441,11 @@ export const runProducts = async ({
     if (ctx.quiet) {
       for (const mid of createdIds) console.log(mid)
     } else {
-      printJson(final)
+      printConnection({
+        connection: { nodes: final.nodes, pageInfo: undefined },
+        format: ctx.format,
+        quiet: false,
+      })
     }
     if (final.failedIds.length > 0) {
       throw new CliError(`One or more media files failed processing: ${final.failedIds.join(', ')}`, 2)
