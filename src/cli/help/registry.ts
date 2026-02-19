@@ -491,12 +491,23 @@ const baseCommandRegistry: ResourceSpec[] = [
       'To list products in a collection, use `shop collections list-products --id <collectionId>` or `shop collections list-products --handle <handle>`.',
     ],
     verbs: [
-      createVerb({ operation: 'productCreate', description: 'Create a new product.' }),
+      createVerb({
+        operation: 'productCreate',
+        description: 'Create a new product.',
+        examples: [
+          'shop products create --set title="Summer Hat" --set status=DRAFT',
+          'shop products create --input @product.json',
+        ],
+      }),
       getVerb({
         operation: 'product',
         description: 'Fetch a product by ID.',
         notes: [
           'To list products in a collection, use `shop collections list-products --id <collectionId>` or `shop collections list-products --handle <handle>`.',
+        ],
+        examples: [
+          'shop products get --id 123',
+          'shop products get --id gid://shopify/Product/123 --view full',
         ],
       }),
       {
@@ -505,6 +516,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'productByHandle' },
         requiredFlags: [flagHandle],
         output: { view: true, selection: true },
+        examples: [
+          'shop products by-handle --handle "summer-hat"',
+        ],
       },
       {
         verb: 'by-identifier',
@@ -512,6 +526,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'productByIdentifier' },
         requiredFlags: [flagIdentifierJsonFile],
         output: { view: true, selection: true },
+        examples: [
+          `shop products by-identifier --identifier '{"handle":"summer-hat"}'`,
+        ],
       },
       listVerb({
         operation: 'products',
@@ -520,32 +537,55 @@ const baseCommandRegistry: ResourceSpec[] = [
         notes: [
           'To list products in a collection, use `shop collections list-products --id <collectionId>` or `shop collections list-products --handle <handle>`.',
         ],
+        examples: [
+          'shop products list',
+          'shop products list --query "status:active"',
+          'shop products list --published --first 50',
+        ],
       }),
       countVerb({
         operation: 'productsCount',
         description: 'Count products.',
         flags: [flagQuery, flagLimit, flagSavedSearchId],
+        examples: [
+          'shop products count',
+          'shop products count --query "status:active"',
+        ],
       }),
       {
         verb: 'tags',
         description: 'List product tags in the shop.',
         operation: { type: 'query', name: 'productTags' },
         output: { pagination: true },
+        examples: ['shop products tags'],
       },
       {
         verb: 'types',
         description: 'List product types in the shop.',
         operation: { type: 'query', name: 'productTypes' },
         output: { pagination: true },
+        examples: ['shop products types'],
       },
       {
         verb: 'vendors',
         description: 'List product vendors in the shop.',
         operation: { type: 'query', name: 'productVendors' },
         output: { pagination: true },
+        examples: ['shop products vendors'],
       },
-      updateVerb({ operation: 'productUpdate', description: 'Update a product.' }),
-      deleteVerb({ operation: 'productDelete', description: 'Delete a product.' }),
+      updateVerb({
+        operation: 'productUpdate',
+        description: 'Update a product.',
+        examples: [
+          'shop products update --id 123 --set title="New Title"',
+          'shop products update --id 123 --input @updates.json',
+        ],
+      }),
+      deleteVerb({
+        operation: 'productDelete',
+        description: 'Delete a product.',
+        examples: ['shop products delete --id 123 --yes'],
+      }),
       duplicateVerb({
         operation: 'productDuplicate',
         description: 'Duplicate a product.',
@@ -555,6 +595,10 @@ const baseCommandRegistry: ResourceSpec[] = [
           flagSetJson,
         ],
         notes: ['You can also pass --set newTitle="..." to override the duplicate title.'],
+        examples: [
+          'shop products duplicate --id 123',
+          'shop products duplicate --id 123 --set newTitle="Copy of Product"',
+        ],
       }),
       {
         verb: 'archive',
@@ -562,6 +606,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'productUpdate' },
         requiredFlags: [flagId],
         output: { view: true, selection: true },
+        examples: ['shop products archive --id 123'],
       },
       {
         verb: 'unarchive',
@@ -571,12 +616,17 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flagStatus],
         notes: ['Use --status to set the post-unarchive status (default: DRAFT).'],
         output: { view: true, selection: true },
+        examples: [
+          'shop products unarchive --id 123',
+          'shop products unarchive --id 123 --status ACTIVE',
+        ],
       },
       {
         verb: 'set-status',
         description: 'Set product status.',
         operation: { type: 'mutation', name: 'productUpdate' },
         requiredFlags: [flagId, flagStatus],
+        examples: ['shop products set-status --id 123 --status ACTIVE'],
       },
       {
         verb: 'change-status',
@@ -584,6 +634,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'productChangeStatus' },
         requiredFlags: [flagId, flagStatus],
         notes: ['Prefer `shop products set-status` (productUpdate).'],
+        examples: ['shop products change-status --id 123 --status DRAFT'],
       },
       {
         verb: 'set',
@@ -591,6 +642,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'productSet', inputArg: 'input' },
         input: { mode: 'set', arg: 'input', required: true },
         flags: [...inputFlags, flagIdentifierJsonFile, flagSynchronous],
+        examples: [
+          'shop products set --input @product.json',
+          'shop products set --set title="Hat" --set productType="Accessories"',
+        ],
       },
       {
         verb: 'operation',
@@ -598,6 +653,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'productOperation' },
         requiredFlags: [flagId],
         output: { view: true, selection: true },
+        examples: ['shop products operation --id gid://shopify/ProductSetOperation/123'],
       },
       {
         verb: 'duplicate-job',
@@ -605,18 +661,21 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'productDuplicateJob' },
         requiredFlags: [flagId],
         output: { view: true, selection: true },
+        examples: ['shop products duplicate-job --id gid://shopify/ProductDuplicateJob/123'],
       },
       {
         verb: 'join-selling-plan-groups',
         description: 'Join selling plan groups.',
         operation: { type: 'mutation', name: 'productJoinSellingPlanGroups' },
         requiredFlags: [flagId, flagGroupIds],
+        examples: ['shop products join-selling-plan-groups --id 123 --group-ids 456'],
       },
       {
         verb: 'leave-selling-plan-groups',
         description: 'Leave selling plan groups.',
         operation: { type: 'mutation', name: 'productLeaveSellingPlanGroups' },
         requiredFlags: [flagId, flagGroupIds],
+        examples: ['shop products leave-selling-plan-groups --id 123 --group-ids 456'],
       },
       {
         verb: 'option-update',
@@ -629,6 +688,9 @@ const baseCommandRegistry: ResourceSpec[] = [
           flagOptionValuesToUpdate,
           flagVariantStrategy,
         ],
+        examples: [
+          `shop products option-update --product-id 123 --option '{"id":"gid://shopify/ProductOption/1","name":"Color"}'`,
+        ],
       },
       {
         verb: 'options-create',
@@ -636,6 +698,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'productOptionsCreate' },
         requiredFlags: [flagProductId, flagOptions],
         flags: [flagVariantStrategy],
+        examples: [
+          `shop products options-create --product-id 123 --options '[{"name":"Size","values":[{"name":"S"},{"name":"M"},{"name":"L"}]}]'`,
+        ],
       },
       {
         verb: 'options-delete',
@@ -643,12 +708,16 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'productOptionsDelete' },
         requiredFlags: [flagProductId, flagOptionIds],
         flags: [flagStrategy],
+        examples: ['shop products options-delete --product-id 123 --option-ids gid://shopify/ProductOption/1'],
       },
       {
         verb: 'options-reorder',
         description: 'Reorder product options and values.',
         operation: { type: 'mutation', name: 'productOptionsReorder' },
         requiredFlags: [flagProductId, flagOptions],
+        examples: [
+          `shop products options-reorder --product-id 123 --options '[{"id":"gid://shopify/ProductOption/1","position":2}]'`,
+        ],
       },
       {
         verb: 'combined-listing-update',
@@ -662,18 +731,23 @@ const baseCommandRegistry: ResourceSpec[] = [
           flagProductsRemovedIds,
           flagOptionsAndValues,
         ],
+        examples: [
+          'shop products combined-listing-update --parent-product-id 123 --title "Combined Product"',
+        ],
       },
       {
         verb: 'add-tags',
         description: 'Add tags to a product.',
         operation: { type: 'mutation', name: 'tagsAdd' },
         requiredFlags: [flagId, flagTags],
+        examples: ['shop products add-tags --id 123 --tags "sale,featured"'],
       },
       {
         verb: 'remove-tags',
         description: 'Remove tags from a product.',
         operation: { type: 'mutation', name: 'tagsRemove' },
         requiredFlags: [flagId, flagTags],
+        examples: ['shop products remove-tags --id 123 --tags "clearance"'],
       },
       {
         verb: 'variants list',
@@ -683,6 +757,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         flags: [flagFirst, flagAfter, flagSort, flagReverse],
         output: { view: true, selection: true, pagination: true },
         notes: ['This is product-scoped (no --query). For global search, use `shop product-variants list --query ...`.'],
+        examples: ['shop products variants list --id 123'],
       },
       {
         verb: 'variants create',
@@ -699,6 +774,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         ],
         output: { view: true, selection: true },
         notes: ['Uses productVariantsBulkCreate with a single-item variants array.'],
+        examples: [
+          'shop products variants create --id 123 --variant-option Size=Large --price 29.99',
+          'shop products variants create --id 123 --variant-option Color=Red --variant-option Size=M --sku RED-M-001',
+        ],
       },
       {
         verb: 'variants update',
@@ -716,6 +795,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         ],
         output: { view: true, selection: true },
         notes: ['Uses productVariantsBulkUpdate with a single-item variants array.'],
+        examples: [
+          'shop products variants update --id 123 --variant-id 456 --price 24.99',
+          'shop products variants update --id 123 --variant-id 456 --sku NEW-SKU --barcode 123456789',
+        ],
       },
       {
         verb: 'variants delete',
@@ -723,6 +806,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'productVariantsBulkDelete' },
         requiredFlags: [flagId, flagVariantId],
         notes: ['Uses productVariantsBulkDelete with a single variant ID.'],
+        examples: ['shop products variants delete --id 123 --variant-id 456'],
       },
       {
         verb: 'variants reorder',
@@ -730,6 +814,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'productVariantsBulkReorder' },
         requiredFlags: [flagId, flagVariantId, flag('--position <n>', '1-based position')],
         notes: ['Uses productVariantsBulkReorder with a single position entry.'],
+        examples: ['shop products variants reorder --id 123 --variant-id 456 --position 1'],
       },
       {
         verb: 'set-price',
@@ -741,6 +826,10 @@ const baseCommandRegistry: ResourceSpec[] = [
           flagProductId,
         ],
         notes: ['--product-id is required in --dry-run mode.'],
+        examples: [
+          'shop products set-price --variant-id 456 --price 19.99',
+          'shop products set-price --variant-id 456 --price 19.99 --compare-at-price 29.99',
+        ],
       },
       {
         verb: 'publish',
@@ -749,6 +838,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagPublicationId, flagPublication, flagAt, flagNow],
         notes: ['Pass either --publication-id or --publication (name).'],
+        examples: [
+          'shop products publish --id 123 --publication "Online Store"',
+          'shop products publish --id 123 --publication-id 456 --now',
+        ],
       },
       {
         verb: 'unpublish',
@@ -757,6 +850,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         requiredFlags: [flagId],
         flags: [flagPublicationId, flagPublication],
         notes: ['Pass either --publication-id or --publication (name).'],
+        examples: ['shop products unpublish --id 123 --publication "Online Store"'],
       },
       {
         verb: 'publish-all',
@@ -764,6 +858,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'publishablePublish' },
         requiredFlags: [flagId],
         flags: [flagAt, flagNow],
+        examples: ['shop products publish-all --id 123'],
       },
       {
         verb: 'metafields upsert',
@@ -772,6 +867,9 @@ const baseCommandRegistry: ResourceSpec[] = [
         input: { mode: 'set', arg: 'metafields', required: true },
         requiredFlags: [flagId],
         notes: ['Input can be a single object or { metafields: [...] }.'],
+        examples: [
+          'shop products metafields upsert --id 123 --set namespace=custom --set key=color --set value=red --set type=single_line_text_field',
+        ],
       },
       {
         verb: 'media add',
@@ -787,6 +885,10 @@ const baseCommandRegistry: ResourceSpec[] = [
         ],
         notes: [
           'Alias: --media-content-type is accepted as --media-type.',
+        ],
+        examples: [
+          'shop products media add --id 123 --url "https://example.com/image.jpg"',
+          'shop products media add --id 123 --url "https://example.com/a.jpg" --url "https://example.com/b.jpg" --wait',
         ],
       },
       {
@@ -808,6 +910,11 @@ const baseCommandRegistry: ResourceSpec[] = [
           'Use --file - to read from stdin; requires --filename.',
           'Aliases: --content-type is accepted as --mime-type; --media-content-type is accepted as --media-type.',
         ],
+        examples: [
+          'shop products media upload --id 123 --file ./photo.jpg',
+          'shop products media upload --id 123 --file ./a.jpg --file ./b.jpg --wait',
+          'cat image.png | shop products media upload --id 123 --file - --filename image.png',
+        ],
       },
       {
         verb: 'media list',
@@ -815,6 +922,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'query', name: 'product' },
         requiredFlags: [flagId],
         output: { pagination: true },
+        examples: ['shop products media list --id 123'],
       },
       {
         verb: 'media remove',
@@ -822,30 +930,41 @@ const baseCommandRegistry: ResourceSpec[] = [
         operation: { type: 'mutation', name: 'fileUpdate' },
         requiredFlags: [flagId, flagMediaId],
         notes: ['Repeat --media-id to remove multiple items.'],
+        examples: [
+          'shop products media remove --id 123 --media-id gid://shopify/MediaImage/1',
+          'shop products media remove --id 123 --media-id gid://shopify/MediaImage/1 --media-id gid://shopify/MediaImage/2',
+        ],
       },
       {
         verb: 'media update',
         description: 'Update media metadata (alt text).',
         operation: { type: 'mutation', name: 'fileUpdate' },
         requiredFlags: [flagMediaId, flagAlt],
+        examples: ['shop products media update --media-id gid://shopify/MediaImage/1 --alt "Product photo"'],
       },
       {
         verb: 'media reorder',
-        description: 'Reorder a product’s media.',
+        description: 'Reorder a product's media.',
         operation: { type: 'mutation', name: 'productReorderMedia' },
         requiredFlags: [flagId],
         flags: [flagMoves, flagMove],
         notes: ['Pass either --moves or one or more --move entries.'],
+        examples: [
+          'shop products media reorder --id 123 --move gid://shopify/MediaImage/1:0',
+          `shop products media reorder --id 123 --moves '[{"id":"gid://shopify/MediaImage/1","newPosition":0}]'`,
+        ],
       },
       inputVerb({
         verb: 'bundle-create',
         description: 'Create a product bundle.',
         operation: 'productBundleCreate',
+        examples: ['shop products bundle-create --input @bundle.json'],
       }),
       inputVerb({
         verb: 'bundle-update',
         description: 'Update a product bundle.',
         operation: 'productBundleUpdate',
+        examples: ['shop products bundle-update --input @bundle.json'],
       }),
     ],
   },
