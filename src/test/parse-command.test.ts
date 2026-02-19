@@ -47,6 +47,18 @@ describe('parse-command', () => {
     )
   })
 
+  it('uses the configured command name in the suggested command', () => {
+    const msg = buildMissingIdHint({
+      command: 'shopcli',
+      resource: 'products',
+      verb: 'get',
+      rest: ['7815068024874'],
+    })
+    expect(msg).toBe(
+      'Missing --id <ID>\nDid you mean:\n  shopcli products get --id 7815068024874',
+    )
+  })
+
   it('does not build a hint when --id is already present', () => {
     const msg = buildMissingIdHint({
       command: 'shop',

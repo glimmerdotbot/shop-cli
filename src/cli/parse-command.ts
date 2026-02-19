@@ -1,4 +1,5 @@
 import { commandRegistry } from './help/registry'
+import { formatCommandRef } from './command'
 
 const findResourceSpec = (resource: string) =>
   commandRegistry.find((entry) => entry.resource === resource)
@@ -84,10 +85,14 @@ export const buildMissingIdHint = ({
 
   const tail = rest.slice(1)
   const tailText = tail.length > 0 ? ` ${tail.join(' ')}` : ''
+  const suggested = formatCommandRef(
+    `  shop ${resource} ${verb} --id ${first}${tailText}`,
+    command,
+  )
   return [
     'Missing --id <ID>',
     'Did you mean:',
-    `  ${command} ${resource} ${verb} --id ${first}${tailText}`,
+    suggested,
   ].join('\n')
 }
 
@@ -112,8 +117,9 @@ export const buildUnexpectedPositionalHint = ({
   const first = rest[0]
   if (typeof first !== 'string' || !first || first.startsWith('-')) return undefined
 
+  const seeHelp = formatCommandRef(`shop ${resource} ${verb} --help`, command)
   return [
     `Unexpected argument: \`${first}\`.`,
-    `This command only accepts flags. See \`${command} ${resource} ${verb} --help\`.`,
+    `This command only accepts flags. See \`${seeHelp}\`.`,
   ].join('\n')
 }
