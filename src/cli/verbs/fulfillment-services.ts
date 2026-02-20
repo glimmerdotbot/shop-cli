@@ -70,7 +70,7 @@ export const runFulfillmentServices = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
         '',
         'Special flags:',
-        '  --destination-location-id <gid>  (delete)',
+        '  --destination-location-id <gid|num>  (delete)',
         '  --inventory-action <TRANSFER|KEEP|DELETE>  (delete)',
       ].join('\n'),
     )

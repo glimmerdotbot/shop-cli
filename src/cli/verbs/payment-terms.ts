@@ -82,8 +82,8 @@ export const runPaymentTerms = async ({
         '  --selection <graphql>  (selection override; can be @file.gql)',
         '',
         'Special flags:',
-        '  --reference-id <gid>  (create)',
-        '  --template-id <gid>   (create/update)',
+        '  --reference-id <gid|num>  (create)',
+        '  --template-id <gid|num>   (create/update)',
       ].join('\n'),
     )
     return
