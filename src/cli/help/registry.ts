@@ -3,8 +3,14 @@ import { resourceToType } from '../introspection/resources'
 
 const flag = (label: string, description: string): FlagSpec => ({ label, description })
 
-const flagId = flag('--id <gid>', 'Resource ID (Shopify GID, e.g. gid://shopify/Product/123)')
-const flagIds = flag('--ids <gid>', 'Repeatable or comma-separated Shopify GIDs')
+const flagId = flag(
+  '--id <gid>',
+  'Resource ID (numeric ID or full gid://shopify/... GID; set SHOP_CLI_STRICT_IDS or --strict-ids to require full GIDs)',
+)
+const flagIds = flag(
+  '--ids <gid>',
+  'Repeatable or comma-separated IDs (numeric IDs or full gid://shopify/... GIDs; strict mode requires full GIDs)',
+)
 const flagYes = flag('--yes', 'Confirm destructive action')
 const flagInput = flag('--input <json|@file>', 'Full input payload as JSON')
 const flagSet = flag('--set <path>=<value>', 'Set individual fields (repeatable)')
@@ -106,7 +112,7 @@ const flagTopic = flag('--topic <topic>', 'Webhook topic')
 const flagResourceType = flag('--resource-type <type>', 'Resource type')
 const flagResourceId = flag('--resource-id <gid>', 'Resource ID')
 const flagResourceIds = flag('--resource-ids <gid>', 'Resource IDs (repeatable)')
-const flagPlatform = flag('--platform <apple|android>', 'Platform (helps validate the expected Shopify GID type for --id)')
+const flagPlatform = flag('--platform <apple|android>', 'Platform (used only when coercing numeric IDs)')
 const flagLocale = flag('--locale <string>', 'Locale')
 const flagLocales = flag('--locales <csv>', 'Locales (repeatable or comma-separated)')
 const flagTranslationKeys = flag('--translation-keys <csv>', 'Translation keys (repeatable)')
@@ -527,7 +533,7 @@ const baseCommandRegistry: ResourceSpec[] = [
     resource: 'products',
     description: 'Manage products.',
     notes: [
-      'To list products in a collection, use `shop collections list-products --id <collectionGid>` or `shop collections list-products --handle <handle>`.',
+      'To list products in a collection, use `shop collections list-products --id <collectionId>` or `shop collections list-products --handle <handle>`.',
     ],
     verbs: [
       createVerb({
@@ -543,7 +549,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'Fetch a product by ID.',
         flags: [flagProductId],
         notes: [
-          'To list products in a collection, use `shop collections list-products --id <collectionGid>` or `shop collections list-products --handle <handle>`.',
+          'To list products in a collection, use `shop collections list-products --id <collectionId>` or `shop collections list-products --handle <handle>`.',
         ],
         examples: [
           'shop products get --id gid://shopify/Product/123',
@@ -576,7 +582,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         description: 'List products.',
         flags: [flagPublished],
         notes: [
-          'To list products in a collection, use `shop collections list-products --id <collectionGid>` or `shop collections list-products --handle <handle>`.',
+          'To list products in a collection, use `shop collections list-products --id <collectionId>` or `shop collections list-products --handle <handle>`.',
         ],
         examples: [
           'shop products list',
@@ -2850,7 +2856,7 @@ const baseCommandRegistry: ResourceSpec[] = [
         verb: 'resolve',
         description: 'Resolve a publication ID by name or ID.',
         operation: { type: 'query', name: 'publications' },
-        requiredFlags: [flag('--publication <name|gid>', 'Publication identifier')],
+        requiredFlags: [flag('--publication <name|gid|num>', 'Publication identifier')],
       },
       createVerb({ operation: 'publicationCreate', description: 'Create a publication.' }),
       getVerb({ operation: 'publication', description: 'Fetch a publication by ID.' }),

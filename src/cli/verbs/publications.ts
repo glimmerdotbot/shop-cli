@@ -130,7 +130,7 @@ export const runPublications = async ({
     }
 
     const identifier = args.publication as string | undefined
-    if (!identifier) throw new CliError('Missing --publication <name|gid>', 2)
+    if (!identifier) throw new CliError('Missing --publication <name|gid|num>', 2)
 
     const publications = await listPublications(ctx)
     const id = resolvePublicationIdFromList({ publications, identifier })

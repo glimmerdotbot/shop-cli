@@ -256,6 +256,7 @@ export const renderTopLevelHelp = (command = resolveCliCommand()) => {
     '  --quiet                  (IDs only when possible)',
     '',
     'IDs:',
+    '  By default, many flags accept numeric IDs and will coerce them to gid://shopify/... IDs.',
     '  --strict-ids             (or env SHOP_CLI_STRICT_IDS=1; require full gid://shopify/... IDs)',
     '',
     'Debug:',

@@ -82,7 +82,7 @@ export const runMobilePlatformApplications = async ({
         '  create|get|list|update|delete',
         '',
         'Notes:',
-        '  --platform apple|android can be used to validate the expected Shopify GID type for --id.',
+        '  --platform apple|android is used only when coercing numeric IDs to GIDs.',
       ].join('\n'),
     )
     return
