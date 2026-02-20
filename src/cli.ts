@@ -252,13 +252,13 @@ const main = async () => {
       message = `${message}\nSee help:\n  ${command} ${resource} ${verb} --help`
     }
 
-    throw new CliError(message, err.exitCode)
+    throw new CliError(message, err.exitCode, { silent: err.silent })
   }
 }
 
 main().catch((err) => {
   if (err instanceof CliError) {
-    console.error(err.message)
+    if (!err.silent) console.error(err.message)
     process.exit(err.exitCode)
   }
   console.error(err)

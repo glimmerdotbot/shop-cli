@@ -6,6 +6,7 @@ import { GenqlError } from '../generated/admin-2026-04'
 
 import { CliError } from './errors'
 import { printJsonError, setGlobalOutputFormat, type OutputFormat } from './output'
+import { maybeThrowApprovalRequired } from './approvalRequired'
 import { getFields, getType } from './introspection'
 import { printFieldsTable } from './introspection/format'
 import { resourceToType } from './introspection/resources'
@@ -509,6 +510,7 @@ export const runQuery = async (ctx: CommandContext, request: any): Promise<any> 
     return await ctx.client.query(request)
   } catch (err) {
     if (err instanceof GenqlError) {
+      maybeThrowApprovalRequired({ format: ctx.format, errors: err.errors })
       if (ctx.warnMissingAccessToken && hasNotAuthorizedError(err)) {
         console.error('SHOPIFY_ACCESS_TOKEN not set')
       }
@@ -530,6 +532,7 @@ export const runMutation = async (ctx: CommandContext, request: any): Promise<an
     return await ctx.client.mutation(request)
   } catch (err) {
     if (err instanceof GenqlError) {
+      maybeThrowApprovalRequired({ format: ctx.format, errors: err.errors })
       if (ctx.warnMissingAccessToken && hasNotAuthorizedError(err)) {
         console.error('SHOPIFY_ACCESS_TOKEN not set')
       }

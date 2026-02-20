@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { CliError } from '../errors'
 import { printIds, printJson, printJsonError } from '../output'
 import { parseStandardArgs, runQuery, type CommandContext } from '../router'
+import { maybeThrowApprovalRequired } from '../approvalRequired'
 import {
   createRawGraphQLClient,
   type RawGraphQLRequest,
@@ -313,6 +314,7 @@ export const runGraphQL = async ({
 
   // Handle errors
   if (response.errors && response.errors.length > 0) {
+    maybeThrowApprovalRequired({ format: ctx.format, errors: response.errors as any })
     printJsonError({ errors: response.errors, data: response.data }, ctx.format !== 'raw')
     throw new CliError('GraphQL request returned errors', 1)
   }
