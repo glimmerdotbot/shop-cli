@@ -52,10 +52,13 @@ const extractUnionId = (node: any) =>
 
 const normalizeMobileAppId = (raw: unknown, platform?: string) => {
   if (typeof raw !== 'string' || !raw) throw new CliError('Missing --id', 2)
-  if (raw.startsWith('gid://')) return raw
 
-  const p = (platform ?? 'android').trim().toLowerCase()
+  const p = platform?.trim().toLowerCase()
   const type = p === 'apple' || p === 'ios' ? 'AppleApplication' : 'AndroidApplication'
+  if (raw.startsWith('gid://')) {
+    // If --platform is provided, validate the GID type early; otherwise the ID could be either Apple or Android.
+    return p ? coerceGid(raw, type, '--id') : raw
+  }
   // This is primarily for convenience in tests/dry-run; real IDs are typically full GIDs.
   return coerceGid(raw, type)
 }

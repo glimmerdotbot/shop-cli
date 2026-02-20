@@ -29,12 +29,12 @@ export const requireId = (id: unknown, type: ShopifyGidType, flag = '--id') => {
         ? String(id)
         : undefined
   if (!normalized) throw new CliError(`Missing ${flag}`, 2)
-  return coerceGid(normalized, type)
+  return coerceGid(normalized, type, flag)
 }
 
 export const requireGidFlag = (value: unknown, flag: string, type: ShopifyGidType) => {
   if (typeof value !== 'string' || !value) throw new CliError(`Missing ${flag}`, 2)
-  return coerceGid(value, type)
+  return coerceGid(value, type, flag)
 }
 
 export const requireStringFlag = (value: unknown, flag: string) => {
@@ -44,7 +44,7 @@ export const requireStringFlag = (value: unknown, flag: string) => {
 
 export const requireLocationId = (value: unknown, flag = '--location-id') => {
   if (typeof value !== 'string' || !value) throw new CliError(`Missing ${flag}`, 2)
-  return coerceGid(value, 'Location')
+  return coerceGid(value, 'Location', flag)
 }
 
 export const parseDateTime = (value: unknown, flag: string) => {
@@ -70,7 +70,7 @@ export const parseIds = (value: unknown, type: ShopifyGidType) => {
     parts.push(...v.split(',').map((s) => s.trim()).filter(Boolean))
   }
   if (parts.length === 0) throw new CliError('Missing --ids', 2)
-  return parts.map((id) => coerceGid(id, type))
+  return parts.map((id) => coerceGid(id, type, '--ids'))
 }
 
 const readUtf8 = (path: string) => readFileSync(path, 'utf8')
