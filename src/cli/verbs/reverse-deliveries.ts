@@ -42,8 +42,14 @@ const getReverseDeliverySelection = (view: CommandContext['view']) => {
 }
 
 const parseLineItem = (value: string): { reverseFulfillmentOrderLineItemId: string; quantity: number } => {
-  const [id, qtyRaw] = value.split(':')
+  const idx = value.lastIndexOf(':')
+  if (idx <= 0 || idx === value.length - 1) {
+    throw new CliError('--line-item must be <reverseFulfillmentOrderLineItemId>:<quantity>', 2)
+  }
+  const id = value.slice(0, idx).trim()
+  const qtyRaw = value.slice(idx + 1).trim()
   if (!id || !qtyRaw) throw new CliError('--line-item must be <reverseFulfillmentOrderLineItemId>:<quantity>', 2)
+
   const quantity = Number(qtyRaw)
   if (!Number.isFinite(quantity) || !Number.isInteger(quantity) || quantity <= 0) {
     throw new CliError('--line-item quantity must be a positive integer', 2)
@@ -199,4 +205,3 @@ export const runReverseDeliveries = async ({
 
   throw new CliError(`Unknown verb for reverse-deliveries: ${verb}`, 2)
 }
-

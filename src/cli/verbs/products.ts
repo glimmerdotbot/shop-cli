@@ -2677,7 +2677,7 @@ export const runProducts = async ({
     })
     const id = requireProductIdForSubverb(args)
 
-    let moves: Array<{ id: string; newPosition: number }> = []
+    let moves: Array<{ id: string; newPosition: string }> = []
     if ((args as any).moves) {
       try {
         const parsed = JSON.parse((args as any).moves as string)
@@ -2688,15 +2688,15 @@ export const runProducts = async ({
       }
     } else if ((args as any).move) {
       const raw = (args as any).move as string[]
-      const parsedMoves: Array<{ id: string; newPosition: number }> = []
+      const parsedMoves: Array<{ id: string; newPosition: string }> = []
       for (const item of raw) {
-        const parts = item.split(':')
-        if (parts.length !== 2) throw new CliError('--move must be <mediaId>:<newPosition>', 2)
-        const mediaId = parts[0]!.trim()
-        const pos = Number(parts[1]!.trim())
+        const idx = item.lastIndexOf(':')
+        if (idx <= 0 || idx === item.length - 1) throw new CliError('--move must be <mediaId>:<newPosition>', 2)
+        const mediaId = item.slice(0, idx).trim()
+        const pos = Number(item.slice(idx + 1).trim())
         if (!mediaId) throw new CliError('--move mediaId cannot be empty', 2)
         if (!Number.isFinite(pos) || pos < 0) throw new CliError('--move newPosition must be a non-negative number', 2)
-        parsedMoves.push({ id: normalizeMediaId(mediaId), newPosition: Math.floor(pos) } as any)
+        parsedMoves.push({ id: normalizeMediaId(mediaId), newPosition: String(Math.floor(pos)) })
       }
       moves = parsedMoves as any
     }
@@ -2715,7 +2715,7 @@ export const runProducts = async ({
       if (!Number.isFinite(pos) || pos < 0) {
         throw new CliError(`moves[${i}].newPosition must be a non-negative number`, 2)
       }
-      return { id: normalizeMediaId(id), newPosition: Math.floor(pos) }
+      return { id: normalizeMediaId(id), newPosition: String(Math.floor(pos)) }
     })
 
     const result = await runMutation(ctx, {

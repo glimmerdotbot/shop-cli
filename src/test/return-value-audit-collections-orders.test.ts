@@ -90,8 +90,8 @@ describe('return value audit: collections & orders', () => {
         mutation: async (request: any) => {
           expect(request?.collectionReorderProducts?.__args?.id).toBe('gid://shopify/Collection/1')
           expect(request?.collectionReorderProducts?.__args?.moves).toEqual([
-            { id: 'gid://shopify/Product/10', newPosition: 0 },
-            { id: 'gid://shopify/Product/11', newPosition: 3 },
+            { id: 'gid://shopify/Product/10', newPosition: '0' },
+            { id: 'gid://shopify/Product/11', newPosition: '3' },
           ])
           return { collectionReorderProducts: { job: { id: 'gid://shopify/Job/102', done: true }, userErrors: [] } }
         },
@@ -115,8 +115,8 @@ describe('return value audit: collections & orders', () => {
       job: { id: 'gid://shopify/Job/102', done: true },
       collectionId: 'gid://shopify/Collection/1',
       moves: [
-        { id: 'gid://shopify/Product/10', newPosition: 0 },
-        { id: 'gid://shopify/Product/11', newPosition: 3 },
+        { id: 'gid://shopify/Product/10', newPosition: '0' },
+        { id: 'gid://shopify/Product/11', newPosition: '3' },
       ],
     })
   })
@@ -352,4 +352,3 @@ describe('return value audit: collections & orders', () => {
     })
   })
 })
-

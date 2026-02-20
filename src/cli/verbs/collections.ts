@@ -535,13 +535,13 @@ export const runCollections = async ({
     })
     const id = requireId(args.id as any, 'Collection')
 
-    let moves: Array<{ id: string; newPosition: number }> = []
+    let moves: Array<{ id: string; newPosition: string }> = []
     if ((args as any).moves) {
       moves = parseJsonArg((args as any).moves, '--moves')
       if (!Array.isArray(moves)) throw new CliError('--moves must be a JSON array', 2)
     } else if ((args as any).move) {
       const raw = (args as any).move as string[]
-      const parsedMoves: Array<{ id: string; newPosition: number }> = []
+      const parsedMoves: Array<{ id: string; newPosition: string }> = []
       for (const item of raw) {
         const idx = item.lastIndexOf(':')
         if (idx <= 0 || idx === item.length - 1) throw new CliError('--move must be <productId>:<newPosition>', 2)
@@ -549,7 +549,7 @@ export const runCollections = async ({
         const pos = Number(item.slice(idx + 1).trim())
         if (!productId) throw new CliError('--move productId cannot be empty', 2)
         if (!Number.isFinite(pos) || pos < 0) throw new CliError('--move newPosition must be a non-negative number', 2)
-        parsedMoves.push({ id: coerceGid(productId, 'Product'), newPosition: Math.floor(pos) })
+        parsedMoves.push({ id: coerceGid(productId, 'Product'), newPosition: String(Math.floor(pos)) })
       }
       moves = parsedMoves
     }
@@ -564,7 +564,7 @@ export const runCollections = async ({
       if (typeof mid !== 'string' || !mid.trim()) throw new CliError(`moves[${i}].id is required`, 2)
       const pos = Number(newPosition)
       if (!Number.isFinite(pos) || pos < 0) throw new CliError(`moves[${i}].newPosition must be a non-negative number`, 2)
-      return { id: mid.startsWith('gid://') ? mid : coerceGid(mid, 'Product'), newPosition: Math.floor(pos) }
+      return { id: mid.startsWith('gid://') ? mid : coerceGid(mid, 'Product'), newPosition: String(Math.floor(pos)) }
     })
 
     const result = await runMutation(ctx, {
