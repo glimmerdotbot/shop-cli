@@ -72,6 +72,36 @@ describe('colon-delimited flags with GIDs', () => {
     ])
   })
 
+  it('products media reorder rejects non-media GID types before hitting the API', async () => {
+    const { runProducts } = await import('../cli/verbs/products')
+
+    let called = false
+    const ctx: any = {
+      client: {
+        mutation: async () => {
+          called = true
+          return {}
+        },
+      },
+      format: 'json',
+      quiet: false,
+      view: 'summary',
+      dryRun: false,
+      failOnUserErrors: true,
+      warnMissingAccessToken: false,
+    }
+
+    await expect(
+      runProducts({
+        ctx,
+        verb: 'media reorder',
+        argv: ['--product-id', 'gid://shopify/Product/1', '--move', 'gid://shopify/ProductImage/36068487069738:0'],
+      }),
+    ).rejects.toThrow(/--move mediaId must be a Shopify GID of type one of/i)
+
+    expect(called).toBe(false)
+  })
+
   it('collections reorder-products stringifies UnsignedInt64 newPosition', async () => {
     const { runCollections } = await import('../cli/verbs/collections')
 
@@ -201,4 +231,3 @@ describe('colon-delimited flags with GIDs', () => {
     ])
   })
 })
-

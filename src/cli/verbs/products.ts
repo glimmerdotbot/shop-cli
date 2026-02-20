@@ -1,5 +1,5 @@
 import { CliError } from '../errors'
-import { coerceGid } from '../gid'
+import { assertShopifyGidTypeIn, coerceGid, type ShopifyGidType } from '../gid'
 import { renderVerbGroupHelp } from '../help/render'
 import { buildInput } from '../input'
 import { printConnection, printIds, printJson, printNode } from '../output'
@@ -271,10 +271,12 @@ const getTopProductMediaIds = async ({
     .filter((id): id is string => typeof id === 'string' && id.trim() !== '')
 }
 
-const normalizeMediaId = (value: string) => {
+const allowedMediaGidTypes = ['MediaImage', 'Video', 'ExternalVideo', 'Model3d'] as const satisfies readonly ShopifyGidType[]
+
+const normalizeMediaId = (value: string, label = 'Media ID') => {
   const raw = value.trim()
-  if (!raw) throw new CliError('Media ID cannot be empty', 2)
-  if (raw.startsWith('gid://')) return raw
+  if (!raw) throw new CliError(`${label} cannot be empty`, 2)
+  if (raw.startsWith('gid://')) return assertShopifyGidTypeIn(raw, allowedMediaGidTypes, label)
   // Numeric IDs are ambiguous - could be MediaImage, Video, Model3d, etc.
   // Require the full GID from `media list` output to avoid confusion.
   throw new CliError(
@@ -2607,7 +2609,7 @@ export const runProducts = async ({
     if (mediaIds.length === 0) throw new CliError('Missing --media-id (repeatable)', 2)
 
     const files = mediaIds.map((id) => ({
-      id: normalizeMediaId(id),
+      id: normalizeMediaId(id, '--media-id'),
       referencesToRemove: [productId],
     }))
 
@@ -2650,7 +2652,7 @@ export const runProducts = async ({
     const alt = args.alt as string | undefined
     if (alt === undefined) throw new CliError('Missing --alt', 2)
 
-    const files = [{ id: normalizeMediaId(mediaIdRaw), alt }]
+    const files = [{ id: normalizeMediaId(mediaIdRaw, '--media-id'), alt }]
 
     const result = await runMutation(ctx, {
       fileUpdate: {
@@ -2696,7 +2698,7 @@ export const runProducts = async ({
         const pos = Number(item.slice(idx + 1).trim())
         if (!mediaId) throw new CliError('--move mediaId cannot be empty', 2)
         if (!Number.isFinite(pos) || pos < 0) throw new CliError('--move newPosition must be a non-negative number', 2)
-        parsedMoves.push({ id: normalizeMediaId(mediaId), newPosition: String(Math.floor(pos)) })
+        parsedMoves.push({ id: normalizeMediaId(mediaId, '--move mediaId'), newPosition: String(Math.floor(pos)) })
       }
       moves = parsedMoves as any
     }
@@ -2715,7 +2717,7 @@ export const runProducts = async ({
       if (!Number.isFinite(pos) || pos < 0) {
         throw new CliError(`moves[${i}].newPosition must be a non-negative number`, 2)
       }
-      return { id: normalizeMediaId(id), newPosition: String(Math.floor(pos)) }
+      return { id: normalizeMediaId(id, `moves[${i}].id`), newPosition: String(Math.floor(pos)) }
     })
 
     const result = await runMutation(ctx, {
