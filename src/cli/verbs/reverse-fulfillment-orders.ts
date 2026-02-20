@@ -42,27 +42,65 @@ const getReverseFulfillmentOrderSelection = (view: CommandContext['view']) => {
   return reverseFulfillmentOrderSummarySelection
 }
 
-const parseDisposition = (value: string) => {
+const parseDisposition = (
+  value: string,
+): { reverseFulfillmentOrderLineItemId: string; quantity: number; dispositionType: string; locationId?: string } => {
   // <reverseFulfillmentOrderLineItemId>:<quantity>:<dispositionType>[:<locationId>]
-  const parts = value.split(':')
-  if (parts.length < 3) {
-    throw new CliError('--disposition must be <reverseFulfillmentOrderLineItemId>:<quantity>:<dispositionType>[:<locationId>]', 2)
-  }
-  const reverseFulfillmentOrderLineItemId = parts[0]!
-  const quantityRaw = parts[1]!
-  const dispositionType = parts[2]!
-  const locationId = parts[3]
+  const raw = value.trim()
+  const usage = () =>
+    new CliError('--disposition must be <reverseFulfillmentOrderLineItemId>:<quantity>:<dispositionType>[:<locationId>]', 2)
 
-  const quantity = Number(quantityRaw)
-  if (!Number.isFinite(quantity) || !Number.isInteger(quantity) || quantity <= 0) {
-    throw new CliError('--disposition quantity must be a positive integer', 2)
+  const splitOnLastColonOrThrow = (s: string): [string, string] => {
+    const idx = s.lastIndexOf(':')
+    if (idx <= 0 || idx === s.length - 1) throw usage()
+    return [s.slice(0, idx), s.slice(idx + 1)]
   }
 
-  return {
-    reverseFulfillmentOrderLineItemId,
-    quantity,
-    dispositionType,
-    ...(locationId ? { locationId } : {}),
+  const parseCore = (core: string) => {
+    // <id>:<qty>:<type>
+    const [rest, dispositionTypeRaw] = splitOnLastColonOrThrow(core)
+    const [idRaw, quantityRaw] = splitOnLastColonOrThrow(rest)
+
+    const reverseFulfillmentOrderLineItemId = idRaw.trim()
+    const dispositionType = dispositionTypeRaw.trim()
+    const quantity = Number(quantityRaw.trim())
+
+    if (!reverseFulfillmentOrderLineItemId || !dispositionType) throw usage()
+    if (!Number.isFinite(quantity) || !Number.isInteger(quantity) || quantity <= 0) {
+      throw new CliError('--disposition quantity must be a positive integer', 2)
+    }
+
+    return { reverseFulfillmentOrderLineItemId, quantity, dispositionType }
+  }
+
+  // Try without locationId first.
+  let firstErr: unknown
+  try {
+    return parseCore(raw)
+  } catch (err) {
+    firstErr = err
+  }
+
+  // If there's a trailing locationId, it may itself be a GID (contains ':'), so detect `:<spaces>gid://` safely.
+  const gidIdx = raw.lastIndexOf('gid://')
+  if (gidIdx > 0) {
+    const before = raw.slice(0, gidIdx)
+    const colonIdx = before.lastIndexOf(':')
+    if (colonIdx >= 0 && before.slice(colonIdx + 1).trim() === '') {
+      const core = raw.slice(0, colonIdx).trim()
+      const locationId = raw.slice(gidIdx).trim()
+      if (locationId) return { ...parseCore(core), locationId }
+    }
+  }
+
+  // Non-GID locationId (no ':') - simple suffix split.
+  try {
+    const [core, locationIdRaw] = splitOnLastColonOrThrow(raw)
+    const locationId = locationIdRaw.trim()
+    if (!locationId) throw usage()
+    return { ...parseCore(core.trim()), locationId }
+  } catch {
+    throw firstErr
   }
 }
 
