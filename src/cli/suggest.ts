@@ -9,6 +9,13 @@ const fuzzyMatch = (needle: string, haystack: string): boolean => {
   return ni === lowerNeedle.length
 }
 
+const tokenize = (value: string): string[] =>
+  value
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .split(/[^A-Za-z0-9]+/)
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean)
+
 const levenshteinDistance = (a: string, b: string, maxDistance = 3): number => {
   if (a === b) return 0
   if (a.length === 0) return b.length
@@ -43,7 +50,7 @@ const levenshteinDistance = (a: string, b: string, maxDistance = 3): number => {
 }
 
 /** Score a match - lower is better. Prefers exact/prefix/substring, then small edit distance, then fuzzy. */
-const scoreMatch = (query: string, candidate: string): number => {
+const scoreMatchDefault = (query: string, candidate: string): number => {
   const q = query.toLowerCase()
   const c = candidate.toLowerCase()
 
@@ -63,15 +70,50 @@ const scoreMatch = (query: string, candidate: string): number => {
   return Infinity
 }
 
+/**
+ * Score a match for schema field names and input keys.
+ *
+ * Builds on the default scorer, then adds:
+ * - suffix/token affinity (e.g. bodyHtml -> descriptionHtml via shared "html" suffix token)
+ * - token overlap fallback, when edit distance is too large for default scoring
+ */
+const scoreMatchField = (query: string, candidate: string): number => {
+  const base = scoreMatchDefault(query, candidate)
+  if (base < Infinity) return base
+
+  const qTokens = tokenize(query)
+  const cTokens = tokenize(candidate)
+
+  const qLast = qTokens[qTokens.length - 1]
+  const cLast = cTokens[cTokens.length - 1]
+
+  if (qLast && cLast && qLast === cLast) {
+    return 30
+  }
+
+  const cSet = new Set(cTokens)
+  let overlap = 0
+  for (const t of qTokens) if (cSet.has(t)) overlap++
+  if (overlap > 0) {
+    // More overlap is better (lower score).
+    return 40 - Math.min(overlap, 5)
+  }
+
+  return Infinity
+}
+
 export const findSuggestions = ({
   query,
   candidates,
   limit = 3,
+  mode = 'default',
 }: {
   query: string
   candidates: string[]
   limit?: number
+  mode?: 'default' | 'field'
 }): string[] => {
+  const scoreMatch = mode === 'field' ? scoreMatchField : scoreMatchDefault
   const scored = candidates
     .map((name) => ({ name, score: scoreMatch(query, name) }))
     .filter(({ score }) => score < Infinity)

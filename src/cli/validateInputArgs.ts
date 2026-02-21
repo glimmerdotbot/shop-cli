@@ -2,6 +2,7 @@ import { CliError } from './errors'
 import { resolveCliCommand } from './command'
 import { inputTypeHelp } from '../generated/help/schema-help'
 import { getType } from './introspection'
+import { findSuggestions } from './suggest'
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -9,61 +10,6 @@ const isPlainObject = (value: unknown): value is Record<string, unknown> =>
 const formatCliPlaceholder = (field: { typeName: string; isList: boolean }) => {
   const base = `${field.typeName}${field.isList ? '[]' : ''}`
   return `<${base}>`
-}
-
-const splitTokens = (value: string): string[] =>
-  value
-    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
-    .split(/[^A-Za-z0-9]+/)
-    .map((t) => t.trim())
-    .filter(Boolean)
-
-/** Simple fuzzy matching: check if all chars of needle appear in haystack in order */
-const fuzzyMatch = (needle: string, haystack: string): boolean => {
-  const lowerNeedle = needle.toLowerCase()
-  const lowerHaystack = haystack.toLowerCase()
-  let ni = 0
-  for (let hi = 0; hi < lowerHaystack.length && ni < lowerNeedle.length; hi++) {
-    if (lowerHaystack[hi] === lowerNeedle[ni]) ni++
-  }
-  return ni === lowerNeedle.length
-}
-
-/** Score a match - lower is better. Prefers exact prefix matches, then substring, then fuzzy */
-const scoreMatch = (query: string, fieldName: string): number => {
-  const lowerField = fieldName.toLowerCase()
-
-  const lowerQuery = query.toLowerCase()
-  const queryVariants = [query]
-  if (lowerQuery.endsWith('html') && query.length > 4) queryVariants.push(query.slice(0, -4))
-
-  let best = Infinity
-  for (const qRaw of queryVariants) {
-    const q = qRaw.toLowerCase()
-    if (lowerField === q) best = Math.min(best, 0)
-    else if (lowerField.startsWith(q)) best = Math.min(best, 1)
-    else if (lowerField.includes(q)) best = Math.min(best, 2)
-    else {
-      const qTokens = splitTokens(qRaw).map((t) => t.toLowerCase())
-      const fTokens = splitTokens(fieldName).map((t) => t.toLowerCase())
-      const qLast = qTokens[qTokens.length - 1]
-      const fLast = fTokens[fTokens.length - 1]
-      if (qLast && fLast && qLast === fLast) best = Math.min(best, 3)
-      else if (fuzzyMatch(qRaw, fieldName)) best = Math.min(best, 4)
-    }
-  }
-
-  return best
-}
-
-const suggestFieldNames = (query: string, candidates: string[], limit = 5): string[] => {
-  const scored = candidates
-    .map((name) => ({ name, score: scoreMatch(query, name) }))
-    .filter(({ score }) => score < Infinity)
-    .sort((a, b) => a.score - b.score || a.name.localeCompare(b.name))
-    .slice(0, limit)
-
-  return scored.map(({ name }) => name)
 }
 
 const validateInputObject = ({
@@ -98,7 +44,12 @@ const validateInputObject = ({
     const field = allowed.get(key)
     if (!field) {
       const fullSetPath = setPath ? `${setPath}.${key}` : key
-      const suggestions = suggestFieldNames(key, Array.from(allowed.keys()))
+      const suggestions = findSuggestions({
+        query: key,
+        candidates: Array.from(allowed.keys()),
+        limit: 5,
+        mode: 'field',
+      })
 
       const lines = [
         `Unknown input field "${key}" on ${inputTypeName}${setPath ? ` (in --set ${fullSetPath})` : ''}`,
@@ -150,7 +101,12 @@ export const validateRequestInputArgs = (rootTypeName: 'Query' | 'Mutation', req
       const argDef: any = argDefs[argName]
       if (!argDef) {
         const candidates = Object.keys(argDefs)
-        const suggestions = suggestFieldNames(argName, candidates)
+        const suggestions = findSuggestions({
+          query: argName,
+          candidates,
+          limit: 5,
+          mode: 'field',
+        })
         const lines = [`Unknown argument "${argName}" for ${rootTypeName}.${opName}.`]
         if (suggestions.length > 0) {
           lines.push('')
