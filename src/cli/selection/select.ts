@@ -139,6 +139,12 @@ export const resolveSelection = ({
   let out = override ? deepCloneSelection(override) : baseForBuiltInViews
 
   for (const p of selectPaths as string[]) {
+    if (/[({]/.test(p)) {
+      throw new CliError(
+        'This looks like GraphQL; use dot paths like variants.nodes.id (repeat --select).',
+        2,
+      )
+    }
     mergeDotPath({ selection: out, path: p, defaultConnectionFirst })
   }
 
