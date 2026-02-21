@@ -37,6 +37,29 @@ import {
 
 type MediaContentType = 'IMAGE' | 'VIDEO' | 'MODEL_3D' | 'EXTERNAL_VIDEO'
 
+const normalizeProductInput = (input: any) => {
+  if (!input || typeof input !== 'object') return input
+
+  // Back-compat: ProductInput uses descriptionHtml, but many scripts still use bodyHtml
+  // (bodyHtml exists on Product and is deprecated in favor of descriptionHtml).
+  const hasBodyHtml = Object.prototype.hasOwnProperty.call(input, 'bodyHtml')
+  const hasDescriptionHtml = Object.prototype.hasOwnProperty.call(input, 'descriptionHtml')
+
+  if (!hasBodyHtml) return input
+
+  if (hasDescriptionHtml) {
+    const a = (input as any).bodyHtml
+    const b = (input as any).descriptionHtml
+    if (a !== b) throw new CliError('Conflicting bodyHtml and descriptionHtml; use descriptionHtml.', 2)
+    delete (input as any).bodyHtml
+    return input
+  }
+
+  ;(input as any).descriptionHtml = (input as any).bodyHtml
+  delete (input as any).bodyHtml
+  return input
+}
+
 const requireProductIdForSubverb = (args: any) => {
   if (args.id !== undefined) {
     throw new CliError('Unknown flag --id, did you mean --product-id?', 2)
@@ -2026,7 +2049,7 @@ export const runProducts = async ({
 
     const result = await runMutation(ctx, {
       productCreate: {
-        __args: { input: built.input },
+        __args: { input: normalizeProductInput(built.input) },
         product: selection,
         userErrors: { field: true, message: true },
       },
@@ -2077,7 +2100,7 @@ export const runProducts = async ({
     })
     if (!built.used) throw new CliError('Missing --input or --set/--set-json', 2)
 
-    const input = { ...built.input, id }
+    const input = normalizeProductInput({ ...built.input, id })
 
     const selection = resolveSelection({
       resource: 'products',
