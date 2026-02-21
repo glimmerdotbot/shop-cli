@@ -35,9 +35,14 @@ const parseSetValue = (raw: string) => {
   return raw
 }
 
-const splitSetArg = (arg: string) => {
+const splitSetArg = (arg: string, label: '--set' | '--set-json') => {
   const eq = arg.indexOf('=')
-  if (eq === -1) throw new CliError(`Expected --set path=value, got: ${arg}`, 2)
+  if (eq === -1) {
+    if (label === '--set' && arg.trim().startsWith('{')) {
+      throw new CliError('Did you mean --set field=<object>? --set is path=value.', 2)
+    }
+    throw new CliError(`Expected ${label} path=value, got: ${arg}`, 2)
+  }
   const path = arg.slice(0, eq).trim()
   const value = arg.slice(eq + 1)
   if (!path) throw new CliError(`Expected --set path=value, got: ${arg}`, 2)
@@ -95,12 +100,12 @@ export const buildInput = ({
   let result: any = inputArg ? parseJsonOrFile(inputArg, '--input') : {}
 
   for (const arg of setArgs ?? []) {
-    const { path, value } = splitSetArg(arg)
+    const { path, value } = splitSetArg(arg, '--set')
     setDeep(result, path, parseSetValue(value))
   }
 
   for (const arg of setJsonArgs ?? []) {
-    const { path, value } = splitSetArg(arg)
+    const { path, value } = splitSetArg(arg, '--set-json')
     const parsed = parseJsonOrFile(value, '--set-json')
     setDeep(result, path, parsed)
   }
