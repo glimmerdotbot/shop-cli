@@ -2,6 +2,7 @@ import { CliError } from '../errors'
 import { assertShopifyGidTypeIn, coerceGid, type ShopifyGidType } from '../gid'
 import { renderVerbGroupHelp } from '../help/render'
 import { buildInput } from '../input'
+import { parseJson5 } from '../json'
 import { printConnection, printIds, printJson, printNode } from '../output'
 import { applyComputedFieldsToNode, computedPublicationsSelection } from '../output/computedFields'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
@@ -2682,7 +2683,7 @@ export const runProducts = async ({
     let moves: Array<{ id: string; newPosition: string }> = []
     if ((args as any).moves) {
       try {
-        const parsed = JSON.parse((args as any).moves as string)
+        const parsed = parseJson5((args as any).moves as string)
         if (!Array.isArray(parsed)) throw new CliError('--moves must be a JSON array', 2)
         moves = parsed as any
       } catch (err) {

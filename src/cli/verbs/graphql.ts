@@ -2,6 +2,7 @@ import { parseArgs } from 'node:util'
 import { readFileSync } from 'node:fs'
 
 import { CliError } from '../errors'
+import { parseJson5 } from '../json'
 import { printIds, printJson, printJsonError } from '../output'
 import { parseStandardArgs, runQuery, type CommandContext } from '../router'
 import { maybeThrowApprovalRequired } from '../approvalRequired'
@@ -107,7 +108,7 @@ const parseVariables = ({
   if (variablesArg) {
     const raw = readTextArg(variablesArg)
     try {
-      const parsed = JSON.parse(raw)
+      const parsed = parseJson5(raw)
       if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
         throw new CliError('--variables must be a JSON object', 2)
       }
@@ -141,7 +142,7 @@ const parseVariables = ({
       const jsonStr = arg.slice(eqIdx + 1)
       if (!name) throw new CliError(`Invalid --var-json: missing variable name in "${arg}"`, 2)
       try {
-        vars[name] = JSON.parse(jsonStr)
+        vars[name] = parseJson5(jsonStr)
         hasVars = true
       } catch (err) {
         throw new CliError(`Invalid --var-json "${name}": ${(err as Error).message}`, 2)

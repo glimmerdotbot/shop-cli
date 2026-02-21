@@ -1,5 +1,6 @@
 import { CliError } from '../errors'
 import { buildInput } from '../input'
+import { parseJson5 } from '../json'
 import { printConnection, printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
@@ -62,7 +63,7 @@ const parseMoneyInput = (flag: string, value: unknown) => {
   if (raw.startsWith('{')) {
     let parsed: any
     try {
-      parsed = JSON.parse(raw)
+      parsed = parseJson5(raw)
     } catch (err) {
       throw new CliError(`${flag} must be valid JSON: ${(err as Error).message}`, 2)
     }

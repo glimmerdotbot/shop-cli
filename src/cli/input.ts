@@ -1,11 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { CliError } from './errors'
+import { parseJson5 } from './json'
 
 const readUtf8 = (path: string) => readFileSync(path, 'utf8')
 
 const parseJson = (value: string, label: string) => {
   try {
-    return JSON.parse(value)
+    return parseJson5(value)
   } catch (err) {
     throw new CliError(`${label} must be valid JSON: ${(err as Error).message}`, 2)
   }
@@ -106,4 +107,3 @@ export const buildInput = ({
 
   return { input: result, used: true }
 }
-

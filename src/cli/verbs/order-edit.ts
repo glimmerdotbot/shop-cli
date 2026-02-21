@@ -1,6 +1,7 @@
 import { CliError } from '../errors'
 import { coerceGid } from '../gid'
 import { buildInput } from '../input'
+import { parseJson5 } from '../json'
 import { printJson, printNode } from '../output'
 import { parseStandardArgs, runMutation, runQuery, type CommandContext } from '../router'
 import { resolveSelection } from '../selection/select'
@@ -128,7 +129,7 @@ const parseQuantity = (value: unknown, flag: string, { allowZero = false } = {})
 const parseJsonFlag = (value: unknown, flag: string) => {
   if (typeof value !== 'string' || !value) throw new CliError(`Missing ${flag}`, 2)
   try {
-    return JSON.parse(value)
+    return parseJson5(value)
   } catch (err) {
     throw new CliError(`${flag} must be valid JSON: ${(err as Error).message}`, 2)
   }

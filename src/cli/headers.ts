@@ -1,4 +1,5 @@
 import { CliError } from './errors'
+import { parseJson5 } from './json'
 
 const parseHeaderPair = (value: string, label: string) => {
   const colonIndex = value.indexOf(':')
@@ -41,7 +42,7 @@ export const parseHeadersFromEnv = (
 
   let parsed: unknown
   try {
-    parsed = JSON.parse(raw)
+    parsed = parseJson5(raw)
   } catch {
     throw new CliError(
       `Invalid ${label}: expected a JSON object like {"X-Foo":"bar"}`,
